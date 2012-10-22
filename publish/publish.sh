@@ -43,27 +43,34 @@ rm -fr ${WORKSPACE}/results; mkdir -p ${STAGINGDIR}
 
 # check for aggregate zip or overall zip
 z=""
-if [[ -d     ${WORKSPACE}/sources/aggregate/site/target ]]; then
+if [[ -d ${WORKSPACE}/sources/aggregate/site/target ]]; then
 	if [[ -f ${WORKSPACE}/sources/aggregate/site/target/site_assembly.zip ]]; then
 	 siteZip=${WORKSPACE}/sources/aggregate/site/target/site_assembly.zip
 	else
 	 siteZip=${WORKSPACE}/sources/aggregate/site/target/repository.zip
 	fi
 	z=$siteZip
-elif [[ -d   ${WORKSPACE}/sources/aggregate/site/site/target ]]; then
+elif [[ -d ${WORKSPACE}/sources/aggregate/site/site/target ]]; then
 	if [[ -f ${WORKSPACE}/sources/aggregate/site/site/target/site_assembly.zip ]]; then
 	 siteZip=${WORKSPACE}/sources/aggregate/site/site/target/site_assembly.zip
 	else
 	 siteZip=${WORKSPACE}/sources/aggregate/site/site/target/repository.zip
 	fi
 	z=$siteZip
-elif [[ -d   ${WORKSPACE}/sources/site/target ]]; then
-	if [[ -f ${WORKSPACE}/sources/site/target/site_assembly.zip ]]; then
-	 siteZip=${WORKSPACE}/sources/site/target/site_assembly.zip
+elif [[ -d ${WORKSPACE}/sources/site/target ]] || [[ -d ${WORKSPACE}/site/target ]]; then
+	if [[ -d ${WORKSPACE}/sources/site/target ]]; then
+		#old SVN convention
+		targetDir=${WORKSPACE}/sources/site/target
 	else
-	 siteZip=${WORKSPACE}/sources/site/target/repository.zip
+		# new git convention
+		targetDir=${WORKSPACE}/site/target
+	fi
+	if [[ -f ${targetDir}/site_assembly.zip ]]; then
+	 siteZip=${targetDir}/site_assembly.zip
+	else
+	 siteZip=${targetDir}/repository.zip
 	 # JBIDE-10923
-	 pushd ${WORKSPACE}/sources/site/target/repository >/dev/null
+	 pushd ${targetDir}/repository >/dev/null
 	 zip -r $siteZip .
 	 popd >/dev/null
 	fi
