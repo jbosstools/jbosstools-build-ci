@@ -9,6 +9,7 @@
           target: default              
          ================================= -->
     <target name="reports">
+	<mkdir dir="${user.dir}/target/coverage-report"/>
     	<report>
     		<executiondata>
     			<fileset dir="${user.dir}/target">
