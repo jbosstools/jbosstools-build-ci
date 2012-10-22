@@ -456,8 +456,10 @@ if [[ $ec == "0" ]] && [[ $fc == "0" ]]; then
 				mkdir -p $DESTINATION/updates/nightly/${PUBLISHPATHSUFFIX}
 			fi
 			date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/all/repo/* $DESTINATION/updates/nightly/${PUBLISHPATHSUFFIX}/
+			echo ">> http://download.jboss.org/jbosstools/updates/nightly/${PUBLISHPATHSUFFIX} <<"
 		else
 			date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/all/repo/* $DESTINATION/updates/nightly/${JOBNAMEREDUX}/
+			echo ">> http://download.jboss.org/jbosstools/updates/nightly/${JOBNAMEREDUX} <<"
 		fi
 	fi
 fi
