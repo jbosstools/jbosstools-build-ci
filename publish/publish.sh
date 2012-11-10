@@ -270,12 +270,8 @@ mkdir -p ${STAGINGDIR}/logs
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
 	mkdir -p ${WORKSPACE}/sources/results
 	pushd ${WORKSPACE}/sources/results >/dev/null
-	resultsPageRoot=https://anonsvn.jboss.org/repos/jbosstools/trunk/build/results/
-	wget ${resultsPageRoot} -q --no-check-certificate -N
-	files=$(cat index.html | egrep -v "http://|\.\.|\.gitignore" | grep href | sed -e 's#.\+href="\(.\+\)".\+#'${resultsPageRoot}'\1#g' | egrep -v ".+/$|README")
-	if [[ $files ]]; then wget ${files} -q --no-check-certificate -N; fi
-	rm -f index.html
-
+	rm -fr pom.xml build.xml index-template.html
+	wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-sites/master/results/pom.xml https://raw.github.com/jbosstools/jbosstools-build-sites/master/results/index-template.html https://raw.github.com/jbosstools/jbosstools-build-sites/master/results/build.xml
 	export JAVA_HOME=$(find /qa/tools/opt -maxdepth 1 -mindepth 1 -type d -name "jdk1.6.0_*" | sort | tail -1)
 	export M2_HOME=$(find /qa/tools/opt -maxdepth 1 -mindepth 1 -type d -name "apache-maven-3.0.*" | sort | tail -1)
 	${M2_HOME}/bin/mvn -q -B install -DJOB_NAME=${JOB_NAME} -DBUILD_NUMBER=${BUILD_NUMBER} -DBUILD_ID=${BUILD_ID} -DBUILD_ALIAS=${BUILD_ALIAS}
@@ -481,7 +477,7 @@ rm -fr $tmpdir
 
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
 	# regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
-	wget http://anonsvn.jboss.org/repos/jbosstools/trunk/build/util/cleanup/jbosstools-cleanup.sh --no-check-certificate
+	wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/cleanup/jbosstools-cleanup.sh
 	chmod +x jbosstools-cleanup.sh
 	./jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/
 	rm -f jbosstools-cleanup.sh
