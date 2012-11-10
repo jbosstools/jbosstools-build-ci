@@ -46,7 +46,7 @@ if [[ ${PROJECT_NAME} ]]; then
 fi
 
 # JBIDE-12662: regenerate composite metadata in updates/${BUILD_TYPE}/${TARGET_PLATFORM}/${PARENT_FOLDER}/${PROJECT_NAME} folder for all children
-wget http://anonsvn.jboss.org/repos/jbosstools/trunk/build/util/cleanup/jbosstools-cleanup.sh --no-check-certificate
+wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/cleanup/jbosstools-cleanup.sh
 chmod +x jbosstools-cleanup.sh
 ./jbosstools-cleanup.sh --dirs-to-scan "updates/${BUILD_TYPE}/${TARGET_PLATFORM}/${PARENT_FOLDER}" --regen-metadata-only
 rm -f jbosstools-cleanup.sh
