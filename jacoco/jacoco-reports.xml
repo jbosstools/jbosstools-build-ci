@@ -12,8 +12,9 @@
 	<mkdir dir="${user.dir}/target/coverage-report"/>
     	<report>
     		<executiondata>
-    			<fileset dir="${user.dir}/target">
-    				<include name="*.exec" />
+    			<fileset dir="${user.dir}">
+    				<include name="target/*.exec" />
+    				<include name="*/target/*.exec" />
     			</fileset>
     		</executiondata>
     		<structure name="JaCoCo-Multi Project">
