@@ -17,8 +17,8 @@
     				<include name="*/target/*.exec" />
     			</fileset>
     		</executiondata>
-    		<structure name="JaCoCo-Multi Project">
-    			<group name="JaCoCo-Multi">
+    		<structure name="JBoss Tools chunk">
+    			<group name="JBoss Tools chunk">
     				<classfiles>
 					<fileset dir="${user.dir}" >
 						<include name="plugins/*/target/classes/**/*.class"/>
