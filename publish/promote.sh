@@ -50,16 +50,21 @@ while [[ "$#" -gt 0 ]]; do
   shift 1
 done
 
+if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
   echo "mkdir ${BUILD_TYPE}" | sftp ${DESTINATION}/${RELEASE_TYPE}/
-if [[ ${TARGET_PLATFORM} ]]; then
-  echo "mkdir ${BUILD_TYPE}/${TARGET_PLATFORM}" | sftp ${DESTINATION}/${RELEASE_TYPE}/
+  if [[ ${TARGET_PLATFORM} ]]; then
+    echo "mkdir ${BUILD_TYPE}/${TARGET_PLATFORM}" | sftp ${DESTINATION}/${RELEASE_TYPE}/
+  fi
+  if [[ ${PARENT_FOLDER} ]]; then
+    echo "mkdir ${BUILD_TYPE}/${TARGET_PLATFORM}/${PARENT_FOLDER}" | sftp ${DESTINATION}/${RELEASE_TYPE}/
+  fi
+  if [[ ${PROJECT_NAME} ]]; then
+    echo "mkdir ${BUILD_TYPE}/${TARGET_PLATFORM}/${PARENT_FOLDER}/${PROJECT_NAME}" | sftp ${DESTINATION}/${RELEASE_TYPE}/
+  fi
+else
+  mkdir -p ${DESTINATION}/${RELEASE_TYPE}/${BUILD_TYPE}/${TARGET_PLATFORM}/${PARENT_FOLDER}/${PROJECT_NAME}
 fi
-if [[ ${PARENT_FOLDER} ]]; then
-  echo "mkdir ${BUILD_TYPE}/${TARGET_PLATFORM}/${PARENT_FOLDER}" | sftp ${DESTINATION}/${RELEASE_TYPE}/
-fi
-if [[ ${PROJECT_NAME} ]]; then
-  echo "mkdir ${BUILD_TYPE}/${TARGET_PLATFORM}/${PARENT_FOLDER}/${PROJECT_NAME}" | sftp ${DESTINATION}/${RELEASE_TYPE}/
-fi
+
 if [[ ${TARGET_FOLDER} ]]; then
   if [[ ${OPERATION} ==  "MOVE" ]]; then
     if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
