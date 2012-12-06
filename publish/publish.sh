@@ -201,6 +201,7 @@ if [[ -d ${WORKSPACE}/sources/product/results/target ]]; then
 fi
 
 mkdir -p ${STAGINGDIR}/logs
+ALLREVS=${STAGINGDIR}/logs/ALL_REVISIONS.txt
 
 # collect component zips from upstream aggregated build jobs
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then
@@ -211,6 +212,45 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
 		mv $z ${z}.MD5 ${STAGINGDIR}/components
 	done
 	
+	source="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}"
+	echo "  >>> ${source}/components <<<  " > $ALLREVS
+	# work locally if posible
+	if [[ -d ${STAGINGDIR}/components ]]; then
+		for f in `cd ${STAGINGDIR}/components; find . -maxdepth 1 -type f -name "*.zip" | sort`; do
+			REV=
+			g=`echo $f | sed 's#\.\/\([^<>]\+\)-Update-.\+.zip#\1#g'`
+			wget -q -nc http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -k -O $tmpdir/${g}_GIT_REVISION.txt
+			REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
+			rm -fr $tmpdir/${g}_GIT_REVISION.txt
+			echo -n "${g} :: $REV" >> $ALLREVS
+			componentname=${g/*component--/}
+			componentname=${componentname/-1.9.2/}
+			componentname=${componentname/central-maven-examples/central}
+			echo " :: https://github.com/jbosstools/jbosstools-"${componentname}/commit/${REV##*@} >> $ALLREVS
+		done
+	else
+		# else fetch from server
+		wget -q -nc ${source}/components/ -k -O $tmpdir/index.html
+		for f in $(cat $tmpdir/index.html | egrep -v "C=D|title>|h1>|DIR"); do
+			if [[ ${f/zip.MD5/} != ${f} ]]; then
+				true;
+			elif [[ ${f/zip/} != ${f} ]]; then
+				REV=
+				g=`echo $f | sed 's#href=".\+zip">\([^<>]\+\)-Update-.\+.zip</a>.\+#\1#g'`
+				wget -q -nc http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -k -O $tmpdir/${g}_GIT_REVISION.txt
+				REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
+				rm -fr $tmpdir/${g}_GIT_REVISION.txt
+				echo -n "${g} :: $REV" >> $ALLREVS
+				componentname=${g/*component--/}
+				componentname=${componentname/-1.9.2/}
+				componentname=${componentname/central-maven-examples/central}
+				echo " :: https://github.com/jbosstools/jbosstools-"${componentname}/commit/${REV##*@} >> $ALLREVS
+			fi
+		done
+		rm -f $tmpdir/index.html
+	fi
+	echo "" >> $ALLREVS
+
 	# TODO :: JBIDE-9870 When we have a -Update-Sources- zip, this can be removed
 	mkdir -p ${STAGINGDIR}/all/sources	
 	# unpack component source zips like jbosstools-pi4soa-3.1_trunk-Sources-SNAPSHOT.zip or jbosstools-3.2_trunk.component--ws-Sources-SNAPSHOT.zip
@@ -233,6 +273,19 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
 	if [[ -f ${WORKSPACE}/sources/aggregate/site/zips/build.properties.all.xml ]]; then
 		rsync -aq ${WORKSPACE}/sources/aggregate/site/zips/build.properties.all.xml ${STAGINGDIR}/logs/
 	fi
+fi
+
+if [[ ${JOB_NAME/.devstudio} != ${JOB_NAME} ]]; then # devstudio build
+	echo "  >>> devstudio-6.0_stable_branch.updatesite <<<" >> $ALLREVS
+	## work locally if posible
+	if [[ -f ${STAGINGDIR}/logs/SVN_REVISION.txt ]]; then
+		cp ${STAGINGDIR}/logs/SVN_REVISION.txt $tmpdir/devstudio_SVN_REVISION.txt
+	else
+		# else fetch from server
+		wget -q -nc http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio-6.0_stable_branch.updatesite/logs/SVN_REVISION.txt -k -O $tmpdir/devstudio_SVN_REVISION.txt
+	fi
+	cat $tmpdir/devstudio_SVN_REVISION.txt >> $ALLREVS
+	rm -f $tmpdir/devstudio_SVN_REVISION.txt
 fi
 
 # JBIDE-9870 check if there's a sources update site and rename it if found (note, bottests-site/site/sources won't work; use bottests-site/souces)
