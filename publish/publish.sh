@@ -236,9 +236,9 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
 	fi
 fi
 
-if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] || [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then
-	source="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}"
-	echo "  >>> ${source}/components <<<  " > $ALLREVS
+if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then
+	GITREV_SOURCE="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}"
+	echo "  >>> ${GITREV_SOURCE}/components <<<  " > $ALLREVS
 	# work locally if posible
 	if [[ -d ${STAGINGDIR}/components ]]; then
 		for f in `cd ${STAGINGDIR}/components; find . -maxdepth 1 -type f -name "*.zip" | sort`; do
@@ -255,7 +255,7 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] || [[ ${JOB_NAME/devstudio} != ${
 		done
 	else
 		# else fetch from server
-		wget -q -nc ${source}/components/ -k -O $tmpdir/index.html
+		wget -q -nc ${GITREV_SOURCE}/components/ -k -O $tmpdir/index.html
 		for f in $(cat $tmpdir/index.html | egrep -v "C=D|title>|h1>|DIR"); do
 			if [[ ${f/zip.MD5/} != ${f} ]]; then
 				true;
@@ -284,9 +284,12 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
 		cp ${STAGINGDIR}/logs/SVN_REVISION.txt $tmpdir/devstudio_SVN_REVISION.txt
 	else
 		# else fetch from server
-		wget -q -nc http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio-6.0_stable_branch.updatesite/logs/SVN_REVISION.txt -k -O $tmpdir/devstudio_SVN_REVISION.txt
+		wget -q -nc http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt -k -O $tmpdir/devstudio_SVN_REVISION.txt
 	fi
 	cat $tmpdir/devstudio_SVN_REVISION.txt >> $ALLREVS
+	echo "" >> $ALLREVS
+	echo "See also upstream JBoss Tools aggregate job for complete list of git revisions."  >> $ALLREVS
+	echo "eg., http://download.jboss.org/jbosstools/builds/staging/jbosstools-*.aggregate/logs/ALL_REVISIONS.txt"
 	rm -f $tmpdir/devstudio_SVN_REVISION.txt
 fi
 
