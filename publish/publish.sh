@@ -212,6 +212,31 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
 		mv $z ${z}.MD5 ${STAGINGDIR}/components
 	done
 	
+	# TODO :: JBIDE-9870 When we have a -Update-Sources- zip, this can be removed
+	mkdir -p ${STAGINGDIR}/all/sources	
+	# unpack component source zips like jbosstools-pi4soa-3.1_trunk-Sources-SNAPSHOT.zip or jbosstools-3.2_trunk.component--ws-Sources-SNAPSHOT.zip
+	for z in $(find ${WORKSPACE}/sources/aggregate/site/zips -name "*Sources*.zip"); do
+		zn=${z%*-Sources*.zip}; zn=${zn#*--}; zn=${zn##*/}; zn=${zn#jbosstools-}; 
+		# zn=${zn%_trunk}; zn=${zn%_stable_branch};
+		mkdir -p ${STAGINGDIR}/all/sources/${zn}/
+		unzip -qq -o -d ${STAGINGDIR}/all/sources/${zn}/ $z
+	done
+	# add component sources into sources zip
+	pushd ${STAGINGDIR}/all/sources
+	zip ${STAGINGDIR}/all/${SRCSNAME} -q -r * -x hudson_workspace\* -x documentation\* -x download.jboss.org\* -x requirements\* \
+	  -x workingset\* -x labs\* -x build\* -x \*test\* -x \*target\* -x \*.class -x \*.svn\* -x \*classes\* -x \*bin\* -x \*.zip \
+	  -x \*docs\* -x \*reference\* -x \*releng\* -x \*.git\* -x \*/lib/\*.jar
+	popd
+	rm -fr ${STAGINGDIR}/all/sources
+	z=${STAGINGDIR}/all/${SRCSNAME}; for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done
+
+	# JBIDE-7444 get aggregate metadata xml properties file
+	if [[ -f ${WORKSPACE}/sources/aggregate/site/zips/build.properties.all.xml ]]; then
+		rsync -aq ${WORKSPACE}/sources/aggregate/site/zips/build.properties.all.xml ${STAGINGDIR}/logs/
+	fi
+fi
+
+if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] || [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then
 	source="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}"
 	echo "  >>> ${source}/components <<<  " > $ALLREVS
 	# work locally if posible
@@ -250,32 +275,9 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
 		rm -f $tmpdir/index.html
 	fi
 	echo "" >> $ALLREVS
-
-	# TODO :: JBIDE-9870 When we have a -Update-Sources- zip, this can be removed
-	mkdir -p ${STAGINGDIR}/all/sources	
-	# unpack component source zips like jbosstools-pi4soa-3.1_trunk-Sources-SNAPSHOT.zip or jbosstools-3.2_trunk.component--ws-Sources-SNAPSHOT.zip
-	for z in $(find ${WORKSPACE}/sources/aggregate/site/zips -name "*Sources*.zip"); do
-		zn=${z%*-Sources*.zip}; zn=${zn#*--}; zn=${zn##*/}; zn=${zn#jbosstools-}; 
-		# zn=${zn%_trunk}; zn=${zn%_stable_branch};
-		mkdir -p ${STAGINGDIR}/all/sources/${zn}/
-		unzip -qq -o -d ${STAGINGDIR}/all/sources/${zn}/ $z
-	done
-	# add component sources into sources zip
-	pushd ${STAGINGDIR}/all/sources
-	zip ${STAGINGDIR}/all/${SRCSNAME} -q -r * -x hudson_workspace\* -x documentation\* -x download.jboss.org\* -x requirements\* \
-	  -x workingset\* -x labs\* -x build\* -x \*test\* -x \*target\* -x \*.class -x \*.svn\* -x \*classes\* -x \*bin\* -x \*.zip \
-	  -x \*docs\* -x \*reference\* -x \*releng\* -x \*.git\* -x \*/lib/\*.jar
-	popd
-	rm -fr ${STAGINGDIR}/all/sources
-	z=${STAGINGDIR}/all/${SRCSNAME}; for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done
-
-	# JBIDE-7444 get aggregate metadata xml properties file
-	if [[ -f ${WORKSPACE}/sources/aggregate/site/zips/build.properties.all.xml ]]; then
-		rsync -aq ${WORKSPACE}/sources/aggregate/site/zips/build.properties.all.xml ${STAGINGDIR}/logs/
-	fi
 fi
 
-if [[ ${JOB_NAME/.devstudio} != ${JOB_NAME} ]]; then # devstudio build
+if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
 	echo "  >>> devstudio-6.0_stable_branch.updatesite <<<" >> $ALLREVS
 	## work locally if posible
 	if [[ -f ${STAGINGDIR}/logs/SVN_REVISION.txt ]]; then
