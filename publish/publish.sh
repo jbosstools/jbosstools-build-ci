@@ -289,7 +289,7 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
 	cat $tmpdir/devstudio_SVN_REVISION.txt >> $ALLREVS
 	echo "" >> $ALLREVS
 	echo "See also upstream JBoss Tools aggregate job for complete list of git revisions."  >> $ALLREVS
-	echo "eg., http://download.jboss.org/jbosstools/builds/staging/jbosstools-*.aggregate/logs/ALL_REVISIONS.txt"
+	echo "eg., http://download.jboss.org/jbosstools/builds/staging/jbosstools-*.aggregate/logs/ALL_REVISIONS.txt" >> $ALLREVS
 	rm -f $tmpdir/devstudio_SVN_REVISION.txt
 fi
 
