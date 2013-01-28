@@ -81,6 +81,7 @@ if [[ ${TARGET_FOLDER} ]]; then
   else
     # purge existing workspace folder to ensure we're not combining releases
     if [[ ${WORKSPACE} ]] && [[ -d ${WORKSPACE}/${JOB_NAME} ]]; then rm -fr ${WORKSPACE}/${JOB_NAME}/; fi
+    mkdir -p ${WORKSPACE}/${JOB_NAME}/
     if [[ -d ${SOURCE_PATH} ]]; then # use local source path in workspace
       rsync -arzq ${SOURCE_PATH}/* ${WORKSPACE}/${JOB_NAME}/
     else
