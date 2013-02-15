@@ -34,11 +34,9 @@ if [[ $# -lt 1 ]]; then
   # push from http://download.jboss.org/drools/release/5.3.0.Final/droolsjbpm-tools-distribution-5.3.0.Final.zip
   #        to http://download.jboss.org/jbosstools/updates/stable/indigo/soa-tooling/droolsjbpm/5.3.0.Final/
   echo "Example: $0 -BUILD_TYPE stable -TARGET_PLATFORM indigo -PARENT_FOLDER soa-tooling -PROJECT_NAME droolsjbpm -TARGET_FOLDER 5.3.0.Final -SOURCE_ZIP http://download.jboss.org/drools/release/5.3.0.Final/droolsjbpm-tools-distribution-5.3.0.Final.zip"
-  echo ""
-
-  # push from http://download.jboss.org/drools/release/5.5.0.Final/org.drools.updatesite/
+  # push from http://download.jboss.org/drools/release/5.5.0.Final/droolsjbpm-tools-distribution-5.5.0.Final.zip
   #        to http://download.jboss.org/jbosstools/updates/integration/juno/integration-stack/droolsjbpm/5.5.0.Final/
-  echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM juno -PARENT_FOLDER integration-stack -PROJECT_NAME droolsjbpm -TARGET_FOLDER 5.5.0.Final -SOURCE_PATH drools/release/5.5.0.Final/org.drools.updatesite"
+  echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM juno -PARENT_FOLDER integration-stack -PROJECT_NAME droolsjbpm -TARGET_FOLDER 5.5.0.Final -SOURCE_ZIP http://download.jboss.org/drools/release/5.5.0.Final/droolsjbpm-tools-distribution-5.5.0.Final.zip"
   echo ""
 
   # push to http://download.jboss.org/jbosstools/discovery/nightly/core/trunk/jbosstools-directory.xml
