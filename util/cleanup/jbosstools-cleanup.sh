@@ -87,7 +87,7 @@ clean ()
 		tmp=`mktemp`
 		for ssd in $subsubdirs; do
 			if [[ ${ssd##$sd/201*} == "" ]] || [[ $checkTimeStamps -eq 0 ]]; then # a build dir
-				buildid=${ssd##*/};  
+				buildid=${ssd##*/}; 
 				echo $buildid >> $tmp
 			fi
 		done
@@ -132,22 +132,24 @@ clean ()
 		subsubdirs=$getSubDirsReturn
 		#echo $subsubdirs
 		tmp=`mktemp`
+		subdirCount=0;
 		for ssd in $subsubdirs; do
 			if [[ ${ssd##$sd/201*} == "" ]] || [[ $checkTimeStamps -eq 0 ]]; then # a build dir
 				buildid=${ssd##*/};  
+				let subdirCount=subdirCount+1;				
+				# echo "[${subdirCount}] Found $buildid"
 				echo $buildid >> $tmp
 			fi
 		done
 		all=$(cat $tmp | sort -r) # check these
 		rm -f $tmp
 
-		getListSize $all; #return $getListSizeReturn
-		if [[ $getListSizeReturn -gt 0 ]]; then
-			echo "Generate metadata for ${getListSizeReturn} subdir(s) in $sd/" | tee -a $log	
+		if [[ $subdirCount -gt 0 ]]; then
+			echo "Generate metadata for ${subdirCount} subdir(s) in $sd/" | tee -a $log	
 			mkdir -p /tmp/cleanup-fresh-metadata/
 			siteName=${sd##*/downloads_htdocs/tools/}
-			regenCompositeMetadata "$siteName" "$all" "$getListSizeReturn" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "/tmp/cleanup-fresh-metadata/compositeContent.xml"
-			regenCompositeMetadata "$siteName" "$all" "$getListSizeReturn" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "/tmp/cleanup-fresh-metadata/compositeArtifacts.xml"
+			regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "/tmp/cleanup-fresh-metadata/compositeContent.xml"
+			regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "/tmp/cleanup-fresh-metadata/compositeArtifacts.xml"
 			rsync --rsh=ssh --protocol=28 -q /tmp/cleanup-fresh-metadata/composite*.xml tools@filemgmt.jboss.org:$sd/
 			rm -fr /tmp/cleanup-fresh-metadata/
 		else
@@ -156,16 +158,6 @@ clean ()
 		fi
 	done
 	echo "" | tee -a $log	
-}
-
-# determine the number of items in a space-separated list
-getListSize ()
-{
-	list=$1
-	getListSizeReturn=0;
-	for item in $list; do
-		let getListSizeReturn=getListSizeReturn+1;
-	done
 }
 
 #regen metadata for remaining subdirs in this folder
