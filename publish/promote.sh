@@ -8,25 +8,39 @@ URL=http://download.jboss.org/jbosstools # or http://www.qa.jboss.com/binaries/R
 RELEASE_TYPE=updates # or discovery
 BUILD_TYPE=nightly
 TARGET_PLATFORM=
-PARENT_FOLDER=core # or soa-tooling
+PARENT_FOLDER=core # or integration-stack (or soa-tooling)
 PROJECT_NAME=
 TARGET_FOLDER=
 SOURCE_PATH=
+SOURCE_ZIP=
+
+tmpfile=`mktemp`
+tmpdir=`mktemp -d`
 
 if [[ $# -lt 1 ]]; then
   echo "Usage  : $0 [-DESTINATION destination] [-RELEASE_TYPE release_type] -BUILD_TYPE build_type -TARGET_PLATFORM target_platform -PROJECT_NAME project_name -TARGET_FOLDER target_folder -SOURCE_PATH source_path"
-  # push to http://download.jboss.org/jbosstools/updates/integration/kepler/base/as_4.1.kepler/
-  echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM kepler -PROJECT_NAME base -TARGET_FOLDER as_4.1.kepler -SOURCE_PATH jbosstools-4.1_stable_branch.component--as/all/repo"
-  # push to http://download.jboss.org/jbosstools/updates/integration/kepler/base/archives_4.1.kepler/
-  echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM kepler -PROJECT_NAME base -TARGET_FOLDER archives_4.1.kepler -SOURCE_PATH jbosstools-4.1_stable_branch.component--archives/all/repo"
-  # push to http://download.jboss.org/jbosstools/updates/integration/kepler/base/jmx_4.1.kepler/
-  echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM kepler -PROJECT_NAME base -TARGET_FOLDER jmx_4.1.kepler -SOURCE_PATH jbosstools-4.1_stable_branch.component--jmx/all/repo"
+  # push to http://download.jboss.org/jbosstools/updates/integration/kepler/core/base/4.1.0.Alpha1/
+  echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM kepler -PARENT_FOLDER core -PROJECT_NAME base -TARGET_FOLDER 4.1.0.Alpha1 -SOURCE_PATH jbosstools-base_41/all/repo"
+  # push to http://download.jboss.org/jbosstools/updates/integration/kepler/core/server/4.1.0.Alpha1/
+  echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM kepler -PARENT_FOLDER core -PROJECT_NAME server -TARGET_FOLDER 4.1.0.Alpha1 -SOURCE_PATH jbosstools-server_41/all/repo"
   echo ""
+
   # push to http://download.jboss.org/jbosstools/updates/development/juno/soa-tooling/modeshape/3.0.0.CR1/
-  echo "Example: $0 -BUILD_TYPE development -TARGET_PLATFORM juno -PARENT_FOLDER soa-tooling -PROJECT_NAME modeshape -TARGET_FOLDER 3.3.0.CR1 -SOURCE_PATH modeshape-tools-continuous/all/repo"
+  echo "Example: $0 -BUILD_TYPE development -TARGET_PLATFORM juno -PARENT_FOLDER integration-stack -PROJECT_NAME modeshape -TARGET_FOLDER 3.3.0.CR1 -SOURCE_PATH modeshape-tools-continuous/all/repo"
   # push to http://download.jboss.org/jbosstools/updates/stable/indigo/soa-tooling/switchyard/0.6.0.Final/
   echo "Example: $0 -BUILD_TYPE stable -TARGET_PLATFORM indigo -PARENT_FOLDER soa-tooling -PROJECT_NAME switchyard -TARGET_FOLDER 0.6.0.Final -SOURCE_PATH SwitchYard-Tools/eclipse"
   echo ""
+
+  # push from http://download.jboss.org/drools/release/5.3.0.Final/droolsjbpm-tools-distribution-5.3.0.Final.zip
+  #        to http://download.jboss.org/jbosstools/updates/stable/indigo/soa-tooling/droolsjbpm/5.3.0.Final/
+  echo "Example: $0 -BUILD_TYPE stable -TARGET_PLATFORM indigo -PARENT_FOLDER soa-tooling -PROJECT_NAME droolsjbpm -TARGET_FOLDER 5.3.0.Final -SOURCE_ZIP http://download.jboss.org/drools/release/5.3.0.Final/droolsjbpm-tools-distribution-5.3.0.Final.zip"
+  echo ""
+
+  # push from http://download.jboss.org/drools/release/5.5.0.Final/org.drools.updatesite/
+  #        to http://download.jboss.org/jbosstools/updates/integration/juno/integration-stack/droolsjbpm/5.5.0.Final/
+  echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM juno -PARENT_FOLDER integration-stack -PROJECT_NAME droolsjbpm -TARGET_FOLDER 5.5.0.Final -SOURCE_PATH drools/release/5.5.0.Final/org.drools.updatesite"
+  echo ""
+
   # push to http://download.jboss.org/jbosstools/discovery/nightly/core/trunk/jbosstools-directory.xml
   echo "Example: $0 -RELEASE_TYPE discovery -PARENT_FOLDER core -TARGET_FOLDER trunk -SOURCE_PATH ${WORKSPACE}/sources/discovery/core/org.jboss.tools.central.discovery/target/discovery-site/"
   # push to http://www.qa.jboss.com/binaries/RHDS/discovery/nightly/core/4.1.kepler/devstudio-directory.xml
@@ -46,6 +60,7 @@ while [[ "$#" -gt 0 ]]; do
     '-PROJECT_NAME') PROJECT_NAME="$2"; shift 1;; # switchyard, modeshape, droolsjbpm, ...
     '-TARGET_FOLDER') TARGET_FOLDER="$2"; shift 1;; # 0.5.0.Beta3, 0.6.0.Final, ...
     '-SOURCE_PATH') SOURCE_PATH="$2"; shift 1;; # jbosstools-4.0_stable_branch.component--as/all/repo, modeshape-tools-continuous/all/repo, SwitchYard-Tools/eclipse
+    '-SOURCE_ZIP') SOURCE_ZIP="$2"; shift 1;; # http://download.jboss.org/drools/release/5.3.0.Final/droolsjbpm-tools-distribution-5.3.0.Final.zip
   esac
   shift 1
 done
@@ -65,6 +80,21 @@ else
   mkdir -p ${DESTINATION}/${RELEASE_TYPE}/${BUILD_TYPE}/${TARGET_PLATFORM}/${PARENT_FOLDER}/${PROJECT_NAME}
 fi
 
+if [[ ${SOURCE_ZIP} ]]; then
+  mkdir -p ${tmpdir}/wget ${tmpdir}/unzip
+  pushd ${tmpdir}/wget >/dev/null
+  wget ${SOURCE_ZIP}
+  popd >/dev/null
+  unzip -d ${tmpdir}/unzip ${tmpdir}/wget/*.zip
+  if [[ ! $SOURCE_PATH ]]; then
+    # looking for a folder like ${tmpdir}/unzip/droolsjbpm-tools-distribution-5.3.0.Final/binaries/org.drools.updatesite
+    SOURCE_PATH=`find ${tmpdir}/unzip -name "*update*" -type d | sort | tail -1`
+  fi
+  if [[ ! $SOURCE_PATH ]]; then
+    SOURCE_PATH=${tmpdir}/unzip # will possibly end up copying too much, but better that than nothing
+  fi
+fi
+
 if [[ ${TARGET_FOLDER} ]]; then
   if [[ ${OPERATION} ==  "MOVE" ]]; then
     if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
@@ -82,10 +112,20 @@ if [[ ${TARGET_FOLDER} ]]; then
     # purge existing workspace folder to ensure we're not combining releases
     if [[ ${WORKSPACE} ]] && [[ -d ${WORKSPACE}/${JOB_NAME} ]]; then rm -fr ${WORKSPACE}/${JOB_NAME}/; fi
     mkdir -p ${WORKSPACE}/${JOB_NAME}/
-    if [[ -d ${SOURCE_PATH} ]]; then # use local source path in workspace
+    if [[ -d ${SOURCE_PATH} ]]; then 
+      # use local source path in workspace
       rsync -arzq ${SOURCE_PATH}/* ${WORKSPACE}/${JOB_NAME}/
-    else
+    elif [[ ! `wget ${URL}/builds/staging/${SOURCE_PATH} -O ${tmpfile} 2>&1 | egrep "ERROR 404" && rm -f ${tmpfile}` ]]; then
+      # if folder exists, stuff is in builds/staging/
       rsync -arzq --protocol=28 ${DESTINATION}/builds/staging/${SOURCE_PATH}/* ${WORKSPACE}/${JOB_NAME}/
+    elif [[ ! `wget ${URL}/${SOURCE_PATH} -O ${tmpfile} 2>&1 | egrep "ERROR 404" && rm -f ${tmpfile}` ]]; then
+      rsync -arzq --protocol=28 ${DESTINATION}/${SOURCE_PATH}/* ${WORKSPACE}/${JOB_NAME}/
+    else
+      echo "ERROR: Could not find a source path to copy from any of these locations:"
+      echo " * ${SOURCE_PATH} (in job workspace `pwd`)"
+      echo " * ${DESTINATION}/builds/staging/${SOURCE_PATH}/ (404 found for ${URL}/builds/staging/${SOURCE_PATH} )"
+      echo " * ${DESTINATION}/${SOURCE_PATH}/ (404 found for ${URL}/${SOURCE_PATH} )"
+      exit 1;
     fi
     rsync -arzq --protocol=28 --delete ${WORKSPACE}/${JOB_NAME}/* ${DESTINATION}/${RELEASE_TYPE}/${BUILD_TYPE}/${TARGET_PLATFORM}/${PARENT_FOLDER}/${PROJECT_NAME}/${TARGET_FOLDER}/
   fi
@@ -98,3 +138,6 @@ if [[ ${RELEASE_TYPE} == "updates" ]]; then
   ./jbosstools-cleanup.sh --dirs-to-scan "updates/${BUILD_TYPE}/${TARGET_PLATFORM}/${PARENT_FOLDER}" --regen-metadata-only
   rm -f jbosstools-cleanup.sh
 fi
+
+# cleanup
+rm -fr ${tmpfile} ${tmpdir}
