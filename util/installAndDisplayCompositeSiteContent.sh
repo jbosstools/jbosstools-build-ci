@@ -21,6 +21,7 @@ SITES="http://download.jboss.org/jbosstools/updates/kepler/,http://download.jbos
 IUs="org.hibernate.eclipse.feature.feature.group,org.jboss.ide.eclipse.archives.feature.feature.group,org.jboss.ide.eclipse.as.feature.feature.group,org.jboss.ide.eclipse.freemarker.feature.feature.group,org.jboss.tools.cdi.deltaspike.feature.feature.group,org.jboss.tools.cdi.feature.feature.group,org.jboss.tools.cdi.seam.feature.feature.group,org.jboss.tools.common.jdt.feature.feature.group,org.jboss.tools.common.mylyn.feature.feature.group,org.jboss.tools.community.central.feature.feature.group,org.jboss.tools.community.project.examples.feature.feature.group,org.jboss.tools.forge.feature.feature.group,org.jboss.tools.jmx.feature.feature.group,org.jboss.tools.jsf.feature.feature.group,org.jboss.tools.jst.feature.feature.group,org.jboss.tools.maven.cdi.feature.feature.group,org.jboss.tools.maven.feature.feature.group,org.jboss.tools.maven.hibernate.feature.feature.group,org.jboss.tools.maven.jbosspackaging.feature.feature.group,org.jboss.tools.maven.jdt.feature.feature.group,org.jboss.tools.maven.portlet.feature.feature.group,org.jboss.tools.maven.profiles.feature.feature.group,org.jboss.tools.maven.project.examples.feature.feature.group,org.jboss.tools.maven.seam.feature.feature.group,org.jboss.tools.maven.sourcelookup.feature.feature.group,org.jboss.tools.openshift.egit.integration.feature.feature.group,org.jboss.tools.openshift.express.feature.feature.group,org.jboss.tools.portlet.feature.feature.group,org.jboss.tools.project.examples.feature.feature.group,org.jboss.tools.richfaces.feature.feature.group,org.jboss.tools.runtime.core.feature.feature.group,org.jboss.tools.runtime.seam.detector.feature.feature.group,org.jboss.tools.seam.feature.feature.group,org.jboss.tools.usage.feature.feature.group,org.jboss.tools.vpe.browsersim.feature.feature.group,org.jboss.tools.vpe.feature.feature.group,org.jboss.tools.ws.feature.feature.group,org.jboss.tools.ws.jaxrs.feature.feature.group"
 DESTINATION="tools@filemgmt.jboss.org:/downloads_htdocs/tools"
 DEST_URL="http://download.jboss.org/jbosstools"
+manifest=composite.site.IUs.txt
 
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
@@ -34,11 +35,7 @@ while [[ "$#" -gt 0 ]]; do
 	shift 1
 done
 
-########################################################
-
 cd ${WORKSPACE}
-
-manifest=composite.site.IUs.txt
 
 # get previous manifest file, if it exists
 rm -f ${manifest}_PREVIOUS
