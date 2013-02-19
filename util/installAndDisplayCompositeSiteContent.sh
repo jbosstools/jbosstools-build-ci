@@ -4,17 +4,53 @@
 # whether the fresh installation differs from a previously cached install manifest (list of features/plugins)
 # if the install footprint is different from before, the composite site contains new content and we should fire a downstream job to produce a new aggregate site
 
-cd ${WORKSPACE}
+usage ()
+{
+	echo "Usage: $0 -PATH path/to/composite/ -SITES http://target-platform-site,http://composite-site/ -IUs a.feature.group,b.feature.group"
+	echo "Example: $0 -PATH builds/staging/_composite_/core/trunk/ -SITES http://download.jboss.org/jbosstools/updates/kepler/,http://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/ -IUs org.hibernate.eclipse.feature.feature.group,org.jboss.ide.eclipse.archives.feature.feature.group,..."
+	exit 1;
+}
 
-DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools
-JBT_SITE=http://download.jboss.org/jbosstools
+if [[ $# -lt 1 ]]; then
+	usage;
+fi
+
+#defaults
+PATH="builds/staging/_composite_/core/trunk/"
+SITES="http://download.jboss.org/jbosstools/updates/kepler/,http://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/"
+IUs="org.hibernate.eclipse.feature.feature.group,org.jboss.ide.eclipse.archives.feature.feature.group,org.jboss.ide.eclipse.as.feature.feature.group,org.jboss.ide.eclipse.freemarker.feature.feature.group,org.jboss.tools.cdi.deltaspike.feature.feature.group,org.jboss.tools.cdi.feature.feature.group,org.jboss.tools.cdi.seam.feature.feature.group,org.jboss.tools.common.jdt.feature.feature.group,org.jboss.tools.common.mylyn.feature.feature.group,org.jboss.tools.community.central.feature.feature.group,org.jboss.tools.community.project.examples.feature.feature.group,org.jboss.tools.forge.feature.feature.group,org.jboss.tools.jmx.feature.feature.group,org.jboss.tools.jsf.feature.feature.group,org.jboss.tools.jst.feature.feature.group,org.jboss.tools.maven.cdi.feature.feature.group,org.jboss.tools.maven.feature.feature.group,org.jboss.tools.maven.hibernate.feature.feature.group,org.jboss.tools.maven.jbosspackaging.feature.feature.group,org.jboss.tools.maven.jdt.feature.feature.group,org.jboss.tools.maven.portlet.feature.feature.group,org.jboss.tools.maven.profiles.feature.feature.group,org.jboss.tools.maven.project.examples.feature.feature.group,org.jboss.tools.maven.seam.feature.feature.group,org.jboss.tools.maven.sourcelookup.feature.feature.group,org.jboss.tools.openshift.egit.integration.feature.feature.group,org.jboss.tools.openshift.express.feature.feature.group,org.jboss.tools.portlet.feature.feature.group,org.jboss.tools.project.examples.feature.feature.group,org.jboss.tools.richfaces.feature.feature.group,org.jboss.tools.runtime.core.feature.feature.group,org.jboss.tools.runtime.seam.detector.feature.feature.group,org.jboss.tools.seam.feature.feature.group,org.jboss.tools.usage.feature.feature.group,org.jboss.tools.vpe.browsersim.feature.feature.group,org.jboss.tools.vpe.feature.feature.group,org.jboss.tools.ws.feature.feature.group,org.jboss.tools.ws.jaxrs.feature.feature.group"
+DESTINATION="tools@filemgmt.jboss.org:/downloads_htdocs/tools"
+DEST_URL="http://download.jboss.org/jbosstools"
+
+# read commandline args
+while [[ "$#" -gt 0 ]]; do
+	case $1 in
+		'-PATH') PATH="$2"; shift 1;;
+		'-SITES') SITES="$2"; shift 1;;
+		'-IUs') IUs="$2"; shift 1;;
+		'-DESTINATION') DESTINATION="$2"; shift 1;;
+		'-DEST_URL') DEST_URL="$2"; shift 1;;
+	esac
+	shift 1
+done
+
+if [[ ! $branch ]]; then 
+	echo "branch is not set!"; exit 1
+fi
+if [[ ! $projects ]]; then 
+	echo "no project(s) selected!"; exit 1
+fi
+
+########################################################
+
+cd ${WORKSPACE}
 
 tmpfile=`mktemp`
 manifest=composite.site.IUs.txt
 
 # get previous manifest file, if it exists
-if [[ ! `wget ${JBT_SITE}/${JBT_PATH}/${manifest} -O ${tmpfile} 2>&1 | egrep "ERROR 404" && rm -f ${tmpfile}` ]]; then
-  rsync -arzq --protocol=28 ${DESTINATION}/${JBT_PATH}/${manifest} ${manifest}_PREVIOUS
+if [[ ! `wget ${DEST_URL}/${PATH}/${manifest} -O ${tmpfile} 2>&1 | egrep "ERROR 404" && rm -f ${tmpfile}` ]]; then
+  rsync -arzq --protocol=28 ${DESTINATION}/${PATH}/${manifest} ${manifest}_PREVIOUS
 else
   # remote file not exist so create empty file to diff
   touch ${manifest}_PREVIOUS 
@@ -22,16 +58,16 @@ fi
 
 # run scripted installation via p2.director
 rm -f ${WORKSPACE}/director.xml
-wget ${JBT_SITE}/updates/scripted-installation/director.xml -q --no-check-certificate -N
+wget ${DEST_URL}/updates/scripted-installation/director.xml -q --no-check-certificate -N
 chmod +x ${WORKSPACE}/eclipse/eclipse
 ${WORKSPACE}/eclipse/eclipse -consolelog -nosplash -data /tmp -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${WORKSPACE}/eclipse \
- -DsourceSites=${JBT_UPSTREAM_SITES},${JBT_SITE}/${JBT_PATH} -DIUs=${JBT_IUs} 
+ -DsourceSites=${SITES} -DIUs=${IUs} 
 
 # collect a list of IUs in the installation - if Eclipse version or any included IUs change, this will change and cause downstream to spin. THIS IS GOOD.
 find ${WORKSPACE}/eclipse/features/ ${WORKSPACE}/eclipse/plugins/ -maxdepth 1 -type f | tee ${manifest}
 
 # update cached copy of the manifest for subsequent checks
-rsync -arzq --protocol=28 ${manifest} ${DESTINATION}/${JBT_PATH}/
+rsync -arzq --protocol=28 ${manifest} ${DESTINATION}/${PATH}/
 
 # echo a string to the Jenkins console log which we can then search for using Jenkins Text Finder to determine if the build should be blue (STABLE) or yellow (UNSTABLE)
 if [[ `diff ${manifest} ${manifest}_PREVIOUS` ]]; then
