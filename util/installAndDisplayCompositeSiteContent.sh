@@ -6,8 +6,8 @@
 
 usage ()
 {
-	echo "Usage: $0 -PATH path/to/composite/ -SITES http://target-platform-site,http://composite-site/ -IUs a.feature.group,b.feature.group"
-	echo "Example: $0 -PATH builds/staging/_composite_/core/trunk/ -SITES http://download.jboss.org/jbosstools/updates/kepler/,http://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/ -IUs org.hibernate.eclipse.feature.feature.group,org.jboss.ide.eclipse.archives.feature.feature.group,..."
+	echo "Usage: $0 -COMP_PATH path/to/composite/ -SITES http://target-platform-site,http://composite-site/ -IUs a.feature.group,b.feature.group"
+	echo "Example: $0 -COMP_PATH builds/staging/_composite_/core/trunk/ -SITES http://download.jboss.org/jbosstools/updates/kepler/,http://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/ -IUs org.hibernate.eclipse.feature.feature.group,org.jboss.ide.eclipse.archives.feature.feature.group,..."
 	exit 1;
 }
 
@@ -16,17 +16,17 @@ if [[ $# -lt 1 ]]; then
 fi
 
 #defaults
-PATH="builds/staging/_composite_/core/trunk/"
+COMP_PATH="builds/staging/_composite_/core/trunk/"
 SITES="http://download.jboss.org/jbosstools/updates/kepler/,http://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/"
 IUs="org.hibernate.eclipse.feature.feature.group,org.jboss.ide.eclipse.archives.feature.feature.group,org.jboss.ide.eclipse.as.feature.feature.group,org.jboss.ide.eclipse.freemarker.feature.feature.group,org.jboss.tools.cdi.deltaspike.feature.feature.group,org.jboss.tools.cdi.feature.feature.group,org.jboss.tools.cdi.seam.feature.feature.group,org.jboss.tools.common.jdt.feature.feature.group,org.jboss.tools.common.mylyn.feature.feature.group,org.jboss.tools.community.central.feature.feature.group,org.jboss.tools.community.project.examples.feature.feature.group,org.jboss.tools.forge.feature.feature.group,org.jboss.tools.jmx.feature.feature.group,org.jboss.tools.jsf.feature.feature.group,org.jboss.tools.jst.feature.feature.group,org.jboss.tools.maven.cdi.feature.feature.group,org.jboss.tools.maven.feature.feature.group,org.jboss.tools.maven.hibernate.feature.feature.group,org.jboss.tools.maven.jbosspackaging.feature.feature.group,org.jboss.tools.maven.jdt.feature.feature.group,org.jboss.tools.maven.portlet.feature.feature.group,org.jboss.tools.maven.profiles.feature.feature.group,org.jboss.tools.maven.project.examples.feature.feature.group,org.jboss.tools.maven.seam.feature.feature.group,org.jboss.tools.maven.sourcelookup.feature.feature.group,org.jboss.tools.openshift.egit.integration.feature.feature.group,org.jboss.tools.openshift.express.feature.feature.group,org.jboss.tools.portlet.feature.feature.group,org.jboss.tools.project.examples.feature.feature.group,org.jboss.tools.richfaces.feature.feature.group,org.jboss.tools.runtime.core.feature.feature.group,org.jboss.tools.runtime.seam.detector.feature.feature.group,org.jboss.tools.seam.feature.feature.group,org.jboss.tools.usage.feature.feature.group,org.jboss.tools.vpe.browsersim.feature.feature.group,org.jboss.tools.vpe.feature.feature.group,org.jboss.tools.ws.feature.feature.group,org.jboss.tools.ws.jaxrs.feature.feature.group"
 DESTINATION="tools@filemgmt.jboss.org:/downloads_htdocs/tools"
 DEST_URL="http://download.jboss.org/jbosstools"
-manifest=composite.site.IUs.txt
+manifest="composite.site.IUs.txt"
 
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
 	case $1 in
-		'-PATH') PATH="$2"; shift 1;;
+		'-COMP_PATH') COMP_PATH="$2"; shift 1;;
 		'-SITES') SITES="$2"; shift 1;;
 		'-IUs') IUs="$2"; shift 1;;
 		'-DESTINATION') DESTINATION="$2"; shift 1;;
@@ -35,11 +35,12 @@ while [[ "$#" -gt 0 ]]; do
 	shift 1
 done
 
+if [[ ! ${WORKSPACE} ]]; then WORKSPACE=`pwd`; fi
 cd ${WORKSPACE}
 
 # get previous manifest file, if it exists
 rm -f ${manifest}_PREVIOUS
-wget -q ${DEST_URL}/${PATH}/${manifest} -O ${manifest}_PREVIOUS --no-check-certificate -N
+wget -q ${DEST_URL}/${COMP_PATH}/${manifest} -O ${manifest}_PREVIOUS --no-check-certificate -N
 touch ${manifest}_PREVIOUS 
 
 # run scripted installation via p2.director
@@ -53,7 +54,7 @@ ${WORKSPACE}/eclipse/eclipse -consolelog -nosplash -data /tmp -application org.e
 find ${WORKSPACE}/eclipse/features/ ${WORKSPACE}/eclipse/plugins/ -maxdepth 1 -type f | tee ${manifest}
 
 # update cached copy of the manifest for subsequent checks
-rsync -arzq --protocol=28 ${manifest} ${DESTINATION}/${PATH}/
+rsync -arzq --protocol=28 ${manifest} ${DESTINATION}/${COMP_PATH}/
 
 # echo a string to the Jenkins console log which we can then search for using Jenkins Text Finder to determine if the build should be blue (STABLE) or yellow (UNSTABLE)
 if [[ `diff ${manifest} ${manifest}_PREVIOUS` ]]; then
