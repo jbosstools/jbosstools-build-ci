@@ -34,13 +34,6 @@ while [[ "$#" -gt 0 ]]; do
 	shift 1
 done
 
-if [[ ! $branch ]]; then 
-	echo "branch is not set!"; exit 1
-fi
-if [[ ! $projects ]]; then 
-	echo "no project(s) selected!"; exit 1
-fi
-
 ########################################################
 
 cd ${WORKSPACE}
