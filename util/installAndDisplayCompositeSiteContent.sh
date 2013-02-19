@@ -38,16 +38,12 @@ done
 
 cd ${WORKSPACE}
 
-tmpfile=`mktemp`
 manifest=composite.site.IUs.txt
 
 # get previous manifest file, if it exists
-if [[ ! `wget ${DEST_URL}/${PATH}/${manifest} -O ${tmpfile} 2>&1 | egrep "ERROR 404" && rm -f ${tmpfile}` ]]; then
-  rsync -arzq --protocol=28 ${DESTINATION}/${PATH}/${manifest} ${manifest}_PREVIOUS
-else
-  # remote file not exist so create empty file to diff
-  touch ${manifest}_PREVIOUS 
-fi
+rm -f ${manifest}_PREVIOUS
+wget -q ${DEST_URL}/${PATH}/${manifest} -O ${manifest}_PREVIOUS --no-check-certificate -N
+touch ${manifest}_PREVIOUS 
 
 # run scripted installation via p2.director
 rm -f ${WORKSPACE}/director.xml
