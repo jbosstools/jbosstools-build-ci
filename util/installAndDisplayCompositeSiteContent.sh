@@ -39,25 +39,26 @@ if [[ ! ${WORKSPACE} ]]; then WORKSPACE=`pwd`; fi
 cd ${WORKSPACE}
 
 # get previous manifest file, if it exists
-rm -f ${manifest}_PREVIOUS
-wget -q ${DEST_URL}/${COMP_PATH}/${manifest} -O ${manifest}_PREVIOUS --no-check-certificate -N
-touch ${manifest}_PREVIOUS 
+rm -f ${WORKSPACE}/${manifest}_PREVIOUS
+wget -q ${DEST_URL}/${COMP_PATH}/${manifest} -O ${WORKSPACE}/${manifest}_PREVIOUS --no-check-certificate -N
+touch ${WORKSPACE}/${manifest}_PREVIOUS 
 
 # run scripted installation via p2.director
 rm -f ${WORKSPACE}/director.xml
 wget ${DEST_URL}/updates/scripted-installation/director.xml -q --no-check-certificate -N
 chmod +x ${WORKSPACE}/eclipse/eclipse
-${WORKSPACE}/eclipse/eclipse -consolelog -nosplash -data /tmp -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${WORKSPACE}/eclipse \
- -DsourceSites=${SITES} -DIUs=${IUs} 
+${WORKSPACE}/eclipse/eclipse -consolelog -nosplash -data /tmp -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${WORKSPACE}/eclipse -DsourceSites=${SITES} -DIUs=${IUs} 
 
 # collect a list of IUs in the installation - if Eclipse version or any included IUs change, this will change and cause downstream to spin. THIS IS GOOD.
-find ${WORKSPACE}/eclipse/features/ ${WORKSPACE}/eclipse/plugins/ -maxdepth 1 -type f | tee ${manifest}
+pushd ${WORKSPACE}/eclipse/ >/dev/null
+find features/ plugins/ -maxdepth 1 -type f | tee ${manifest}
+popd >/dev/null
 
 # update cached copy of the manifest for subsequent checks
-rsync -arzq --protocol=28 ${manifest} ${DESTINATION}/${COMP_PATH}/
+rsync -arzq --protocol=28 ${WORKSPACE}/${manifest} ${DESTINATION}/${COMP_PATH}/
 
 # echo a string to the Jenkins console log which we can then search for using Jenkins Text Finder to determine if the build should be blue (STABLE) or yellow (UNSTABLE)
-if [[ `diff ${manifest} ${manifest}_PREVIOUS` ]]; then
+if [[ `diff ${WORKSPACE}/${manifest} ${WORKSPACE}/${manifest}_PREVIOUS` ]]; then
   echo "COMPOSITE HAS CHANGED" 	# mark build stable (blue) and fire downstream job
 else
   echo "COMPOSITE UNCHANGED" 	# mark build unstable (yellow) and do not fire downstream job
