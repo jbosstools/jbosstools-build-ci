@@ -51,7 +51,7 @@ ${WORKSPACE}/eclipse/eclipse -consolelog -nosplash -data /tmp -application org.e
 
 # collect a list of IUs in the installation - if Eclipse version or any included IUs change, this will change and cause downstream to spin. THIS IS GOOD.
 pushd ${WORKSPACE}/eclipse/ >/dev/null
-find features/ plugins/ -maxdepth 1 | tee ${WORKSPACE}/${manifest}
+find features/ plugins/ -maxdepth 1 | sort | tee ${WORKSPACE}/${manifest}
 popd >/dev/null
 
 # update cached copy of the manifest for subsequent checks
