@@ -161,16 +161,24 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
 	rm -f $tmpdir/devstudio_SVN_REVISION.txt
 fi
 
+showUnchangedMessage ()
+{
+	echo "======================================================================================================="
+	echo ""
+	echo "$1 revision(s) UNCHANGED. Publish cancelled (nothing to do). Skip this check with 'EXPORT skipRevisionCheckWhenPublishing=true; ./$0 ...'"
+	echo ""
+	echo "======================================================================================================="
+}
+
 # JBIDE-13672 if current revision log == previous revision log, then we can stop publishing right now (unless skipRevisionCheckWhenPublishing=true)
 if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
-	UNCHANGED_MSG="revision UNCHANGED. Publish cancelled (nothing to do). Skip this check with 'EXPORT skipRevisionCheckWhenPublishing=true; ./$0 ...'"
+	
 	if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then # check previous build's ALL_REVISIONS log
 		PREV_REV=`wget -nc -q -k http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt -O - `
 		if [[ ! ${PREV_REV} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
 		elif [[ `cat ${ALLREVS}` == ${PREV_REV} ]]; then 
-			echo "GIT ${UNCHANGED_MSG}"
-			echo ${PREV_REV}
+			showUnchangedMessage GIT
 			exit 0
 		fi
 	elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then # check previous build's GIT_REVISION log
@@ -178,8 +186,7 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 		if [[ ! ${PREV_REV} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
 		elif [[ `cat ${rl}.txt` == ${PREV_REV} ]]; then 
-			echo "GIT ${UNCHANGED_MSG}"
-			echo ${PREV_REV}
+			showUnchangedMessage GIT
 			exit 0
 		fi
 	elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".svn") ]]; then # check previous build's SVN_REVISION log
@@ -187,8 +194,7 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 		if [[ ! ${PREV_REV} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
 		elif [[ `cat ${rl}.txt` == ${PREV_REV} ]]; then 
-			echo "SVN ${UNCHANGED_MSG}"
-			echo ${PREV_REV}
+			showUnchangedMessage SVN
 			exit 0
 		fi
 	fi
