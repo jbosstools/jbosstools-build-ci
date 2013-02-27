@@ -488,7 +488,8 @@ if [[ $ec == "0" ]] && [[ $fc == "0" ]]; then
 		date; rsync -arzq --protocol=28 ${STAGINGDIR}/all/composite*.xml $DESTINATION/builds/staging/${JOB_NAME}/all/
 
 		# create a snapshot dir outside Hudson which is file:// accessible
-		date; rsync -arzq --delete ${STAGINGDIR}/* $INTRNALDEST/builds/staging/${JOB_NAME}.next
+		mkdir -p $INTRNALDEST/builds/staging/${JOB_NAME}.next/
+		date; rsync -arzq --delete ${STAGINGDIR}/* $INTRNALDEST/builds/staging/${JOB_NAME}.next/
 
 		# cycle internal copy of ${JOB_NAME} in staging and staging.previous
 		mkdir -p $INTRNALDEST/builds/staging/${JOB_NAME}/
