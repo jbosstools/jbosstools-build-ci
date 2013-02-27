@@ -163,12 +163,13 @@ fi
 
 # JBIDE-13672 if current revision log == previous revision log, then we can stop publishing right now (unless skipRevisionCheckWhenPublishing=true)
 if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
+	UNCHANGED_MSG="revision UNCHANGED. Publish cancelled (nothing to do). Skip this check with 'EXPORT skipRevisionCheckWhenPublishing=true; ./$0 ...'"
 	if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then # check previous build's ALL_REVISIONS log
 		PREV_REV=`wget -nc -q -k http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt -O - `
 		if [[ ! ${PREV_REV} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
 		elif [[ `cat ${ALLREVS}` == ${PREV_REV} ]]; then 
-			echo "GIT revision UNCHANGED. Publish cancelled (nothing to do)."
+			echo "GIT ${UNCHANGED_MSG}"
 			echo ${PREV_REV}
 			exit 0
 		fi
@@ -177,7 +178,7 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 		if [[ ! ${PREV_REV} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
 		elif [[ `cat ${rl}.txt` == ${PREV_REV} ]]; then 
-			echo "GIT revision UNCHANGED. Publish cancelled (nothing to do)."
+			echo "GIT ${UNCHANGED_MSG}"
 			echo ${PREV_REV}
 			exit 0
 		fi
@@ -186,7 +187,7 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 		if [[ ! ${PREV_REV} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
 		elif [[ `cat ${rl}.txt` == ${PREV_REV} ]]; then 
-			echo "SVN revision UNCHANGED. Publish cancelled (nothing to do)."
+			echo "SVN ${UNCHANGED_MSG}"
 			echo ${PREV_REV}
 			exit 0
 		fi
