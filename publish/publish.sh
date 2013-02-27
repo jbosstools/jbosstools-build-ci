@@ -80,6 +80,7 @@ BUILD_ALIAS=$(cat ${bl} | grep "org/jboss/tools/parent/" | head -1 | sed -e "s#.
 
 # JBDS-1361 - fetch XML and then sed it into plain text
 wgetParams="--timeout=900 --wait=10 --random-wait --tries=30 --retry-connrefused --no-check-certificate --server-response"
+mkdir -p ${STAGINGDIR}/logs
 rl=${STAGINGDIR}/logs/REVISION
 if [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then
 	# Track git source revision through hudson api: /job/${JOB_NAME}/${BUILD_NUMBER}/api/xml?xpath=(//lastBuiltRevision)[1]
@@ -100,7 +101,101 @@ else
 	echo "UNKNOWN REVISION(S)" > ${rl}.txt
 fi
 
+# collect ALL_REVISIONS for aggregate build
+mkdir -p ${STAGINGDIR}/logs
+ALLREVS=${STAGINGDIR}/logs/ALL_REVISIONS.txt
+if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then
+	GITREV_SOURCE="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}"
+	echo "  >>> ${GITREV_SOURCE}/components <<<  " > $ALLREVS
+	# work locally if posible
+	if [[ -d ${STAGINGDIR}/components ]]; then
+		for f in `cd ${STAGINGDIR}/components; find . -maxdepth 1 -type f -name "*.zip" | sort`; do
+			REV=
+			g=`echo $f | sed 's#\.\/\([^<>]\+\)-Update-.\+.zip#\1#g'`
+			wget -q -nc http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -k -O $tmpdir/${g}_GIT_REVISION.txt
+			REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
+			rm -fr $tmpdir/${g}_GIT_REVISION.txt
+			echo -n "${g} :: $REV" >> $ALLREVS
+			componentname=${g/*component--/}
+			componentname=${componentname/-1.9.2/}
+			componentname=${componentname/central-maven-examples/central}
+			echo " :: https://github.com/jbosstools/jbosstools-"${componentname}/commit/${REV##*@} >> $ALLREVS
+		done
+	else
+		# else fetch from server
+		wget -q -nc ${GITREV_SOURCE}/components/ -k -O $tmpdir/index.html
+		for f in $(cat $tmpdir/index.html | egrep -v "C=D|title>|h1>|DIR"); do
+			if [[ ${f/zip.MD5/} != ${f} ]]; then
+				true;
+			elif [[ ${f/zip/} != ${f} ]]; then
+				REV=
+				g=`echo $f | sed 's#href=".\+zip">\([^<>]\+\)-Update-.\+.zip</a>.\+#\1#g'`
+				wget -q -nc http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -k -O $tmpdir/${g}_GIT_REVISION.txt
+				REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
+				rm -fr $tmpdir/${g}_GIT_REVISION.txt
+				echo -n "${g} :: $REV" >> $ALLREVS
+				componentname=${g/*component--/}
+				componentname=${componentname/-1.9.2/}
+				componentname=${componentname/central-maven-examples/central}
+				echo " :: https://github.com/jbosstools/jbosstools-"${componentname}/commit/${REV##*@} >> $ALLREVS
+			fi
+		done
+		rm -f $tmpdir/index.html
+	fi
+	echo "" >> $ALLREVS
+fi
+
+if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
+	echo "  >>> devstudio-6.0_stable_branch.updatesite <<<" >> $ALLREVS
+	## work locally if posible
+	if [[ -f ${STAGINGDIR}/logs/SVN_REVISION.txt ]]; then
+		cp ${STAGINGDIR}/logs/SVN_REVISION.txt $tmpdir/devstudio_SVN_REVISION.txt
+	else
+		# else fetch from server
+		wget -q -nc http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt -k -O $tmpdir/devstudio_SVN_REVISION.txt
+	fi
+	cat $tmpdir/devstudio_SVN_REVISION.txt >> $ALLREVS
+	echo "" >> $ALLREVS
+	echo "See also upstream JBoss Tools aggregate job for complete list of git revisions."  >> $ALLREVS
+	echo "eg., http://download.jboss.org/jbosstools/builds/staging/jbosstools-*.aggregate/logs/ALL_REVISIONS.txt" >> $ALLREVS
+	rm -f $tmpdir/devstudio_SVN_REVISION.txt
+fi
+
+# JBIDE-13672 if current revision log == previous revision log, then we can stop publishing right now (unless skipRevisionCheckWhenPublishing=true)
+if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
+	if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then # check previous build's ALL_REVISIONS log
+		PREV_REV=`wget -nc -q -k http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt -O - `
+		if [[ ! ${PREV_REV} ]]; then 
+			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
+		elif [[ `cat ${ALLREVS}` == ${PREV_REV} ]]; then 
+			echo "GIT revision UNCHANGED. Publish cancelled (nothing to do)."
+			echo ${PREV_REV}
+			exit 0
+		fi
+	elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then # check previous build's GIT_REVISION log
+		PREV_REV=`wget -nc -q -k http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt -O - `
+		if [[ ! ${PREV_REV} ]]; then 
+			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
+		elif [[ `cat ${rl}.txt` == ${PREV_REV} ]]; then 
+			echo "GIT revision UNCHANGED. Publish cancelled (nothing to do)."
+			echo ${PREV_REV}
+			exit 0
+		fi
+	elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".svn") ]]; then # check previous build's SVN_REVISION log
+		PREV_REV=`wget -nc -q -k http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt -O - `
+		if [[ ! ${PREV_REV} ]]; then 
+			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
+		elif [[ `cat ${rl}.txt` == ${PREV_REV} ]]; then 
+			echo "SVN revision UNCHANGED. Publish cancelled (nothing to do)."
+			echo ${PREV_REV}
+			exit 0
+		fi
+	fi
+	PREV_REV=""
+fi
+
 METAFILE="${BUILD_ID}-B${BUILD_NUMBER}.txt"
+mkdir -p ${STAGINGDIR}/logs
 touch ${STAGINGDIR}/logs/${METAFILE}
 METAFILE=build.properties
 
@@ -200,9 +295,6 @@ if [[ -d ${WORKSPACE}/sources/product/results/target ]]; then
 	rsync -aq ${WORKSPACE}/sources/product/results/target/* ${STAGINGDIR}/installer/
 fi
 
-mkdir -p ${STAGINGDIR}/logs
-ALLREVS=${STAGINGDIR}/logs/ALL_REVISIONS.txt
-
 # collect component zips from upstream aggregated build jobs
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then
 	mkdir -p ${STAGINGDIR}/components
@@ -236,62 +328,6 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
 	fi
 fi
 
-if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then
-	GITREV_SOURCE="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}"
-	echo "  >>> ${GITREV_SOURCE}/components <<<  " > $ALLREVS
-	# work locally if posible
-	if [[ -d ${STAGINGDIR}/components ]]; then
-		for f in `cd ${STAGINGDIR}/components; find . -maxdepth 1 -type f -name "*.zip" | sort`; do
-			REV=
-			g=`echo $f | sed 's#\.\/\([^<>]\+\)-Update-.\+.zip#\1#g'`
-			wget -q -nc http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -k -O $tmpdir/${g}_GIT_REVISION.txt
-			REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
-			rm -fr $tmpdir/${g}_GIT_REVISION.txt
-			echo -n "${g} :: $REV" >> $ALLREVS
-			componentname=${g/*component--/}
-			componentname=${componentname/-1.9.2/}
-			componentname=${componentname/central-maven-examples/central}
-			echo " :: https://github.com/jbosstools/jbosstools-"${componentname}/commit/${REV##*@} >> $ALLREVS
-		done
-	else
-		# else fetch from server
-		wget -q -nc ${GITREV_SOURCE}/components/ -k -O $tmpdir/index.html
-		for f in $(cat $tmpdir/index.html | egrep -v "C=D|title>|h1>|DIR"); do
-			if [[ ${f/zip.MD5/} != ${f} ]]; then
-				true;
-			elif [[ ${f/zip/} != ${f} ]]; then
-				REV=
-				g=`echo $f | sed 's#href=".\+zip">\([^<>]\+\)-Update-.\+.zip</a>.\+#\1#g'`
-				wget -q -nc http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -k -O $tmpdir/${g}_GIT_REVISION.txt
-				REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
-				rm -fr $tmpdir/${g}_GIT_REVISION.txt
-				echo -n "${g} :: $REV" >> $ALLREVS
-				componentname=${g/*component--/}
-				componentname=${componentname/-1.9.2/}
-				componentname=${componentname/central-maven-examples/central}
-				echo " :: https://github.com/jbosstools/jbosstools-"${componentname}/commit/${REV##*@} >> $ALLREVS
-			fi
-		done
-		rm -f $tmpdir/index.html
-	fi
-	echo "" >> $ALLREVS
-fi
-
-if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
-	echo "  >>> devstudio-6.0_stable_branch.updatesite <<<" >> $ALLREVS
-	## work locally if posible
-	if [[ -f ${STAGINGDIR}/logs/SVN_REVISION.txt ]]; then
-		cp ${STAGINGDIR}/logs/SVN_REVISION.txt $tmpdir/devstudio_SVN_REVISION.txt
-	else
-		# else fetch from server
-		wget -q -nc http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt -k -O $tmpdir/devstudio_SVN_REVISION.txt
-	fi
-	cat $tmpdir/devstudio_SVN_REVISION.txt >> $ALLREVS
-	echo "" >> $ALLREVS
-	echo "See also upstream JBoss Tools aggregate job for complete list of git revisions."  >> $ALLREVS
-	echo "eg., http://download.jboss.org/jbosstools/builds/staging/jbosstools-*.aggregate/logs/ALL_REVISIONS.txt" >> $ALLREVS
-	rm -f $tmpdir/devstudio_SVN_REVISION.txt
-fi
 
 # JBIDE-9870 check if there's a sources update site and rename it if found (note, bottests-site/site/sources won't work; use bottests-site/souces)
 for z in $(find ${WORKSPACE}/sources/aggregate/*/sources/target/ -name "repository.zip" -o -name "site_assembly.zip"); do
