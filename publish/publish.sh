@@ -172,7 +172,6 @@ showUnchangedMessage ()
 
 # JBIDE-13672 if current revision log == previous revision log, then we can stop publishing right now (unless skipRevisionCheckWhenPublishing=true)
 if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
-	
 	if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then # check previous build's ALL_REVISIONS log
 		PREV_REV=`wget -nc -q -k http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt -O - `
 		if [[ ! ${PREV_REV} ]]; then 
@@ -190,9 +189,14 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 			exit 0
 		fi
 	elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".svn") ]]; then # check previous build's SVN_REVISION log
-		PREV_REV=`wget -nc -q -k http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt -O - `
+		if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
+			SVN_REVISION_URL=http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt
+		else
+			SVN_REVISION_URL=http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt
+		fi
+		PREV_REV=`wget -nc -q -k ${SVN_REVISION_URL} -O - `
 		if [[ ! ${PREV_REV} ]]; then 
-			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
+			echo "No previous log in ${SVN_REVISION_URL}"
 		elif [[ `cat ${rl}.txt` == ${PREV_REV} ]]; then 
 			showUnchangedMessage SVN
 			exit 0
