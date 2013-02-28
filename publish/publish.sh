@@ -36,7 +36,7 @@ SUFFNAME="-Update-${ZIPSUFFIX}.zip"
 if [[ $DESTINATION == "" ]]; then DESTINATION="tools@filemgmt.jboss.org:/downloads_htdocs/tools"; fi
 
 # internal destination mirror, for file:// access (instead of http://)
-if [[ $INTRNALDEST == "" ]]; then INTRNALDEST="/home/hudson/static_build_env/jbds/"; fi
+if [[ $INTRNALDEST == "" ]]; then INTRNALDEST="/home/hudson/static_build_env/jbds"; fi
 
 # cleanup from last time
 rm -fr ${WORKSPACE}/results; mkdir -p ${STAGINGDIR}
