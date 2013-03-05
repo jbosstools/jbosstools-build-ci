@@ -18,6 +18,8 @@ PUBLISHPATHSUFFIX=""; if [[ $1 ]]; then PUBLISHPATHSUFFIX="$1"; fi
 # https://jira.jboss.org/browse/JBIDE-6956 "jbosstools-3.2.0.M2" is too verbose, use "3.2.0.M2" instead
 JOBNAMEREDUX=${JOB_NAME/.aggregate}; JOBNAMEREDUX=${JOBNAMEREDUX/jbosstools-}
 
+wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate"
+
 # releases get named differently than snapshots
 if [[ ${RELEASE} == "Yes" ]]; then
 	ZIPSUFFIX="${BUILD_ID}-B${BUILD_NUMBER}"
@@ -73,24 +75,23 @@ fi
 # note the job name, build number, SVN rev, and build ID of the latest snapshot zip
 mkdir -p ${STAGINGDIR}/logs
 bl=${STAGINGDIR}/logs/BUILDLOG.txt
-rm -f ${bl}; wget -q http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText -O ${bl} --timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate
+rm -f ${bl}; curl -s http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText > ${bl}
 
 # calculate BUILD_ALIAS from parent pom version as recorded in the build log, eg., from org/jboss/tools/parent/4.0.0.Alpha2-SNAPSHOT get Alpha2
 BUILD_ALIAS=$(cat ${bl} | grep "org/jboss/tools/parent/" | head -1 | sed -e "s#.\+org/jboss/tools/parent/\(.\+\)/\(maven-metadata.xml\|parent.\+\)#\1#" | sed -e "s#-SNAPSHOT##" | sed -e "s#[0-9].[0-9].[0-9].##")
 
 # JBDS-1361 - fetch XML and then sed it into plain text
-wgetParams="--timeout=900 --wait=10 --random-wait --tries=30 --retry-connrefused --no-check-certificate --server-response"
 mkdir -p ${STAGINGDIR}/logs
 rl=${STAGINGDIR}/logs/REVISION
 if [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then
 	# Track git source revision through hudson api: /job/${JOB_NAME}/${BUILD_NUMBER}/api/xml?xpath=(//lastBuiltRevision)[1]
 	rl=${STAGINGDIR}/logs/GIT_REVISION
-	rm -f ${rl}.txt ${rl}.xml; wget -O ${rl}.xml "http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/api/xml?xpath=%28//lastBuiltRevision%29[1]" ${wgetParams}
+	rm -f ${rl}.txt ${rl}.xml; curl -s "http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/api/xml?xpath=%28//lastBuiltRevision%29[1]" > ${rl}.xml 
 	sed -e "s#<lastBuiltRevision><SHA1>\([a-f0-9]\+\)</SHA1><branch><SHA1>\([a-f0-9]\+\)</SHA1><name>\([^<>]\+\)</name></branch></lastBuiltRevision>#\3\@\1#g" ${rl}.xml | sed -e "s#<[^<>]\+>##g" > ${rl}.txt
 elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".svn") ]]; then
 	# Track svn source revision through hudson api: /job/${JOB_NAME}/api/xml?wrapper=changeSet&depth=1&xpath=//build[1]/changeSet/revision
 	rl=${STAGINGDIR}/logs/SVN_REVISION
-	rm -f ${rl}.txt ${rl}.xml; wget -O ${rl}.xml "http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/api/xml?wrapper=changeSet&depth=1&xpath=//build[1]/changeSet/revision" ${wgetParams}
+	rm -f ${rl}.txt ${rl}.xml; curl -s "http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/api/xml?wrapper=changeSet&depth=1&xpath=//build[1]/changeSet/revision" > ${rl}.xml
 	if [[ $? -eq 0 ]]; then
 		sed -e "s#<module>\(http[^<>]\+\)</module><revision>\([0-9]\+\)</revision>#\1\@\2\n#g" ${rl}.xml | sed -e "s#<[^<>]\+>##g" > ${rl}.txt 
 	else
@@ -112,7 +113,7 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
 		for f in `cd ${STAGINGDIR}/components; find . -maxdepth 1 -type f -name "*.zip" | sort`; do
 			REV=
 			g=`echo $f | sed 's#\.\/\([^<>]\+\)-Update-.\+.zip#\1#g'`
-			wget -q -nc http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -k -O $tmpdir/${g}_GIT_REVISION.txt
+			curl -s http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt > $tmpdir/${g}_GIT_REVISION.txt
 			REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
 			rm -fr $tmpdir/${g}_GIT_REVISION.txt
 			echo -n "${g} :: $REV" >> $ALLREVS
@@ -130,7 +131,7 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
 			elif [[ ${f/zip/} != ${f} ]]; then
 				REV=
 				g=`echo $f | sed 's#href=".\+zip">\([^<>]\+\)-Update-.\+.zip</a>.\+#\1#g'`
-				wget -q -nc http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -k -O $tmpdir/${g}_GIT_REVISION.txt
+				curl -s http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt > $tmpdir/${g}_GIT_REVISION.txt
 				REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
 				rm -fr $tmpdir/${g}_GIT_REVISION.txt
 				echo -n "${g} :: $REV" >> $ALLREVS
@@ -152,7 +153,7 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
 		cp ${STAGINGDIR}/logs/SVN_REVISION.txt $tmpdir/devstudio_SVN_REVISION.txt
 	else
 		# else fetch from server
-		wget -q -nc http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt -k -O $tmpdir/devstudio_SVN_REVISION.txt
+		curl -s http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt > $tmpdir/devstudio_SVN_REVISION.txt
 	fi
 	cat $tmpdir/devstudio_SVN_REVISION.txt >> $ALLREVS
 	echo "" >> $ALLREVS
@@ -173,16 +174,16 @@ showUnchangedMessage ()
 # JBIDE-13672 if current revision log == previous revision log, then we can stop publishing right now (unless skipRevisionCheckWhenPublishing=true)
 if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 	if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then # check previous build's ALL_REVISIONS log
-		PREV_REV=`wget -nc -q -k http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt -O - `
-		if [[ ! ${PREV_REV} ]]; then 
+		PREV_REV=`curl -s http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt`
+		if [[ ! ${PREV_REV} ]] || [[ ! ${PREV_REV%%*404*} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
 		elif [[ `cat ${ALLREVS}` == ${PREV_REV} ]]; then 
 			showUnchangedMessage GIT
 			exit 0
 		fi
 	elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then # check previous build's GIT_REVISION log
-		PREV_REV=`wget -nc -q -k http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt -O - `
-		if [[ ! ${PREV_REV} ]]; then 
+		PREV_REV=`curl -s http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt`
+		if [[ ! ${PREV_REV} ]] || [[ ! ${PREV_REV%%*404*} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
 		elif [[ `cat ${rl}.txt` == ${PREV_REV} ]]; then 
 			showUnchangedMessage GIT
@@ -194,8 +195,8 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 		else
 			SVN_REVISION_URL=http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt
 		fi
-		PREV_REV=`wget -nc -q -k ${SVN_REVISION_URL} -O - `
-		if [[ ! ${PREV_REV} ]]; then 
+		PREV_REV=`curl -s ${SVN_REVISION_URL}`
+		if [[ ! ${PREV_REV} ]] || [[ ! ${PREV_REV%%*404*} ]]; then 
 			echo "No previous log in ${SVN_REVISION_URL}"
 		elif [[ `cat ${rl}.txt` == ${PREV_REV} ]]; then 
 			showUnchangedMessage SVN
@@ -574,7 +575,7 @@ fi
 
 # publish updated log
 bl=${STAGINGDIR}/logs/BUILDLOG.txt
-rm -f ${bl}; wget -q http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText -O ${bl} --timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate
+rm -f ${bl}; curl -s http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText > ${bl}
 date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/logs $DESTINATION/builds/staging/${JOB_NAME}/
 date; rsync -arzq --delete ${STAGINGDIR}/logs $INTRNALDEST/builds/staging/${JOB_NAME}/
 
