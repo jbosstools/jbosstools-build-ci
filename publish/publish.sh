@@ -75,7 +75,7 @@ fi
 # note the job name, build number, SVN rev, and build ID of the latest snapshot zip
 mkdir -p ${STAGINGDIR}/logs
 bl=${STAGINGDIR}/logs/BUILDLOG.txt
-rm -f ${bl}; curl -s http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText > ${bl}
+rm -f ${bl}; curl -s https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText > ${bl}
 
 # calculate BUILD_ALIAS from parent pom version as recorded in the build log, eg., from org/jboss/tools/parent/4.0.0.Alpha2-SNAPSHOT get Alpha2
 BUILD_ALIAS=$(cat ${bl} | grep "org/jboss/tools/parent/" | head -1 | sed -e "s#.\+org/jboss/tools/parent/\(.\+\)/\(maven-metadata.xml\|parent.\+\)#\1#" | sed -e "s#-SNAPSHOT##" | sed -e "s#[0-9].[0-9].[0-9].##")
@@ -86,12 +86,12 @@ rl=${STAGINGDIR}/logs/REVISION
 if [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then
 	# Track git source revision through hudson api: /job/${JOB_NAME}/${BUILD_NUMBER}/api/xml?xpath=(//lastBuiltRevision)[1]
 	rl=${STAGINGDIR}/logs/GIT_REVISION
-	rm -f ${rl}.txt ${rl}.xml; curl -s "http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/api/xml?xpath=%28//lastBuiltRevision%29[1]" > ${rl}.xml 
+	rm -f ${rl}.txt ${rl}.xml; wget -O ${rl}.xml "https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/api/xml?xpath=%28//lastBuiltRevision%29[1]" ${wgetParams}
 	sed -e "s#<lastBuiltRevision><SHA1>\([a-f0-9]\+\)</SHA1><branch><SHA1>\([a-f0-9]\+\)</SHA1><name>\([^<>]\+\)</name></branch></lastBuiltRevision>#\3\@\1#g" ${rl}.xml | sed -e "s#<[^<>]\+>##g" > ${rl}.txt
 elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".svn") ]]; then
 	# Track svn source revision through hudson api: /job/${JOB_NAME}/api/xml?wrapper=changeSet&depth=1&xpath=//build[1]/changeSet/revision
 	rl=${STAGINGDIR}/logs/SVN_REVISION
-	rm -f ${rl}.txt ${rl}.xml; curl -s "http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/api/xml?wrapper=changeSet&depth=1&xpath=//build[1]/changeSet/revision" > ${rl}.xml
+	rm -f ${rl}.txt ${rl}.xml; wget -O ${rl}.xml "https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/api/xml?wrapper=changeSet&depth=1&xpath=//build[1]/changeSet/revision" ${wgetParams}
 	if [[ $? -eq 0 ]]; then
 		sed -e "s#<module>\(http[^<>]\+\)</module><revision>\([0-9]\+\)</revision>#\1\@\2\n#g" ${rl}.xml | sed -e "s#<[^<>]\+>##g" > ${rl}.txt 
 	else
@@ -575,7 +575,7 @@ fi
 
 # publish updated log
 bl=${STAGINGDIR}/logs/BUILDLOG.txt
-rm -f ${bl}; curl -s http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText > ${bl}
+rm -f ${bl}; curl -s https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText > ${bl}
 date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/logs $DESTINATION/builds/staging/${JOB_NAME}/
 date; rsync -arzq --delete ${STAGINGDIR}/logs $INTRNALDEST/builds/staging/${JOB_NAME}/
 
