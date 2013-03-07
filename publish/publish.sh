@@ -174,16 +174,16 @@ showUnchangedMessage ()
 # JBIDE-13672 if current revision log == previous revision log, then we can stop publishing right now (unless skipRevisionCheckWhenPublishing=true)
 if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 	if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then # check previous build's ALL_REVISIONS log
-		PREV_REV=`wget ${wgetParams} -O - http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt`
-		if [[ ! ${PREV_REV} ]] || [[ ! ${PREV_REV%%*404*} ]]; then 
+		PREV_REV=`wget ${wgetParams} -O - http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt && echo "found" || echo "not found"`
+		if [[ ! ${PREV_REV} ]] || [[ ! ${PREV_REV%%*not found*} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
 		elif [[ `cat ${ALLREVS}` == ${PREV_REV} ]]; then 
 			showUnchangedMessage GIT
 			exit 0
 		fi
 	elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then # check previous build's GIT_REVISION log
-		PREV_REV=`wget ${wgetParams} -O - http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt`
-		if [[ ! ${PREV_REV} ]] || [[ ! ${PREV_REV%%*404*} ]]; then 
+		PREV_REV=`wget ${wgetParams} -O - http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt && echo "found" || echo "not found"`
+		if [[ ! ${PREV_REV} ]] || [[ ! ${PREV_REV%%*not found*} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
 		elif [[ `cat ${rl}.txt` == ${PREV_REV} ]]; then 
 			showUnchangedMessage GIT
@@ -195,8 +195,8 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 		else
 			SVN_REVISION_URL=http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt
 		fi
-		PREV_REV=`wget ${wgetParams} -O - ${SVN_REVISION_URL}`
-		if [[ ! ${PREV_REV} ]] || [[ ! ${PREV_REV%%*404*} ]]; then 
+		PREV_REV=`wget ${wgetParams} -O - ${SVN_REVISION_URL} && echo "found" || echo "not found"`
+		if [[ ! ${PREV_REV} ]] || [[ ! ${PREV_REV%%*not found*} ]]; then 
 			echo "No previous log in ${SVN_REVISION_URL}"
 		elif [[ `cat ${rl}.txt` == ${PREV_REV} ]]; then 
 			showUnchangedMessage SVN
