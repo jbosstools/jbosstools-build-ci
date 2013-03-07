@@ -18,7 +18,7 @@ PUBLISHPATHSUFFIX=""; if [[ $1 ]]; then PUBLISHPATHSUFFIX="$1"; fi
 # https://jira.jboss.org/browse/JBIDE-6956 "jbosstools-3.2.0.M2" is too verbose, use "3.2.0.M2" instead
 JOBNAMEREDUX=${JOB_NAME/.aggregate}; JOBNAMEREDUX=${JOBNAMEREDUX/jbosstools-}
 
-wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate"
+wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate -q"
 
 # releases get named differently than snapshots
 if [[ ${RELEASE} == "Yes" ]]; then
@@ -173,19 +173,20 @@ showUnchangedMessage ()
 
 # JBIDE-13672 if current revision log == previous revision log, then we can stop publishing right now (unless skipRevisionCheckWhenPublishing=true)
 if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
+	PREV_REV_FILE=$tmpdir/PREV_REV.txt
 	if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then # check previous build's ALL_REVISIONS log
-		PREV_REV=`wget ${wgetParams} -O - http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt && echo "found" || echo "not found"`
-		if [[ ! ${PREV_REV} ]] || [[ ! ${PREV_REV%%*not found*} ]]; then 
+		rm -f ${PREV_REV_FILE}; PREV_REV_CHECK=`wget ${wgetParams} -O ${PREV_REV_FILE} http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt 2>/dev/null && echo "found" || echo "not found"`
+		if [[ ! ${PREV_REV_CHECK%%*not found*} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
-		elif [[ `cat ${ALLREVS}` == ${PREV_REV} ]]; then 
+		elif [[ `cat ${ALLREVS}` == `cat ${PREV_REV_FILE}` ]]; then 
 			showUnchangedMessage GIT
 			exit 0
 		fi
 	elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then # check previous build's GIT_REVISION log
-		PREV_REV=`wget ${wgetParams} -O - http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt && echo "found" || echo "not found"`
-		if [[ ! ${PREV_REV} ]] || [[ ! ${PREV_REV%%*not found*} ]]; then 
+		rm -f ${PREV_REV_FILE}; PREV_REV_CHECK=`wget ${wgetParams} -O ${PREV_REV_FILE} http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt 2>/dev/null && echo "found" || echo "not found"`
+		if [[ ! ${PREV_REV_CHECK%%*not found*} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
-		elif [[ `cat ${rl}.txt` == ${PREV_REV} ]]; then 
+		elif [[ `cat ${rl}.txt` == `cat ${PREV_REV_FILE}` ]]; then 
 			showUnchangedMessage GIT
 			exit 0
 		fi
@@ -195,15 +196,15 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 		else
 			SVN_REVISION_URL=http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt
 		fi
-		PREV_REV=`wget ${wgetParams} -O - ${SVN_REVISION_URL} && echo "found" || echo "not found"`
-		if [[ ! ${PREV_REV} ]] || [[ ! ${PREV_REV%%*not found*} ]]; then 
+		rm -f ${PREV_REV_FILE}; PREV_REV_CHECK=`wget ${wgetParams} -O ${PREV_REV_FILE} ${SVN_REVISION_URL} 2>/dev/null && echo "found" || echo "not found"`
+		if [[ ! ${PREV_REV_CHECK%%*not found*} ]]; then 
 			echo "No previous log in ${SVN_REVISION_URL}"
-		elif [[ `cat ${rl}.txt` == ${PREV_REV} ]]; then 
+		elif [[ `cat ${rl}.txt` == `cat ${PREV_REV_FILE}` ]]; then 
 			showUnchangedMessage SVN
 			exit 0
 		fi
 	fi
-	PREV_REV=""
+	PREV_REV_CHECK=""
 fi
 
 METAFILE="${BUILD_ID}-B${BUILD_NUMBER}.txt"
