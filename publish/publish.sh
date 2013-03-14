@@ -105,13 +105,13 @@ elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".svn") ]]; then
 	else
 		echo "UNKNOWN SVN REVISION(S)" > ${rl}.txt
     REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/"
-    REV_LOG_DETAIL="Click for details"
+    REV_LOG_DETAIL="Details"
 	fi
 else
 	# not git or svn... unsupported
 	echo "UNKNOWN REVISION(S)" > ${rl}.txt
   REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/"
-  REV_LOG_DETAIL="Click for details"
+  REV_LOG_DETAIL="Details"
 fi
 
 # collect ALL_REVISIONS for aggregate build
@@ -176,6 +176,7 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
 	rm -f $tmpdir/devstudio_SVN_REVISION.txt
 fi
 
+UNCHANGED=""
 showUnchangedMessage ()
 {
 	echo "======================================================================================================="
@@ -183,6 +184,7 @@ showUnchangedMessage ()
 	echo "$1 revision(s) UNCHANGED. Publish cancelled (nothing to do). Skip this check with 'EXPORT skipRevisionCheckWhenPublishing=true; ./$0 ...'"
 	echo ""
 	echo "======================================================================================================="
+  UNCHANGED=" (UNCHANGED)"
 }
 
 # JBIDE-13672 if current revision log == previous revision log, then we can stop publishing right now (unless skipRevisionCheckWhenPublishing=true)
@@ -190,15 +192,12 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 	PREV_REV_FILE=$tmpdir/PREV_REV.txt
 	if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then # check previous build's ALL_REVISIONS log
 		rm -f ${PREV_REV_FILE}; PREV_REV_CHECK=`wget ${wgetParams} -O ${PREV_REV_FILE} http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt 2>/dev/null && echo "found" || echo "not found"`
+      REV_LOG_DETAIL="Details"
+      REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
 		if [[ ! ${PREV_REV_CHECK%%*not found*} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
-      REV_LOG_DETAIL="Click for details"
-      REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
 		elif [[ `cat ${ALLREVS}` == `cat ${PREV_REV_FILE}` ]]; then 
 			showUnchangedMessage GIT
-      REV_LOG_DETAIL="UNCHANGED - Click for details"
-      REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
-			exit 0
 		fi
 	elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then # check previous build's GIT_REVISION log
     REV_LOG_DETAIL="`cat ${rl}.txt`"
@@ -208,7 +207,6 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
 		elif [[ `cat ${rl}.txt` == `cat ${PREV_REV_FILE}` ]]; then 
 			showUnchangedMessage GIT 
-			exit 0
 		fi
 	elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".svn") ]]; then # check previous build's SVN_REVISION log
 		if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
@@ -223,11 +221,16 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 			echo "No previous log in ${SVN_REVISION_URL}"
 		elif [[ `cat ${rl}.txt` == `cat ${PREV_REV_FILE}` ]]; then 
 			showUnchangedMessage SVN 
-			exit 0
 		fi
 	fi
 	PREV_REV_CHECK=""
 fi
+
+# set a BUILD_DESCRIPTION we can later parse from Jenkins
+BUILD_DESCRIPTION="<li>Rev: <a href='${REV_LOG_URL}'>${REV_LOG_DETAIL}</a>${UNCHANGED}</li> <li>TP Min: <a href='http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/${TARGET_PLATFORM_VERSION}'>${TARGET_PLATFORM_VERSION}</a><li> <li>TP Max: <a href='http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/${TARGET_PLATFORM_VERSION-maximum}'>${TARGET_PLATFORM_VERSION-maximum}</a><li> <li><a href="/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/artifact/sources/target/coverage-report/html/JBoss_Tools_chunk/index.html">Coverage report</a> &amp; <a href="/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/artifact/sources/*/target/jacoco.exec" style="color: purple; font-weight:bold">jacoco.exec</a> (EclEmma)</li>"
+
+# if we showed the revision unchanged message, exit w/o error, and do not publish anything
+if [[ ${UNCHANGED} ]]; then exit 0; fi
 
 METAFILE="${BUILD_ID}-B${BUILD_NUMBER}.txt"
 mkdir -p ${STAGINGDIR}/logs
