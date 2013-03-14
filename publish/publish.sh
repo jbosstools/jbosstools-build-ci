@@ -45,21 +45,21 @@ rm -fr ${WORKSPACE}/results; mkdir -p ${STAGINGDIR}
 
 # check for aggregate zip or overall zip
 z=""
-if [[ -d     ${WORKSPACE}/sources/aggregate/site/target ]]; then
+if [[ -d   ${WORKSPACE}/sources/aggregate/site/target ]]; then
 	if [[ -f ${WORKSPACE}/sources/aggregate/site/target/site_assembly.zip ]]; then
 	 siteZip=${WORKSPACE}/sources/aggregate/site/target/site_assembly.zip
 	else
 	 siteZip=${WORKSPACE}/sources/aggregate/site/target/repository.zip
 	fi
 	z=$siteZip
-elif [[ -d   ${WORKSPACE}/sources/aggregate/site/site/target ]]; then
+elif [[ -d ${WORKSPACE}/sources/aggregate/site/site/target ]]; then
 	if [[ -f ${WORKSPACE}/sources/aggregate/site/site/target/site_assembly.zip ]]; then
 	 siteZip=${WORKSPACE}/sources/aggregate/site/site/target/site_assembly.zip
 	else
 	 siteZip=${WORKSPACE}/sources/aggregate/site/site/target/repository.zip
 	fi
 	z=$siteZip
-elif [[ -d   ${WORKSPACE}/sources/site/target ]]; then
+elif [[ -d ${WORKSPACE}/sources/site/target ]]; then
 	if [[ -f ${WORKSPACE}/sources/site/target/site_assembly.zip ]]; then
 	 siteZip=${WORKSPACE}/sources/site/target/site_assembly.zip
 	else
@@ -80,6 +80,10 @@ rm -f ${bl}; wget ${wgetParams} -O - http://hudson.qa.jboss.com/hudson/job/${JOB
 # calculate BUILD_ALIAS from parent pom version as recorded in the build log, eg., from org/jboss/tools/parent/4.0.0.Alpha2-SNAPSHOT get Alpha2
 BUILD_ALIAS=$(cat ${bl} | grep "org/jboss/tools/parent/" | head -1 | sed -e "s#.\+org/jboss/tools/parent/\(.\+\)/\(maven-metadata.xml\|parent.\+\)#\1#" | sed -e "s#-SNAPSHOT##" | sed -e "s#[0-9].[0-9].[0-9].##")
 
+# store details about the SVN or Git revision and where the detailed log is located, so we can easily see if this build's different from the previous
+REV_LOG_URL=""
+REV_LOG_DETAIL=""
+
 # JBDS-1361 - fetch XML and then sed it into plain text
 mkdir -p ${STAGINGDIR}/logs
 rl=${STAGINGDIR}/logs/REVISION
@@ -88,18 +92,26 @@ if [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then
 	rl=${STAGINGDIR}/logs/GIT_REVISION
 	rm -f ${rl}.txt ${rl}.xml; wget ${wgetParams} -O ${rl}.xml  "http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/api/xml?xpath=%28//lastBuiltRevision%29[1]"
 	sed -e "s#<lastBuiltRevision><SHA1>\([a-f0-9]\+\)</SHA1><branch><SHA1>\([a-f0-9]\+\)</SHA1><name>\([^<>]\+\)</name></branch></lastBuiltRevision>#\3\@\1#g" ${rl}.xml | sed -e "s#<[^<>]\+>##g" > ${rl}.txt
+  REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
+  REV_LOG_DETAIL="`cat ${rl}.txt`"
 elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".svn") ]]; then
 	# Track svn source revision through hudson api: /job/${JOB_NAME}/api/xml?wrapper=changeSet&depth=1&xpath=//build[1]/changeSet/revision
 	rl=${STAGINGDIR}/logs/SVN_REVISION
 	rm -f ${rl}.txt ${rl}.xml; wget ${wgetParams} -O ${rl}.xml "http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/api/xml?wrapper=changeSet&depth=1&xpath=//build[1]/changeSet/revision"
 	if [[ $? -eq 0 ]]; then
 		sed -e "s#<module>\(http[^<>]\+\)</module><revision>\([0-9]\+\)</revision>#\1\@\2\n#g" ${rl}.xml | sed -e "s#<[^<>]\+>##g" > ${rl}.txt 
+    REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
+    REV_LOG_DETAIL="`cat ${rl}.txt`"
 	else
 		echo "UNKNOWN SVN REVISION(S)" > ${rl}.txt
+    REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/"
+    REV_LOG_DETAIL="Click for details"
 	fi
 else
 	# not git or svn... unsupported
 	echo "UNKNOWN REVISION(S)" > ${rl}.txt
+  REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/"
+  REV_LOG_DETAIL="Click for details"
 fi
 
 # collect ALL_REVISIONS for aggregate build
@@ -155,6 +167,8 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
 		# else fetch from server
 		wget ${wgetParams} -O - http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt > $tmpdir/devstudio_SVN_REVISION.txt
 	fi
+  REV_LOG_URL="http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
+  REV_LOG_DETAIL="`cat $tmpdir/devstudio_SVN_REVISION.txt`"
 	cat $tmpdir/devstudio_SVN_REVISION.txt >> $ALLREVS
 	echo "" >> $ALLREVS
 	echo "See also upstream JBoss Tools aggregate job for complete list of git revisions."  >> $ALLREVS
@@ -178,16 +192,22 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 		rm -f ${PREV_REV_FILE}; PREV_REV_CHECK=`wget ${wgetParams} -O ${PREV_REV_FILE} http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt 2>/dev/null && echo "found" || echo "not found"`
 		if [[ ! ${PREV_REV_CHECK%%*not found*} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
+      REV_LOG_DETAIL="Click for details"
+      REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
 		elif [[ `cat ${ALLREVS}` == `cat ${PREV_REV_FILE}` ]]; then 
 			showUnchangedMessage GIT
+      REV_LOG_DETAIL="UNCHANGED - Click for details"
+      REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
 			exit 0
 		fi
 	elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then # check previous build's GIT_REVISION log
+    REV_LOG_DETAIL="`cat ${rl}.txt`"
+    REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
 		rm -f ${PREV_REV_FILE}; PREV_REV_CHECK=`wget ${wgetParams} -O ${PREV_REV_FILE} http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt 2>/dev/null && echo "found" || echo "not found"`
 		if [[ ! ${PREV_REV_CHECK%%*not found*} ]]; then 
 			echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
 		elif [[ `cat ${rl}.txt` == `cat ${PREV_REV_FILE}` ]]; then 
-			showUnchangedMessage GIT
+			showUnchangedMessage GIT 
 			exit 0
 		fi
 	elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".svn") ]]; then # check previous build's SVN_REVISION log
@@ -196,11 +216,13 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 		else
 			SVN_REVISION_URL=http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt
 		fi
+    REV_LOG_DETAIL="`cat ${rl}.txt`"
+    REV_LOG_URL="${SVN_REVISION_URL}"
 		rm -f ${PREV_REV_FILE}; PREV_REV_CHECK=`wget ${wgetParams} -O ${PREV_REV_FILE} ${SVN_REVISION_URL} 2>/dev/null && echo "found" || echo "not found"`
 		if [[ ! ${PREV_REV_CHECK%%*not found*} ]]; then 
 			echo "No previous log in ${SVN_REVISION_URL}"
 		elif [[ `cat ${rl}.txt` == `cat ${PREV_REV_FILE}` ]]; then 
-			showUnchangedMessage SVN
+			showUnchangedMessage SVN 
 			exit 0
 		fi
 	fi
@@ -220,6 +242,13 @@ echo "WORKSPACE = ${WORKSPACE}" >> ${STAGINGDIR}/logs/${METAFILE}
 echo "HUDSON_SLAVE = $(uname -a)" >> ${STAGINGDIR}/logs/${METAFILE}
 echo "RELEASE = ${RELEASE}" >> ${STAGINGDIR}/logs/${METAFILE}
 echo "ZIPSUFFIX = ${ZIPSUFFIX}" >> ${STAGINGDIR}/logs/${METAFILE}
+echo "" >> ${STAGINGDIR}/logs/${METAFILE}
+echo "TARGET_PLATFORM_VERSION=${TARGET_PLATFORM_VERSION}" >> ${STAGINGDIR}/logs/${METAFILE}
+echo "TARGET_PLATFORM_VERSION-maximum=${TARGET_PLATFORM_VERSION-maximum}" >> ${STAGINGDIR}/logs/${METAFILE}
+echo "" >> ${STAGINGDIR}/logs/${METAFILE}
+echo "REV_LOG_URL=${REV_LOG_URL}" >> ${STAGINGDIR}/logs/${METAFILE}
+echo "REV_LOG_DETAIL=\"${REV_LOG_DETAIL}\"" >> ${STAGINGDIR}/logs/${METAFILE}
+
 y=${STAGINGDIR}/logs/${METAFILE}; for m in $(md5sum ${y}); do if [[ $m != ${y} ]]; then echo $m > ${y}.MD5; fi; done
 
 #echo "$z ..."
@@ -229,7 +258,7 @@ if [[ $z != "" ]] && [[ -f $z ]] ; then
 	unzip -u -o -q -d ${STAGINGDIR}/all/repo $z
 
 	# generate MD5 sum for zip (file contains only the hash, not the hash + filename)
-        for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done
+  for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done
 
 	# copy into workspace for access by bucky aggregator (same name every time)
 	rsync -aq $z ${STAGINGDIR}/all/${SNAPNAME}
@@ -248,7 +277,7 @@ for z in $(find ${WORKSPACE}/sources/*/site/target -type f -name "repository.zip
 		# copy into workspace for access by bucky aggregator (same name every time)
 
 		# generate MD5 sum for zip (file contains only the hash, not the hash + filename)
-	        for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done
+    for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done
         
 		rsync -aq $z ${STAGINGDIR}/${y}${SUFFNAME}
 		rsync -aq ${z}.MD5 ${STAGINGDIR}/${y}${SUFFNAME}.MD5
@@ -269,8 +298,8 @@ if [[ ! -f ${STAGINGDIR}/all/${SNAPNAME} ]]; then
 			mkdir -p ${STAGINGDIR}/all
 			unzip -u -o -q -d ${STAGINGDIR}/all/ $z
 
-                	# generate MD5 sum for zip (file contains only the hash, not the hash + filename)
-	                for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done
+      # generate MD5 sum for zip (file contains only the hash, not the hash + filename)
+      for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done
 
 			rsync -aq $z ${STAGINGDIR}/all/${SNAPNAME}
 			rsync -aq ${z}.MD5 ${STAGINGDIR}/all/${SNAPNAME}.MD5
