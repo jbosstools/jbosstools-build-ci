@@ -18,6 +18,12 @@ PUBLISHPATHSUFFIX=""; if [[ $1 ]]; then PUBLISHPATHSUFFIX="$1"; fi
 # https://jira.jboss.org/browse/JBIDE-6956 "jbosstools-3.2.0.M2" is too verbose, use "3.2.0.M2" instead
 JOBNAMEREDUX=${JOB_NAME/.aggregate}; JOBNAMEREDUX=${JOBNAMEREDUX/jbosstools-}
 
+if [[ ${PUBLISHPATHSUFFIX} ]]; then 
+  PUBLISHEDSITE="http://download.jboss.org/jbosstools/updates/nightly/${PUBLISHPATHSUFFIX}"
+else
+  PUBLISHEDSITE="http://download.jboss.org/jbosstools/updates/nightly/${JOBNAMEREDUX}"
+fi
+
 wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate -q"
 
 # releases get named differently than snapshots
@@ -176,7 +182,7 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
 	rm -f $tmpdir/devstudio_SVN_REVISION.txt
 fi
 
-UNCHANGED=""
+PUBLISH_STATUS=""
 showUnchangedMessage ()
 {
 	echo "======================================================================================================="
@@ -184,7 +190,7 @@ showUnchangedMessage ()
 	echo "$1 revision(s) UNCHANGED. Publish cancelled (nothing to do). Skip this check with 'EXPORT skipRevisionCheckWhenPublishing=true; ./$0 ...'"
 	echo ""
 	echo "======================================================================================================="
-  UNCHANGED=" (UNCHANGED)"
+  PUBLISH_STATUS=" (NOT PUBLISHED: UNCHANGED)"
 }
 
 # JBIDE-13672 if current revision log == previous revision log, then we can stop publishing right now (unless skipRevisionCheckWhenPublishing=true)
@@ -224,13 +230,23 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
 		fi
 	fi
 	PREV_REV_CHECK=""
+
+  if [[ ${PUBLISH_STATUS} ]]; then 
+  # set a BUILD_DESCRIPTION we can later parse from Jenkins
+    BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_DETAIL}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://download.jboss.org/jbosstools/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/target/coverage-report/html/JBoss_Tools_chunk/index.html">Coverage report</a> &amp; <a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/*/target/jacoco.exec" style="color: purple; font-weight:bold">jacoco.exec</a> (EclEmma)</li>'
+    if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then echo ">> ${PUBLISHEDSITE} <<"; fi
+    exit 0
+  else
+    # checked but did not show Unchanged Message, so we have changes; will therefore publish
+     PUBLISH_STATUS=" (PUBLISHED: CHANGED)"
+  fi
+else
+    # did not check, so may or may not have changes; will publish regardless
+  PUBLISH_STATUS=" (PUBLISHED: SKIP REV CHECK)"
 fi
 
 # set a BUILD_DESCRIPTION we can later parse from Jenkins
-BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_DETAIL}'</a>'${UNCHANGED}'</li> <li>Target: <a href="http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://download.jboss.org/jbosstools/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/target/coverage-report/html/JBoss_Tools_chunk/index.html">Coverage report</a> &amp; <a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/*/target/jacoco.exec" style="color: purple; font-weight:bold">jacoco.exec</a> (EclEmma)</li>'
-
-# if we showed the revision unchanged message, exit w/o error, and do not publish anything
-if [[ ${UNCHANGED} ]]; then exit 0; fi
+BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_DETAIL}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://download.jboss.org/jbosstools/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/target/coverage-report/html/JBoss_Tools_chunk/index.html">Coverage report</a> &amp; <a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/*/target/jacoco.exec" style="color: purple; font-weight:bold">jacoco.exec</a> (EclEmma)</li>'
 
 METAFILE="${BUILD_ID}-B${BUILD_NUMBER}.txt"
 mkdir -p ${STAGINGDIR}/logs
@@ -592,11 +608,10 @@ if [[ $ec == "0" ]] && [[ $fc == "0" ]]; then
 				mkdir -p $DESTINATION/updates/nightly/${PUBLISHPATHSUFFIX}
 			fi
 			date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/all/repo/* $DESTINATION/updates/nightly/${PUBLISHPATHSUFFIX}/
-			echo ">> http://download.jboss.org/jbosstools/updates/nightly/${PUBLISHPATHSUFFIX} <<"
 		else
 			date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/all/repo/* $DESTINATION/updates/nightly/${JOBNAMEREDUX}/
-			echo ">> http://download.jboss.org/jbosstools/updates/nightly/${JOBNAMEREDUX} <<"
 		fi
+    echo ">> ${PUBLISHEDSITE} <<"
 	fi
 fi
 date
