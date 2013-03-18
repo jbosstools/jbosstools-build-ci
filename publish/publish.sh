@@ -421,17 +421,9 @@ popd >/dev/null
 
 mkdir -p ${STAGINGDIR}/logs
 
-# generate results page for an aggregate build only
-if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
-	mkdir -p ${WORKSPACE}/sources/results
-	pushd ${WORKSPACE}/sources/results >/dev/null
-	rm -fr pom.xml build.xml index-template.html
-	wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-sites/master/results/pom.xml https://raw.github.com/jbosstools/jbosstools-build-sites/master/results/index-template.html https://raw.github.com/jbosstools/jbosstools-build-sites/master/results/build.xml
-	export JAVA_HOME=$(find /qa/tools/opt -maxdepth 1 -mindepth 1 -type d -name "jdk1.6.0_*" | sort | tail -1)
-	export M2_HOME=$(find /qa/tools/opt -maxdepth 1 -mindepth 1 -type d -name "apache-maven-3.0.*" | sort | tail -1)
-	${M2_HOME}/bin/mvn -q -B install -DJOB_NAME=${JOB_NAME} -DBUILD_NUMBER=${BUILD_NUMBER} -DBUILD_ID=${BUILD_ID} -DBUILD_ALIAS=${BUILD_ALIAS}
-	mv target/index.html ${STAGINGDIR}/index.html; rm -fr target
-	popd >/dev/null
+# copy generated aggregate build results page into root of staging dir
+if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -f ${WORKSPACE}/sources/aggregate/site/target/results.html ]]; then
+	cp -f ${WORKSPACE}/sources/aggregate/site/target/results.html ${STAGINGDIR}/index.html
 fi
 
 # purge duplicate zip files in logs/zips/all/*.zip
