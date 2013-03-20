@@ -329,7 +329,7 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
 	mkdir -p ${WORKSPACE}/sources/results
 	pushd ${WORKSPACE}/sources/results >/dev/null
 	rm -fr pom.xml build.xml index-template.html
-	wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-sites/tree/jbosstools-4.0.x/results/pom.xml https://raw.github.com/jbosstools/jbosstools-build-sites/tree/jbosstools-4.0.x/results/index-template.html https://raw.github.com/jbosstools/jbosstools-build-sites/tree/jbosstools-4.0.x/results/build.xml
+	wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-sites/jbosstools-4.0.x/results/pom.xml https://raw.github.com/jbosstools/jbosstools-build-sites/jbosstools-4.0.x/results/index-template.html https://raw.github.com/jbosstools/jbosstools-build-sites/jbosstools-4.0.x/results/build.xml
 	export JAVA_HOME=$(find /qa/tools/opt -maxdepth 1 -mindepth 1 -type d -name "jdk1.6.0_*" | sort | tail -1)
 	export M2_HOME=$(find /qa/tools/opt -maxdepth 1 -mindepth 1 -type d -name "apache-maven-3.0.*" | sort | tail -1)
 	${M2_HOME}/bin/mvn -q -B install -DJOB_NAME=${JOB_NAME} -DBUILD_NUMBER=${BUILD_NUMBER} -DBUILD_ID=${BUILD_ID} -DBUILD_ALIAS=${BUILD_ALIAS}
@@ -536,7 +536,7 @@ rm -fr $tmpdir
 
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
 	# regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
-	wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-ci/tree/jbosstools-4.0.x/util/cleanup/jbosstools-cleanup.sh
+	wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-ci/jbosstools-4.0.x/util/cleanup/jbosstools-cleanup.sh
 	chmod +x jbosstools-cleanup.sh
 	./jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/
 	rm -f jbosstools-cleanup.sh
