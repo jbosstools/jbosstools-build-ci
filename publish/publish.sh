@@ -247,8 +247,14 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
   PREV_REV_CHECK=""
 
   if [[ ${PUBLISH_STATUS} ]]; then 
-  # set a BUILD_DESCRIPTION we can later parse from Jenkins
-    BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_DETAIL}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://download.jboss.org/jbosstools/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/target/coverage-report/html/JBoss_Tools_chunk/index.html">Coverage report</a> &amp; <a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/*/target/jacoco.exec" style="color: purple; font-weight:bold">jacoco.exec</a> (EclEmma)</li>'
+    if [[ ${JOB_NAME/.product} == ${JOB_NAME} ]]; then
+      # set a BUILD_DESCRIPTION we can later parse from Jenkins
+      BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_DETAIL}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://download.jboss.org/jbosstools/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/target/coverage-report/html/JBoss_Tools_chunk/index.html">Coverage report</a> &amp; <a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/*/target/jacoco.exec" style="color: purple; font-weight:bold">jacoco.exec</a> (EclEmma)</li>'
+    else
+      # set a build description for JBDS product builds
+      REV_LOG_SHORT=`echo $REV_LOG_DETAIL | sed "s#.*repos/devstudio/##g" | sed "s/[\n\r\ \t]\+//g"`
+      BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_SHORT}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://www.qa.jboss.com/binaries/RHDS/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://www.qa.jboss.com/binaries/RHDS/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://www.qa.jboss.com/binaries/RHDS/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="http://www.qa.jboss.com/binaries/RHDS/builds/staging/'${JOB_NAME}'/installer/">Installers & Zips</a></li> <li>Upstream: <a href="http://download.jboss.org/jbosstools/builds/staging/'${UPSTREAM_JOB_NAME}'/all/repo/">Update Site</a>'
+    fi
     if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then echo ">> ${PUBLISHEDSITE} <<"; fi
     exit 0
   else
