@@ -136,8 +136,11 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
     for f in `cd ${STAGINGDIR}/components; find . -maxdepth 1 -type f -name "*.zip" | sort`; do
       REV=
       g=`echo $f | sed 's#\.\/\([^<>]\+\)-Update-.\+.zip#\1#g'`
-      wget ${wgetParams} -O - http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt > $tmpdir/${g}_GIT_REVISION.txt
-      REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
+      if [[ ! `wget ${wgetParams} http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -O $tmpdir/${g}_GIT_REVISION.txt 2>&1 | egrep "ERROR 404"` ]]; then
+        REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
+      else
+        REV="?"
+      fi
       rm -fr $tmpdir/${g}_GIT_REVISION.txt
       echo -n "${g} :: $REV" >> $ALLREVS
       componentname=${g/*component--/}
@@ -145,17 +148,18 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
       componentname=${componentname/central-maven-examples/central}
       echo " :: https://github.com/jbosstools/jbosstools-"${componentname}/commit/${REV##*@} >> $ALLREVS
     done
-  else
-    # else fetch from server
-    wget -q -nc ${GITREV_SOURCE}/components/ -k -O $tmpdir/index.html
+  elif [[ ! `wget -q -nc ${GITREV_SOURCE}/components/ -O $tmpdir/index.html 2>&1 | egrep "ERROR 404"` ]]; then # else fetch from server
     for f in $(cat $tmpdir/index.html | egrep -v "C=D|title>|h1>|DIR"); do
       if [[ ${f/zip.MD5/} != ${f} ]]; then
         true;
       elif [[ ${f/zip/} != ${f} ]]; then
         REV=
         g=`echo $f | sed 's#href=".\+zip">\([^<>]\+\)-Update-.\+.zip</a>.\+#\1#g'`
-        wget ${wgetParams} -O - http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt > $tmpdir/${g}_GIT_REVISION.txt
-        REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
+        if [[ ! `wget ${wgetParams} http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -O $tmpdir/${g}_GIT_REVISION.txt 2>&1 | egrep "ERROR 404"` ]]; then
+          REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
+        else
+          REV="?"
+        fi
         rm -fr $tmpdir/${g}_GIT_REVISION.txt
         echo -n "${g} :: $REV" >> $ALLREVS
         componentname=${g/*component--/}
