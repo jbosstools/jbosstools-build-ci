@@ -58,7 +58,7 @@ popd >/dev/null
 rsync -arzq --protocol=28 ${WORKSPACE}/${manifest} ${DESTINATION}/${COMP_PATH}/
 
 # echo a string to the Jenkins console log which we can then search for using Jenkins Text Finder to determine if the build should be blue (STABLE) or yellow (UNSTABLE)
-diff="`diff -U 0 ${WORKSPACE}/${manifest} ${WORKSPACE}/${manifest}_PREVIOUS 2>&1`"
+diff="`diff -U 0 ${WORKSPACE}/${manifest}_PREVIOUS ${WORKSPACE}/${manifest} 2>&1`"
 if [[ ${diff} ]]; then
   echo "COMPOSITE HAS CHANGED" 	# mark build stable (blue) and fire downstream job
   echo "====================="
