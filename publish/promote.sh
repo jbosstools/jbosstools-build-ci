@@ -63,6 +63,8 @@ while [[ "$#" -gt 0 ]]; do
   shift 1
 done
 
+if [[ ${PROJECT_NAME} == "NONE" ]] || [[ ${PROJECT_NAME} == ${PARENT_FOLDER} ]]; then PROJECT_NAME=""; fi
+
 if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
   echo "mkdir ${BUILD_TYPE}" | sftp ${DESTINATION}/${RELEASE_TYPE}/
   if [[ ${TARGET_PLATFORM} ]]; then
