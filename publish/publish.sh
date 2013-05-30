@@ -187,10 +187,7 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
     fi
     # TODO JBDS-2627: switch this to pulling GIT_REV instead of SVN_REV
   fi
-  REV_LOG_URL="http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
-  REV_LOG_DETAIL="`cat $tmpdir/devstudio_SVN_REVISION.txt`"
-  cat $tmpdir/devstudio_SVN_REVISION.txt >> $ALLREVS
-
+  
   # get name of upstream project (eg., for devstudio.product_70 want jbosstools-build-sites.aggregate.site_41)
   wget ${wgetParams} -O $tmpdir/upstreamProject.name.xml "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/api/xml?xpath=%28//upstreamProject/name%29[1]"
   UPSTREAM_JOB_NAME=`sed -e "s#<name>\(.\+\)</name>#\1#g" $tmpdir/upstreamProject.name.xml`
