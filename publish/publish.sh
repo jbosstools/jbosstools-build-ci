@@ -180,7 +180,12 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
     cp ${STAGINGDIR}/logs/SVN_REVISION.txt $tmpdir/devstudio_SVN_REVISION.txt
   else
     # else fetch from server
-    wget ${wgetParams} -O - http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt > $tmpdir/devstudio_SVN_REVISION.txt
+    if [[ ! `wget ${wgetParams} -O - http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt -O $tmpdir/devstudio_SVN_REVISION.txt 2>&1 | egrep "ERROR 404"` ]]; then
+      REV_LOG_URL="http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
+      REV_LOG_DETAIL="`cat $tmpdir/devstudio_SVN_REVISION.txt`"
+      cat $tmpdir/devstudio_SVN_REVISION.txt >> $ALLREVS
+    fi
+    # TODO JBDS-2627: switch this to pulling GIT_REV instead of SVN_REV
   fi
   REV_LOG_URL="http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
   REV_LOG_DETAIL="`cat $tmpdir/devstudio_SVN_REVISION.txt`"
