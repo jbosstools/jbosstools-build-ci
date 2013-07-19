@@ -62,7 +62,7 @@ getSubDirs ()
 	dirs=$(sftp -b $tmp tools@filemgmt.jboss.org 2>/dev/null)
 	i=0
 	for c in $dirs; do
-		if [[ $i -gt 2 ]] && [[ $c != "sftp>" ]] && [[ ${c##*.} != "" ]] && [[ ${c##*/*.*ml} != "" ]] && [[ ${c##*/plugins} != "" ]] && [[ ${c##*/features} != "" ]] && [[ ${c##*/binary} != "" ]] && [[ ${c##*/.blobstore} != "" ]]; then # valid dir; exclude *.xml, *.html files, plus features/plugins/binary/.blobstore
+		if [[ $i -gt 2 ]] && [[ $c != "sftp>" ]] && [[ ${c##*.} != "" ]] && [[ ${c##*/*.*ml} != "" ]] && [[ ${c##*/*.properties} != "" ]] && [[ ${c##*/*.jar} != "" ]] && [[ ${c##*/web} != "" ]] && [[ ${c##*/plugins} != "" ]] && [[ ${c##*/features} != "" ]] && [[ ${c##*/binary} != "" ]] && [[ ${c##*/.blobstore} != "" ]]; then # valid dir; exclude *.xml, *.html, *.properties, *.jar, plus web/features/plugins/binary/.blobstore
 			getSubDirsReturn=$getSubDirsReturn" "$c
 		fi
 		(( i++ ))
@@ -76,6 +76,8 @@ clean ()
 	type=$1 # builds/nightly or updates/development/juno/soa-tooling, etc.
 	numkeep=$2 # number of builds to keep per branch
 	threshhold=$3 # purge builds more than $threshhold days old
+	type=${type//\/\//\/}; # remove duplicate slashes in paths - replace all // with / 
+	type=${type//\/\//\/}; # repeat to replace /// with /
 	echo "Check for $type builds more than $threshhold days old; keep minimum $numkeep builds per branch" | tee -a $log 
 
 	getSubDirs /downloads_htdocs/tools/$type/ 0
