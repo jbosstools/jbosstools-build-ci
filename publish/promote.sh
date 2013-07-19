@@ -141,7 +141,11 @@ if [[ ${RELEASE_TYPE} == "updates" ]]; then
   # JBIDE-12662: regenerate composite metadata in updates/${BUILD_TYPE}/${TARGET_PLATFORM}/${PARENT_FOLDER}/${PROJECT_NAME} folder for all children
   wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/cleanup/jbosstools-cleanup.sh
   chmod +x jbosstools-cleanup.sh
-  ./jbosstools-cleanup.sh --dirs-to-scan "updates/${BUILD_TYPE}/${TARGET_PLATFORM}/${PARENT_FOLDER}" --regen-metadata-only
+  if [[ ${TARGET_PLATFORM} ]]; then
+    ./jbosstools-cleanup.sh --dirs-to-scan "updates/${BUILD_TYPE}/${TARGET_PLATFORM}/${PARENT_FOLDER}" --regen-metadata-only
+  else
+    ./jbosstools-cleanup.sh --dirs-to-scan "updates/${BUILD_TYPE}/${PARENT_FOLDER}" --regen-metadata-only
+  fi
   rm -f jbosstools-cleanup.sh
 fi
 
