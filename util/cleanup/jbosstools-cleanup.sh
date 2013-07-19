@@ -97,7 +97,7 @@ clean ()
 			# echo "[${subdirCount}] Found $buildid"
 			echo $buildid >> $tmp
 		done
-		regenProcess ${subdirCount}
+		regenProcess ${subdirCount} /downloads_htdocs/tools/$type/
 	else # for everyone else, work in sub-subfolders
 		for sd in $subdirs; do
 			getSubDirs $sd 1
@@ -160,7 +160,7 @@ clean ()
 					echo $buildid >> $tmp
 				fi
 			done
-			regenProcess ${subdirCount}
+			regenProcess ${subdirCount} ${sd}
 		done
 	fi
 	echo "" | tee -a $log	
