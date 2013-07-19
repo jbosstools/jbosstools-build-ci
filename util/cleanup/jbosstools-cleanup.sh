@@ -62,7 +62,7 @@ getSubDirs ()
 	dirs=$(sftp -b $tmp tools@filemgmt.jboss.org 2>/dev/null)
 	i=0
 	for c in $dirs; do
-		if [[ $i -gt 2 ]] && [[ $c != "sftp>" ]] && [[ ${c##*.} != "" ]] && [[ ${c##*/*.*ml} != "" ]]; then # valid dir; exclude *.xml, *.html files
+		if [[ $i -gt 2 ]] && [[ $c != "sftp>" ]] && [[ ${c##*.} != "" ]] && [[ ${c##*/*.*ml} != "" ]] && [[ ${c##*/plugins} != "" ]] && [[ ${c##*/features} != "" ]] && [[ ${c##*/binary} != "" ]] && [[ ${c##*/.blobstore} != "" ]]; then # valid dir; exclude *.xml, *.html files, plus features/plugins/binary/.blobstore
 			getSubDirsReturn=$getSubDirsReturn" "$c
 		fi
 		(( i++ ))
@@ -145,9 +145,9 @@ clean ()
 		rm -f $tmp
 
 		if [[ $subdirCount -gt 0 ]]; then
-			echo "Generate metadata for ${subdirCount} subdir(s) in $sd/" | tee -a $log	
-			mkdir -p /tmp/cleanup-fresh-metadata/
 			siteName=${sd##*/downloads_htdocs/tools/}
+			echo "Generate metadata for ${subdirCount} subdir(s) in $sd/ (siteName = ${siteName}" | tee -a $log
+			mkdir -p /tmp/cleanup-fresh-metadata/
 			regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "/tmp/cleanup-fresh-metadata/compositeContent.xml"
 			regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "/tmp/cleanup-fresh-metadata/compositeArtifacts.xml"
 			rsync --rsh=ssh --protocol=28 -q /tmp/cleanup-fresh-metadata/composite*.xml tools@filemgmt.jboss.org:$sd/
