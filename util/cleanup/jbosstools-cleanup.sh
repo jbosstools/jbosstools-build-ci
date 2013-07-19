@@ -39,7 +39,7 @@ while [[ "$#" -gt 0 ]]; do
 		'-a'|'--age-to-delete') threshholdwhendelete="$2"; shift 1;;
 		'-d'|'--dirs-to-scan') dirsToScan="$2"; shift 1;;
 		'-M'|'--regen-metadata-only') delete=0; checkTimeStamps=0; shift 0;;
-		'-S'|'--childFolderSuffix') childFolderSuffix="$2"
+		'-S'|'--childFolderSuffix') childFolderSuffix="$2"; shift 1;;
 	esac
 	shift 1
 done
