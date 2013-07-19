@@ -25,6 +25,10 @@ if [[ $# -lt 1 ]]; then
   echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM kepler -PARENT_FOLDER core -PROJECT_NAME server -TARGET_FOLDER 4.1.0.Alpha1 -SOURCE_PATH jbosstools-server_41/all/repo"
   echo ""
 
+  # push Locus bits to integration
+  echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM NONE -PARENT_FOLDER locus -PROJECT_NAME locus -TARGET_FOLDER 1.0.0.CR2 -SOURCE_PATH \${JOB_NAME}/all/repo"
+  echo ""
+
   # push to http://download.jboss.org/jbosstools/updates/development/juno/soa-tooling/modeshape/3.0.0.CR1/
   echo "Example: $0 -BUILD_TYPE development -TARGET_PLATFORM juno -PARENT_FOLDER integration-stack -PROJECT_NAME modeshape -TARGET_FOLDER 3.3.0.CR1 -SOURCE_PATH modeshape-tools-continuous/all/repo"
   # push to http://download.jboss.org/jbosstools/updates/stable/indigo/soa-tooling/switchyard/0.6.0.Final/
@@ -54,7 +58,7 @@ while [[ "$#" -gt 0 ]]; do
     '-RELEASE_TYPE') RELEASE_TYPE="$2"; shift 1;; # updates, discovery
     '-BUILD_TYPE') BUILD_TYPE="$2"; shift 1;; # nightly, integration, development or stable
     '-TARGET_PLATFORM') TARGET_PLATFORM="$2"; shift 1;; # indigo, juno, kepler, ...
-    '-PARENT_FOLDER') PARENT_FOLDER="$2"; shift 1;; # soa-tooling, core
+    '-PARENT_FOLDER') PARENT_FOLDER="$2"; shift 1;; # soa-tooling, core, locus
     '-PROJECT_NAME') PROJECT_NAME="$2"; shift 1;; # switchyard, modeshape, droolsjbpm, ...
     '-TARGET_FOLDER') TARGET_FOLDER="$2"; shift 1;; # 0.5.0.Beta3, 0.6.0.Final, ...
     '-SOURCE_PATH') SOURCE_PATH="$2"; shift 1;; # jbosstools-4.0_stable_branch.component--as/all/repo, modeshape-tools-continuous/all/repo, SwitchYard-Tools/eclipse
@@ -62,6 +66,8 @@ while [[ "$#" -gt 0 ]]; do
   esac
   shift 1
 done
+
+if [[ ${TARGET_PLATFORM} == "NONE" ]]; then TARGET_PLATFORM=""; fi
 
 if [[ ${PROJECT_NAME} == "NONE" ]] || [[ ${PROJECT_NAME} == ${PARENT_FOLDER} ]]; then PROJECT_NAME=""; fi
 
