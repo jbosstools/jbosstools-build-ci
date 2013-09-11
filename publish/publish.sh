@@ -575,7 +575,9 @@ rm -fr $tmpdir
 
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
   # regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
-  wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/cleanup/jbosstools-cleanup.sh
+  if [[ ! -f jbosstools-cleanup.sh ]]; then 
+    wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/cleanup/jbosstools-cleanup.sh
+  fi
   chmod +x jbosstools-cleanup.sh
   ./jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/
   rm -f jbosstools-cleanup.sh
