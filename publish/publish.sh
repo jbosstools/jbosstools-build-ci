@@ -187,11 +187,7 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
     fi
     # TODO JBDS-2627: switch this to pulling GIT_REV instead of SVN_REV
   fi
-<<<<<<< Updated upstream
-  
-=======
 
->>>>>>> Stashed changes
   # get name of upstream project (eg., for devstudio.product_70 want jbosstools-build-sites.aggregate.site_41)
   wget ${wgetParams} -O $tmpdir/upstreamProject.name.xml "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/api/xml?xpath=%28//upstreamProject/name%29[1]"
   UPSTREAM_JOB_NAME=`sed -e "s#<name>\(.\+\)</name>#\1#g" $tmpdir/upstreamProject.name.xml`
@@ -523,22 +519,111 @@ if [[ $ec == "0" ]] && [[ $fc == "0" ]]; then
         date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/* $DESTINATION/builds/nightly/${JOBNAMEREDUX}/${BUILD_ID}-B${BUILD_NUMBER}/
       fi
       rm -f $tmpdir/latestBuild.html
+    #else
+      # COMMENTED OUT as this uses too much disk space
+      # if a release build, create a named dir
+      #if [[ ${RELEASE} == "Yes" ]]; then
+      #  date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/* $DESTINATION/builds/staging/${JOB_NAME}-${ZIPSUFFIX}/
+      #fi
     fi
 
-    # JBDS-2741 - publish to a new unique build folder for each spin, then later use jbosstools-cleanup.sh to purge old builds
+    # and create/replace a snapshot dir w/ static URL
+    date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/* $DESTINATION/builds/staging/${JOB_NAME}.next
+
+    # 1. To recursively purge contents of .../staging.previous/foobar/ folder: 
+    #  mkdir -p $tmpdir/foobar; 
+    #  rsync -aPrz --delete $tmpdir/foobar tools@filemgmt.jboss.org:/downloads_htdocs/tools/builds/staging.previous/ 
+    # 2. To then remove entire .../staging.previous/foobar/ folder: 
+    #  echo -e "rmdir foobar" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/builds/staging.previous/
+    #  rmdir $tmpdir/foobar
+
+    # JBIDE-8667 move current to previous; move next to current
     if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
       # create folders if not already there (could be empty)
-      echo -e "mkdir CI" | sftp $DESTINATION/builds/staging/
-      echo -e "mkdir ${JOB_NAME}" | sftp $DESTINATION/builds/staging/CI/
+      echo -e "mkdir ${JOB_NAME}" | sftp $DESTINATION/builds/staging/
+      echo -e "mkdir ${JOB_NAME}" | sftp $DESTINATION/builds/staging.previous/
+      #echo -e "mkdir ${JOB_NAME}.2" | sftp $DESTINATION/builds/staging.previous/
+
+      # IF using .2 folders, purge contents of /builds/staging.previous/${JOB_NAME}.2 and remove empty dir
+      # NOTE: comment out next section - should only purge one staging.previous/* folder
+      #mkdir -p $tmpdir/${JOB_NAME}.2
+      #rsync -arzq --delete --protocol=28 $tmpdir/${JOB_NAME}.2 $DESTINATION/builds/staging.previous/
+      #echo -e "rmdir ${JOB_NAME}.2" | sftp $DESTINATION/builds/staging.previous/
+      #rmdir $tmpdir/${JOB_NAME}.2
+
+      # OR, purge contents of /builds/staging.previous/${JOB_NAME} and remove empty dir
+      mkdir -p $tmpdir/${JOB_NAME}
+      rsync -arzq --protocol=28 --delete $tmpdir/${JOB_NAME} $DESTINATION/builds/staging.previous/
+      echo -e "rmdir ${JOB_NAME}" | sftp $DESTINATION/builds/staging.previous/
+      rmdir $tmpdir/${JOB_NAME}
+
+      # move contents of /builds/staging.previous/${JOB_NAME} into /builds/staging.previous/${JOB_NAME}.2
+      #echo -e "rename ${JOB_NAME} ${JOB_NAME}.2" | sftp $DESTINATION/builds/staging.previous/
+
+      # move contents of /builds/staging/${JOB_NAME} into /builds/staging.previous/${JOB_NAME}
+      echo -e "rename ${JOB_NAME} ../staging.previous/${JOB_NAME}" | sftp $DESTINATION/builds/staging/
+
+      # move contents of /builds/staging/${JOB_NAME}.next into /builds/staging/${JOB_NAME}
+      echo -e "rename ${JOB_NAME}.next ${JOB_NAME}" | sftp $DESTINATION/builds/staging/
     else # work locally
       # create folders if not already there (could be empty)
-      mkdir -p $DESTINATION/builds/staging/CI/${JOB_NAME}/
+      mkdir -p $DESTINATION/builds/staging/${JOB_NAME}
+      mkdir -p $DESTINATION/builds/staging.previous/${JOB_NAME}
+      #mkdir -p $DESTINATION/builds/staging.previous/${JOB_NAME}.2
+
+      # purge contents of /builds/staging.previous/${JOB_NAME}.2 and remove empty dir
+      # NOTE: comment out next section - should only purge one staging.previous/* folder
+      #rm -fr $DESTINATION/builds/staging.previous/${JOB_NAME}.2/
+      
+      # OR, purge contents of /builds/staging.previous/${JOB_NAME} and remove empty dir
+      rm -fr $DESTINATION/builds/staging.previous/${JOB_NAME}/
+
+      # move contents of /builds/staging.previous/${JOB_NAME} into /builds/staging.previous/${JOB_NAME}.2
+      #mv $DESTINATION/builds/staging.previous/${JOB_NAME} $DESTINATION/builds/staging.previous/${JOB_NAME}.2
+
+      # move contents of /builds/staging/${JOB_NAME} into /builds/staging.previous/${JOB_NAME}
+      mv $DESTINATION/builds/staging/${JOB_NAME} $DESTINATION/builds/staging.previous/${JOB_NAME}
+
+      # move contents of /builds/staging/${JOB_NAME}.next into /builds/staging/${JOB_NAME}
+      mv $DESTINATION/builds/staging/${JOB_NAME}.next $DESTINATION/builds/staging/${JOB_NAME}
     fi
-    date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/* $DESTINATION/builds/staging/CI/${JOB_NAME}/${BUILD_ID}-B${BUILD_NUMBER}/
+
+    # generate 2 ${STAGINGDIR}/all/composite*.xml files which will point at:
+      # /builds/staging/${JOB_NAME}/all/repo/
+      # /builds/staging.previous/${JOB_NAME}/all/repo/
+      # /builds/staging.previous/${JOB_NAME}.2/all/repo/
+    now=$(date +%s000)
+    mkdir -p ${STAGINGDIR}/all
+    echo "<?xml version='1.0' encoding='UTF-8'?>
+<?compositeMetadataRepository version='1.0.0'?>
+<repository name='JBoss Tools Staging - ${JOB_NAME} Composite' type='org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository' version='1.0.0'>
+" > ${STAGINGDIR}/all/compositeContent.xml
+    echo "<?xml version='1.0' encoding='UTF-8'?>
+<?compositeArtifactRepository version='1.0.0'?>
+<repository name='JBoss Tools Staging - ${JOB_NAME} Composite' type='org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository' version='1.0.0'> " > ${STAGINGDIR}/all/compositeArtifacts.xml
+    metadata="<properties size='2'><property name='p2.compressed' value='true'/><property name='p2.timestamp' value='"${now}"'/></properties>
+<children size='2'>
+<child location='../../../staging/${JOB_NAME}/all/repo/'/>
+<child location='../../../staging.previous/${JOB_NAME}/all/repo/'/>
+</children>
+</repository>
+"
+    echo $metadata >> ${STAGINGDIR}/all/compositeContent.xml
+    echo $metadata >> ${STAGINGDIR}/all/compositeArtifacts.xml
+    date; rsync -arzq --protocol=28 ${STAGINGDIR}/all/composite*.xml $DESTINATION/builds/staging/${JOB_NAME}/all/
 
     # create a snapshot dir outside Hudson which is file:// accessible
-    mkdir -p $INTRNALDEST/builds/staging/CI/${JOB_NAME}/
-    date; rsync -arzq --delete ${STAGINGDIR}/* $INTRNALDEST/builds/staging/CI/${JOB_NAME}/${BUILD_ID}-B${BUILD_NUMBER}/
+    mkdir -p $INTRNALDEST/builds/staging/${JOB_NAME}.next/
+    date; rsync -arzq --delete ${STAGINGDIR}/* $INTRNALDEST/builds/staging/${JOB_NAME}.next/
+
+    # cycle internal copy of ${JOB_NAME} in staging and staging.previous
+    mkdir -p $INTRNALDEST/builds/staging/${JOB_NAME}/
+    # purge contents of /builds/staging.previous/${JOB_NAME} and remove empty dir
+    rm -fr $INTRNALDEST/builds/staging.previous/${JOB_NAME}/
+    # move contents of /builds/staging/${JOB_NAME} into /builds/staging.previous/${JOB_NAME}
+    mv $INTRNALDEST/builds/staging/${JOB_NAME} $INTRNALDEST/builds/staging.previous/${JOB_NAME}
+    # move contents of /builds/staging/${JOB_NAME}.next into /builds/staging/${JOB_NAME}
+    mv $INTRNALDEST/builds/staging/${JOB_NAME}.next $INTRNALDEST/builds/staging/${JOB_NAME}
   fi
 
   # extra publish step for aggregate update sites ONLY
