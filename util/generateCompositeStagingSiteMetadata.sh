@@ -6,14 +6,18 @@
 # -NAME     :: name of the resulting site, eg., 'JBoss Tools - Core - Stable Staging Site'
 # -SITES    :: comma-separated list of URLs of additional update sites to include in the composite, eg., for components which have not changed
 # -JOBNAMES :: comma-separated list of JOB_NAMEs - for each, search in /builds/staging/JOB_NAME/ for subfolders, and return the N most recent ones
-# -DESTINATION :: sftp path to publish composite*.xml files, eg., tools@filemgmt.jboss.org:/downloads_htdocs/tools/builds/staging/_composite_/core/4.1.x.kepler/
+# -DESTINATION :: sftp (or local?) path to publish composite*.xml files, eg., tools@filemgmt.jboss.org:/downloads_htdocs/tools/builds/staging/_composite_/core/4.1.x.kepler/
+
 usage ()
 {
-  echo "Usage    : $0 -NUM <num builds to include> -NAME 'Site Name' -JOBNAMES <job1,job2,job3,...> \
--SITES http://download.jboss.org/jbosstools/updates/site/to/include1,http://download.jboss.org/jbosstools/updates/site/to/include,..."
+  echo "Usage    : $0 -NUM <num builds to include, eg., 1 or 2> -NAME 'Site Name' \
+-DESTINATION tools@filemgmt.jboss.org:/downloads_htdocs/tools/builds/staging/_composite_/path/goes/here/ \
+-SITES http://download.jboss.org/jbosstools/updates/site/to/include1,http://download.jboss.org/jbosstools/updates/site/to/include2,... \
+-JOBNAMES <job1,job2,job3,...> "
   echo ""
   echo "Example 1: $0 -NUM 1 -NAME 'JBoss Tools - Core - Stable Staging Site' \
--DESTINATION tools@filemgmt.jboss.org:/downloads_htdocs/tools/builds/staging/_composite_/core/4.1.x.kepler/ -SITES \
+-DESTINATION tools@filemgmt.jboss.org:/downloads_htdocs/tools/builds/staging/_composite_/core/4.1.x.kepler/ \
+-SITES \
 http://download.jboss.org/jbosstools/updates/stable/kepler/,\
 http://download.jboss.org/jbosstools/updates/stable/juno/core/gwt/,\
 http://download.jboss.org/jbosstools/updates/stable/kepler/core/freemarker/ \
@@ -37,7 +41,8 @@ openshift-java-client-master\
 "
   echo ""
   echo "Example 2: $0 -NUM 2 -NAME 'JBoss Tools - Core - Trunk Staging Site' \
--DESTINATION tools@filemgmt.jboss.org:/downloads_htdocs/tools/builds/staging/_composite_/core/master/-SITES \
+-DESTINATION tools@filemgmt.jboss.org:/downloads_htdocs/tools/builds/staging/_composite_/core/master/ \
+-SITES \
 http://download.jboss.org/jbosstools/updates/requirements/xulrunner-1.9.2/,\
 http://download.jboss.org/jbosstools/updates/stable/juno/core/gwt/,\
 http://download.jboss.org/jbosstools/updates/stable/kepler/core/freemarker/ \
