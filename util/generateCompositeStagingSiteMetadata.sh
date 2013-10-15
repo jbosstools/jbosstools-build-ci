@@ -66,7 +66,7 @@ openshift-java-client-master\
 "
   # TODO JBIDE-15482 ensure example matches with actual path we settle on (ie., builds/staging/CI or builds/ci/)
   echo ""
-  echo "Example 3 (local site - do not use JOBNAMES): $0 -NUM 1 -NAME 'My Local Upstream Composite Site' \
+  echo "Example 3 (local site - do not use JOBNAMES): $0 -NAME 'My Local Upstream Composite Site' \
 -DESTINATION /tmp/my-local-site/ \
 -SITES \
 http://download.jboss.org/jbosstools/updates/requirements/xulrunner-1.9.2/,\
