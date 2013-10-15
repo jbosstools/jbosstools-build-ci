@@ -15,7 +15,7 @@ usage ()
 -SITES http://download.jboss.org/jbosstools/updates/site/to/include1,http://download.jboss.org/jbosstools/updates/site/to/include2,... \
 -JOBNAMES <job1,job2,job3,...> "
   echo ""
-  echo "Example 1: $0 -NUM 1 -NAME 'JBoss Tools - Core - Stable Staging Site' \
+  echo "Example 1 (stable branch site): $0 -NUM 1 -NAME 'JBoss Tools - Core - Stable Branch Staging Site' \
 -DESTINATION tools@filemgmt.jboss.org:/downloads_htdocs/tools/builds/staging/_composite_/core/4.1.x.kepler/ \
 -SITES \
 http://download.jboss.org/jbosstools/updates/stable/kepler/,\
@@ -40,7 +40,7 @@ jbosstools-webservices_41,\
 openshift-java-client-master\
 "
   echo ""
-  echo "Example 2: $0 -NUM 2 -NAME 'JBoss Tools - Core - Trunk Staging Site' \
+  echo "Example 2 (master branch site): $0 -NUM 2 -NAME 'JBoss Tools - Core - Master Branch Staging Site' \
 -DESTINATION tools@filemgmt.jboss.org:/downloads_htdocs/tools/builds/staging/_composite_/core/master/ \
 -SITES \
 http://download.jboss.org/jbosstools/updates/requirements/xulrunner-1.9.2/,\
@@ -63,6 +63,15 @@ jbosstools-server_master,\
 jbosstools-vpe_master,\
 jbosstools-webservices_master,\
 openshift-java-client-master\
+"
+  # TODO JBIDE-15482 ensure example matches with actual path we settle on (ie., builds/staging/CI or builds/ci/)
+  echo ""
+  echo "Example 3 (local site - do not use JOBNAMES): $0 -NUM 1 -NAME 'My Local Upstream Composite Site' \
+-DESTINATION /tmp/my-local-site/ \
+-SITES \
+http://download.jboss.org/jbosstools/updates/requirements/xulrunner-1.9.2/,\
+http://download.jboss.org/jbosstools/builds/staging/CI/jbosstools-base_master/2013-09-25_09-26-23-B349/all/repo/,\
+http://download.jboss.org/jbosstools/builds/staging/CI/jbosstools-server_master/2013-09-24_04-26-25-B380/all/repo/
 "
 	exit 1;
 }
@@ -97,6 +106,13 @@ done
 # without a destination folder there's little point in proceeding here
 if [[ ! $DESTINATION ]]; then
   usage; exit 1
+fi
+
+# if using this script to generate a composite site locally, blank out PATHPREFIX, URLPREFIX, and JOBNAMES
+if [[ ${DESTINATION//@} == ${DESTINATION//@} ]]; then
+  JOBNAMES=""
+  PATHPREFIX=""
+  URLPREFIX=""
 fi
 
 mkdirs ()
@@ -180,7 +196,9 @@ regenProcess ()
 
     echo "Publish composite*.xml to ${DESTINATION}" | tee -a $log
     rsync --rsh=ssh --protocol=28 -q /tmp/cleanup-fresh-metadata/composite*.xml $DESTINATION
-    echo ">> "${URLPREFIX}${DESTINATION##*${PATHPREFIX}} | tee -a $log
+    if [[ ${URLPREFIX} ]]; then 
+      echo ">> "${URLPREFIX}${DESTINATION##*${PATHPREFIX}} | tee -a $log
+    fi
     rm -fr /tmp/cleanup-fresh-metadata/
   else
     echo "No SITES or builds found for specified JOBNAMES" | tee -a $log 
