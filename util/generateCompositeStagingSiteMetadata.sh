@@ -73,11 +73,11 @@ http://download.jboss.org/jbosstools/updates/requirements/xulrunner-1.9.2/,\
 http://download.jboss.org/jbosstools/builds/staging/CI/jbosstools-base_master/2013-09-25_09-26-23-B349/all/repo/,\
 http://download.jboss.org/jbosstools/builds/staging/CI/jbosstools-server_master/2013-09-24_04-26-25-B380/all/repo/
 "
-	exit 1;
+  exit 1;
 }
 
 if [[ $# -lt 1 ]]; then
-	usage;
+  usage;
 fi
 
 #defaults
@@ -93,14 +93,14 @@ childFolderSuffix="/all/repo"
 
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
-	case $1 in
+  case $1 in
     '-NUM') NUM="$2"; shift 1;;
     '-NAME') NAME="$2"; shift 1;;
-		'-SITES') SITES="$2"; shift 1;;
+    '-SITES') SITES="$2"; shift 1;;
     '-JOBNAMES') JOBNAMES="$2"; shift 1;;
     '-DESTINATION') DESTINATION="$2"; shift 1;;
-	esac
-	shift 1
+  esac
+  shift 1
 done
 
 # without a destination folder there's little point in proceeding here
@@ -185,7 +185,11 @@ regenProcess ()
   countChildren=0
   (( countChildren = subdirCount + numSites ))
   if [[ $countChildren -gt 0 ]]; then
-    echo "Generate metadata for $numSites URLs + ${subdirCount} builds" | tee -a $log
+    if [[ ${subdirCount} -gt 0 ]]; then 
+      echo "Generate metadata for $numSites URLs + ${subdirCount} builds" | tee -a $log
+    else
+      echo "Generate metadata for $numSites URLs" | tee -a $log
+    fi
     mkdir -p /tmp/cleanup-fresh-metadata/
     regenCompositeMetadata "$NAME" "${subdirs}" "$countChildren" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "/tmp/cleanup-fresh-metadata/compositeContent.xml"
     regenCompositeMetadata "$NAME" "${subdirs}" "$countChildren" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "/tmp/cleanup-fresh-metadata/compositeArtifacts.xml"
@@ -198,6 +202,12 @@ regenProcess ()
     rsync --rsh=ssh --protocol=28 -q /tmp/cleanup-fresh-metadata/composite*.xml $DESTINATION
     if [[ ${URLPREFIX} ]]; then 
       echo ">> "${URLPREFIX}${DESTINATION##*${PATHPREFIX}} | tee -a $log
+    else
+      echo "" | tee -a $log
+      echo "Use local site like this to build some jbosstools-* github project: " | tee -a $log
+      echo "" | tee -a $log
+      echo "  mvn clean verify -Djbosstools-nightly=file://${DESTINATION}" | tee -a $log
+      echo ""
     fi
     rm -fr /tmp/cleanup-fresh-metadata/
   else
