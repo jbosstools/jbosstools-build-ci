@@ -45,9 +45,9 @@ touch ${WORKSPACE}/${manifest}_PREVIOUS
 
 # run scripted installation via p2.director
 rm -f ${WORKSPACE}/director.xml
-wget ${DEST_URL}/updates/scripted-installation/director.xml -q --no-check-certificate -N
+wget ${DEST_URL}/updates/scripted-install/director.xml -q --no-check-certificate -N
 chmod +x ${WORKSPACE}/eclipse/eclipse
-${WORKSPACE}/eclipse/eclipse -consolelog -nosplash -data /tmp -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${WORKSPACE}/eclipse -DsourceSites=${SITES} -DIUs=${IUs} 
+${WORKSPACE}/eclipse/eclipse -consolelog -nosplash -data /tmp -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${WORKSPACE}/eclipse -DsourceSites=${SITES} -Dinstall=${IUs} 
 
 # collect a list of IUs in the installation - if Eclipse version or any included IUs change, this will change and cause downstream to spin. THIS IS GOOD.
 pushd ${WORKSPACE}/eclipse/ >/dev/null
