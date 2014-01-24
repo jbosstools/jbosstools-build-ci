@@ -197,9 +197,12 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
   echo "See also upstream JBoss Tools aggregate job for complete list of git revisions."  >> $ALLREVS
   echo " * http://download.jboss.org/jbosstools/builds/staging/${UPSTREAM_JOB_NAME}/logs/ALL_REVISIONS.txt *" >> $ALLREVS
   echo "" >> $ALLREVS
-  wget ${wgetParams} -O - http://download.jboss.org/jbosstools/builds/staging/${UPSTREAM_JOB_NAME}/logs/ALL_REVISIONS.txt > $tmpdir/upstream_ALL_REVISIONS.txt
-  cat $tmpdir/upstream_ALL_REVISIONS.txt >> $ALLREVS
-  echo "" >> $ALLREVS
+
+  # ensure upstream logs/ALL_REVISIONS.txt file actually exists
+  if [[ ! `wget ${wgetParams} -O - http://download.jboss.org/jbosstools/builds/staging/${UPSTREAM_JOB_NAME}/logs/ALL_REVISIONS.txt -O $tmpdir/upstream_ALL_REVISIONS.txt 2>&1 | egrep "ERROR 404"` ]]; then
+    cat $tmpdir/upstream_ALL_REVISIONS.txt >> $ALLREVS
+    echo "" >> $ALLREVS
+  fi
   rm -f $tmpdir/devstudio_SVN_REVISION.txt $tmpdir/upstreamProject.name.xml $tmpdir/upstream_ALL_REVISIONS.txt
 fi
 
