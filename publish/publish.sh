@@ -26,6 +26,20 @@ fi
 
 wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate -q"
 
+getRemoteFile ()
+{
+  # requires $wgetParams and $tmpdir to be defined (above)
+  getRemoteFileReturn=""
+  URL="$1"
+  output=$tmpdir/getRemoteFile.out
+  if [[ ! `wget ${wgetParams} ${URL} -O $tmpdir/${output} 2>&1 | egrep "ERROR 404"` ]]; then # file downloaded
+    getRemoteFileReturn=${output}
+  else
+    getRemoteFileReturn=""
+    rm -f ${output}
+  fi
+}
+
 # releases get named differently than snapshots
 if [[ ${RELEASE} == "Yes" ]]; then
   ZIPSUFFIX="${BUILD_ID}-B${BUILD_NUMBER}"
@@ -83,10 +97,12 @@ elif [[ -d ${WORKSPACE}/sources/site/target ]]; then
   z=$siteZip
 fi
 
+
 # note the job name, build number, SVN rev, and build ID of the latest snapshot zip
 mkdir -p ${STAGINGDIR}/logs
 bl=${STAGINGDIR}/logs/BUILDLOG.txt
-rm -f ${bl}; wget ${wgetParams} -O - http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText > ${bl}
+rm -f ${bl}; 
+getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText"; if [[ ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${bl}; fi
 
 # calculate BUILD_ALIAS from parent pom version as recorded in the build log, eg., from org/jboss/tools/parent/4.0.0.Alpha2-SNAPSHOT get Alpha2
 BUILD_ALIAS=$(cat ${bl} | grep "org/jboss/tools/parent/" | head -1 | sed -e "s#.\+org/jboss/tools/parent/\(.\+\)/\(maven-metadata.xml\|parent.\+\)#\1#" | sed -e "s#-SNAPSHOT##" | sed -e "s#[0-9].[0-9].[0-9].##")
@@ -101,14 +117,17 @@ rl=${STAGINGDIR}/logs/REVISION
 if [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then
   # Track git source revision through hudson api: /job/${JOB_NAME}/${BUILD_NUMBER}/api/xml?xpath=(//lastBuiltRevision)[1]
   rl=${STAGINGDIR}/logs/GIT_REVISION
-  rm -f ${rl}.txt ${rl}.xml; wget ${wgetParams} -O ${rl}.xml  "http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/api/xml?xpath=%28//lastBuiltRevision%29[1]"
+  rm -f ${rl}.txt ${rl}.xml 
+  getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/api/xml?xpath=%28//lastBuiltRevision%29[1]"; if [[ ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${rl}.xml; fi
+
   sed -e "s#<lastBuiltRevision><SHA1>\([a-f0-9]\+\)</SHA1><branch><SHA1>\([a-f0-9]\+\)</SHA1><name>\([^<>]\+\)</name></branch></lastBuiltRevision>#\3\@\1#g" ${rl}.xml | sed -e "s#<[^<>]\+>##g" > ${rl}.txt
   REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
   REV_LOG_DETAIL="`cat ${rl}.txt`"
 elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".svn") ]]; then
   # Track svn source revision through hudson api: /job/${JOB_NAME}/api/xml?wrapper=changeSet&depth=1&xpath=//build[1]/changeSet/revision
   rl=${STAGINGDIR}/logs/SVN_REVISION
-  rm -f ${rl}.txt ${rl}.xml; wget ${wgetParams} -O ${rl}.xml "http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/api/xml?wrapper=changeSet&depth=1&xpath=//build[1]/changeSet/revision"
+  rm -f ${rl}.txt ${rl}.xml
+  getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/api/xml?wrapper=changeSet&depth=1&xpath=//build[1]/changeSet/revision"; if [[ ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${rl}.xml; fi
   if [[ $? -eq 0 ]]; then
     sed -e "s#<module>\(http[^<>]\+\)</module><revision>\([0-9]\+\)</revision>#\1\@\2\n#g" ${rl}.xml | sed -e "s#<[^<>]\+>##g" > ${rl}.txt 
     REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
@@ -189,7 +208,8 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
   fi
 
   # get name of upstream project (eg., for devstudio.product_70 want jbosstools-build-sites.aggregate.site_41)
-  wget ${wgetParams} -O $tmpdir/upstreamProject.name.xml "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/api/xml?xpath=%28//upstreamProject/name%29[1]"
+  getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/api/xml?xpath=%28//upstreamProject/name%29[1]"; if [[ ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} $tmpdir/upstreamProject.name.xml; fi
+
   UPSTREAM_JOB_NAME=`sed -e "s#<name>\(.\+\)</name>#\1#g" $tmpdir/upstreamProject.name.xml`
   echo "" >> $ALLREVS
   echo "  >>> ${UPSTREAM_JOB_NAME} <<<" >> $ALLREVS
@@ -654,7 +674,9 @@ fi
 
 # publish updated log
 bl=${STAGINGDIR}/logs/BUILDLOG.txt
-rm -f ${bl}; wget ${wgetParams} -O - http://hudson.qa.jboss.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText > ${bl}
+
+rm -f ${bl}
+getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText"; if [[ ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${bl}; fi
 date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/logs $DESTINATION/builds/staging/${JOB_NAME}/
 date; rsync -arzq --delete ${STAGINGDIR}/logs $INTRNALDEST/builds/staging/${JOB_NAME}/
 
