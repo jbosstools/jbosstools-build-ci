@@ -32,7 +32,7 @@ getRemoteFile ()
   getRemoteFileReturn=""
   URL="$1"
   output=$tmpdir/getRemoteFile.out
-  if [[ ! `wget ${wgetParams} ${URL} -O $tmpdir/${output} 2>&1 | egrep "ERROR 404"` ]]; then # file downloaded
+  if [[ ! `wget ${wgetParams} ${URL} -O ${output} 2>&1 | egrep "ERROR 404"` ]]; then # file downloaded
     getRemoteFileReturn=${output}
   else
     getRemoteFileReturn=""
