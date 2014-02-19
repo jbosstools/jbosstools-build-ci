@@ -65,8 +65,8 @@ getSubDirs ()
 	echo "ls $dir" > $tmp
 	dirs=$(sftp -b $tmp tools@filemgmt.jboss.org 2>/dev/null)
 	i=0
-	for c in $dirs; do #exclude *.xml, *.html, *.properties, *.jar, *.zip, web/features/plugins/binary/.blobstore
-		if [[ $i -gt 2 ]] && [[ $c != "sftp>" ]] && [[ ${c##*.} != "" ]] && [[ ${c##*/*.*ml} != "" ]] && [[ ${c##*/*.properties} != "" ]] && [[ ${c##*/*.jar} != "" ]] && [[ ${c##*/*.zip} != "" ]] && [[ ${c##*/web} != "" ]] && [[ ${c##*/plugins} != "" ]] && [[ ${c##*/features} != "" ]] && [[ ${c##*/binary} != "" ]] && [[ ${c##*/.blobstore} != "" ]]; then
+	for c in $dirs; do #exclude *.xml, *.html, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
+		if [[ $i -gt 2 ]] && [[ $c != "sftp>" ]] && [[ ${c##*.} != "" ]] && [[ ${c##*/*.*ml} != "" ]] && [[ ${c##*/*.properties} != "" ]] && [[ ${c##*/*.jar} != "" ]] && [[ ${c##*/*.zip} != "" ]] && [[ ${c##*/*.MD5} != "" ]] && [[ ${c##*/*.md5} != "" ]] && [[ ${c##*/web} != "" ]] && [[ ${c##*/plugins} != "" ]] && [[ ${c##*/features} != "" ]] && [[ ${c##*/binary} != "" ]] && [[ ${c##*/.blobstore} != "" ]]; then
 			getSubDirsReturn=$getSubDirsReturn" "$c
 		fi
 		(( i++ ))
