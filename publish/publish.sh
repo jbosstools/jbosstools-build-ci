@@ -150,6 +150,13 @@ ALLREVS=${STAGINGDIR}/logs/ALL_REVISIONS.txt
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then
   GITREV_SOURCE="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}"
   echo "  >>> ${GITREV_SOURCE}/components <<<  " > $ALLREVS
+
+  if [[ -f ${WORKSPACE}/sources/aggregate/site/zips/ALL_REVISIONS.txt ]]; then
+    echo "" >> $ALLREVS
+    cat ${WORKSPACE}/sources/aggregate/site/zips/ALL_REVISIONS.txt >> $ALLREVS
+    echo "" >> $ALLREVS
+  fi
+
   # work locally if posible
   if [[ -d ${STAGINGDIR}/components ]]; then
     for f in `cd ${STAGINGDIR}/components; find . -maxdepth 1 -type f -name "*.zip" | sort`; do
@@ -195,17 +202,28 @@ fi
 if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
   echo "  >>> ${JOB_NAME} <<<" >> $ALLREVS
   ## work locally if posible
-  if [[ -f ${STAGINGDIR}/logs/SVN_REVISION.txt ]]; then
+  if [[ -f ${STAGINGDIR}/logs/GIT_REVISION.txt ]]; then
+    cp ${STAGINGDIR}/logs/GIT_REVISION.txt $tmpdir/devstudio_GIT_REVISION.txt
+  elif [[ -f ${STAGINGDIR}/logs/SVN_REVISION.txt ]]; then
     cp ${STAGINGDIR}/logs/SVN_REVISION.txt $tmpdir/devstudio_SVN_REVISION.txt
   else
-    # else fetch from server
-    if [[ ! `wget ${wgetParams} -O - http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt -O $tmpdir/devstudio_SVN_REVISION.txt 2>&1 | egrep "ERROR 404"` ]]; then
-      REV_LOG_URL="http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
-      REV_LOG_DETAIL="`cat $tmpdir/devstudio_SVN_REVISION.txt`"
-      cat $tmpdir/devstudio_SVN_REVISION.txt >> $ALLREVS
+    # else fetch from server - try git then fall back to svn (deprecated)
+    getRemoteFile "http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
+    if [[ ${getRemoteFileReturn} ]]; then 
+      mv ${getRemoteFileReturn} $tmpdir/devstudio_GIT_REVISION.txt 
+      REV_LOG_URL="http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
+      REV_LOG_DETAIL="`cat $tmpdir/devstudio_GIT_REVISION.txt`"
+    else
+      getRemoteFile "http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
+      if [[ ${getRemoteFileReturn} ]]; then 
+        mv ${getRemoteFileReturn} $tmpdir/devstudio_SVN_REVISION.txt 
+        REV_LOG_URL="http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
+        REV_LOG_DETAIL="`cat $tmpdir/devstudio_SVN_REVISION.txt`"
+      fi
     fi
-    # TODO JBDS-2627: switch this to pulling GIT_REV instead of SVN_REV
   fi
+  if [[ -f $tmpdir/devstudio_GIT_REVISION.txt ]]; then cat $tmpdir/devstudio_GIT_REVISION.txt >> $ALLREVS; fi
+  if [[ -f $tmpdir/devstudio_SVN_REVISION.txt ]]; then cat $tmpdir/devstudio_SVN_REVISION.txt >> $ALLREVS; fi
 
   # get name of upstream project (eg., for devstudio.product_70 want jbosstools-build-sites.aggregate.site_41)
   getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/api/xml?xpath=%28//upstreamProject/name%29[1]"; if [[ ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} $tmpdir/upstreamProject.name.xml; fi
@@ -223,7 +241,7 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
     cat $tmpdir/upstream_ALL_REVISIONS.txt >> $ALLREVS
     echo "" >> $ALLREVS
   fi
-  rm -f $tmpdir/devstudio_SVN_REVISION.txt $tmpdir/upstreamProject.name.xml $tmpdir/upstream_ALL_REVISIONS.txt
+  rm -f $tmpdir/devstudio_GIT_REVISION.txt $tmpdir/devstudio_SVN_REVISION.txt $tmpdir/upstreamProject.name.xml $tmpdir/upstream_ALL_REVISIONS.txt
 fi
 
 PUBLISH_STATUS=""
@@ -426,9 +444,10 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
   
   # TODO :: JBIDE-9870 When we have a -Update-Sources- zip, this can be removed
   mkdir -p ${STAGINGDIR}/all/sources  
-  # unpack component source zips like jbosstools-pi4soa-3.1_trunk-Sources-SNAPSHOT.zip or jbosstools-3.2_trunk.component--ws-Sources-SNAPSHOT.zip
-  for z in $(find ${WORKSPACE}/sources/aggregate/site/zips -name "*Sources*.zip"); do
-    zn=${z%*-Sources*.zip}; zn=${zn#*--}; zn=${zn##*/}; zn=${zn#jbosstools-}; 
+  # OLD: unpack component source zips like jbosstools-pi4soa-3.1_trunk-Sources-SNAPSHOT.zip or jbosstools-3.2_trunk.component--ws-Sources-SNAPSHOT.zip
+  # NEW: JBIDE-16632: unpack component source zips like jbosstools-base_Alpha2-v20140221-1555-B437_184e18cc3ac7c339ce406974b6a4917f73909cc4_sources.zip
+  for z in $(find ${WORKSPACE}/sources/aggregate/site/zips -name "*Sources*.zip" -o -name "*_sources.zip"); do
+    zn=${z%*-Sources*.zip}; zn=${zn%*_sources.zip}; zn=${zn#*--}; zn=${zn##*/}; zn=${zn#jbosstools-}; 
     # zn=${zn%_trunk}; zn=${zn%_stable_branch};
     mkdir -p ${STAGINGDIR}/all/sources/${zn}/
     unzip -qq -o -d ${STAGINGDIR}/all/sources/${zn}/ $z
