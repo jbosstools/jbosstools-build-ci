@@ -1,8 +1,18 @@
 #!/bin/bash
 
-# this Jenkins script is used to install a comma-separated list of IUs (.feature.groups) from a composite site into a pre-existing Eclipse installation, then diff 
-# whether the fresh installation differs from a previously cached install manifest (list of features/plugins)
-# if the install footprint is different from before, the composite site contains new content and we should fire a downstream job to produce a new aggregate site
+# this Jenkins script is used to install a comma-separated list of IUs (.feature.groups) from update site(s) into a pre-existing Eclipse installation
+# sample invocation:
+# eclipse=/home/nboldt/tmp/Eclipse_Bundles/eclipse-jee-luna-M6-linux-gtk-x86_64.tar.gz
+# workspace=/home/nboldt/eclipse/workspace-clean44
+# target=/home/nboldt/eclipse/44clean
+# rm -fr $target/eclipse $workspace
+# echo "Unpack $eclipse ..."
+# tar xzf $eclipse
+# ./installFromCentral.sh -ECLIPSE /home/nboldt/eclipse/44clean/eclipse/ -WORKSPACE /home/nboldt/eclipse/workspace-clean44 \
+# -INSTALL_PLAN http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/,http://www.qa.jboss.com/binaries/RHDS/discovery/nightly/core/master/devstudio-directory.xml \
+# | tee /tmp/log.txt; cat /tmp/log.txt | egrep -i "could not be found|FAILED|Missing"
+#
+# See also https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-install-p2director.install-tests.matrix_master/
 
 usage ()
 {
@@ -20,6 +30,8 @@ fi
 DIRECTORXML="http://download.jboss.org/jbosstools/updates/scripted-installation/director.xml"
 
 # read commandline args
+# NOTE: Jenkins matrix jobs require semi-colons here, but to pass to shell, must use quotes
+# On commandline, can use comma-separated pair instead so quotes aren't needed
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     '-INSTALL_PLAN') INSTALL_PLAN="${2/;/,}"; shift 1;; # replace ; with ,
@@ -63,9 +75,13 @@ if [[ -f ${WORKSPACE}/feature.groups.properties ]]; then
   for f in $FEATURES; do BASE_IUs="${BASE_IUs},${f}"; done; BASE_IUs=${BASE_IUs:1}
 fi
 
+date; du -sh ${ECLIPSE}
+
 # run scripted installation via p2.director
 ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
 -DsourceSites=${SITES} -Dinstall=${BASE_IUs}
+
+date; du -sh ${ECLIPSE}
 
 echo "--------------------------------"
 echo "BASE FEATURES INSTALLED"
@@ -117,9 +133,14 @@ CENTRAL_IUs=""; for f in $FEATURES; do CENTRAL_IUs="${CENTRAL_IUs},${f}.feature.
 EXTRA_URLS=`cat ${WORKSPACE}/plugin.transformed.xml | grep -i siteUrl | grep -v jboss.discovery.site.url | sed "s#.\+siteUrl=\"\(.\+\)\"\ *>#\1#" | sort | uniq`
 EXTRA_SITES=""; for e in $EXTRA_URLS; do EXTRA_SITES="${EXTRA_SITES},${e}"; done; EXTRA_SITES=${EXTRA_SITES:1}; #echo $EXTRA_SITES
 
+date; du -sh ${ECLIPSE}
+
 # run scripted installation via p2.director
 ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
--DsourceSites=${SITES},${EXTRA_SITES} -Dinstall=${CENTRAL_IUs} 
+-DsourceSites=${SITES},${EXTRA_SITES} -Dinstall=${CENTRAL_IUs}
+
+date; du -sh ${ECLIPSE}
+
 echo "--------------------------------"
 echo "CENTRAL FEATURES INSTALLED"
 echo "--------------------------------"
