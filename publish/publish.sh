@@ -31,12 +31,12 @@ getRemoteFile ()
   # requires $wgetParams and $tmpdir to be defined (above)
   getRemoteFileReturn=""
   URL="$1"
-  output=`mktemp --tmpdir=$tmpdir getRemoteFile.XXXXXX`
+  output=`mktemp getRemoteFile.XXXXXX`
   if [[ ! `wget ${wgetParams} ${URL} -O ${output} 2>&1 | egrep "ERROR 404"` ]]; then # file downloaded
-    getRemoteFileReturn=${output}
+    getRemoteFileReturn=${$tmpdir}/${output}
   else
     getRemoteFileReturn=""
-    rm -f ${output}
+    rm -f ${$tmpdir}/${output}
   fi
 }
 
