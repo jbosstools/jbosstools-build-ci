@@ -226,7 +226,12 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
   if [[ -f $tmpdir/devstudio_SVN_REVISION.txt ]]; then cat $tmpdir/devstudio_SVN_REVISION.txt >> $ALLREVS; fi
 
   # get name of upstream project (eg., for devstudio.product_70 want jbosstools-build-sites.aggregate.site_41)
-  getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/api/xml?xpath=%28//upstreamProject/name%29[1]"; if [[ -w ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} $tmpdir/upstreamProject.name.xml; fi
+  getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/api/xml?xpath=%28//upstreamProject/name%29[1]"; 
+  if [[ -r ${getRemoteFileReturn} ]] && [[ -w ${getRemoteFileReturn} ]]; then 
+    mv ${getRemoteFileReturn} $tmpdir/upstreamProject.name.xml
+  else
+    echo "<name>UNKNOWN</name>" > $tmpdir/upstreamProject.name.xml
+  fi
 
   UPSTREAM_JOB_NAME=`sed -e "s#<name>\(.\+\)</name>#\1#g" $tmpdir/upstreamProject.name.xml`
   echo "" >> $ALLREVS
