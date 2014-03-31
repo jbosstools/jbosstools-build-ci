@@ -274,12 +274,18 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
     fi
   elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then # check previous build's GIT_REVISION log
     REV_LOG_DETAIL="`cat ${rl}.txt`"
-    REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
-    rm -f ${PREV_REV_FILE}; PREV_REV_CHECK=`wget ${wgetParams} -O ${PREV_REV_FILE} http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt 2>/dev/null && echo "found" || echo "not found"`
-    if [[ ! ${PREV_REV_CHECK%%*not found*} ]]; then 
-      echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
-    elif [[ `cat ${rl}.txt` == `cat ${PREV_REV_FILE}` ]]; then 
-      showUnchangedMessage GIT 
+    if [[ ${REV_LOG_DETAIL} ]]; then # file has contents
+      REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
+      rm -f ${PREV_REV_FILE}; PREV_REV_CHECK=`wget ${wgetParams} -O ${PREV_REV_FILE} http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt 2>/dev/null && echo "found" || echo "not found"`
+      if [[ ! ${PREV_REV_CHECK%%*not found*} ]]; then 
+        echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
+      elif [[ `cat ${rl}.txt` == `cat ${PREV_REV_FILE}` ]]; then 
+        showUnchangedMessage GIT 
+      fi
+    else
+      # should never see this
+      echo "WARNING: no GIT_REVISION found in ${rl}.txt"
+      PUBLISH_STATUS=" (PUBLISHED: NO GIT_REVISION)"
     fi
   elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".svn") ]]; then # check previous build's SVN_REVISION log
     if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
