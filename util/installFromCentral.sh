@@ -6,7 +6,7 @@
 # workspace=${HOME}/eclipse/workspace-clean44
 # target=${HOME}/eclipse/44clean; rm -fr ${target}/eclipse ${workspace}
 # echo "Unpack $eclipse ..."; pushd ${target}; tar xzf ${eclipse}; popd
-# ./installFromCentral.sh -ECLIPSE ${HOME}/eclipse/44clean/eclipse/ -WORKSPACE ${HOME}/eclipse/workspace-clean44 \
+# ./installFromCentral.sh -ECLIPSE ${target}/eclipse/ -WORKSPACE ${workspace} \
 # -INSTALL_PLAN http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/,http://www.qa.jboss.com/binaries/RHDS/discovery/nightly/core/master/devstudio-directory.xml \
 # | tee /tmp/log.txt; cat /tmp/log.txt | egrep -i "could not be found|FAILED|Missing|Only one of the following|being installed|Cannot satisfy dependency|cannot be installed"
 #
@@ -101,28 +101,29 @@ if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then
   unzip -oq plugin.jar plugin.xml
 
   # extract the <iu id=""> and <connectorDescriptor siteUrl=""> properties, excluding commented out stuff
+  # DO NOT INDENT the next lines after cat
   cat << XSLT > ${WORKSPACE}/get-ius-and-siteUrls.xsl
-  <?xml version="1.0" encoding="UTF-8"?>
-  <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
-    <xsl:output omit-xml-declaration="yes"/>
-    <xsl:template match="comment()" />
-    <xsl:template match="connectorDescriptor">
-      <xsl:copy >
-        <xsl:for-each select="@siteUrl">
-          <xsl:copy />
-        </xsl:for-each>
-        <xsl:apply-templates />
-      </xsl:copy>
-    </xsl:template>
-    <xsl:template match="iu">
-      <xsl:copy >
-        <xsl:for-each select="@id">
-          <xsl:copy />
-        </xsl:for-each>
-        <xsl:apply-templates />
-      </xsl:copy>
-    </xsl:template>
-  </xsl:stylesheet>
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+  <xsl:output omit-xml-declaration="yes"/>
+  <xsl:template match="comment()" />
+  <xsl:template match="connectorDescriptor">
+    <xsl:copy >
+      <xsl:for-each select="@siteUrl">
+        <xsl:copy />
+      </xsl:for-each>
+      <xsl:apply-templates />
+    </xsl:copy>
+  </xsl:template>
+  <xsl:template match="iu">
+    <xsl:copy >
+      <xsl:for-each select="@id">
+        <xsl:copy />
+      </xsl:for-each>
+      <xsl:apply-templates />
+    </xsl:copy>
+  </xsl:template>
+</xsl:stylesheet>
 XSLT
 
   ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml \
