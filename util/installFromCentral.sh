@@ -2,15 +2,13 @@
 
 # this Jenkins script is used to install a comma-separated list of IUs (.feature.groups) from update site(s) into a pre-existing Eclipse installation
 # sample invocation:
-# eclipse=/home/nboldt/tmp/Eclipse_Bundles/eclipse-jee-luna-M6-linux-gtk-x86_64.tar.gz
-# workspace=/home/nboldt/eclipse/workspace-clean44
-# target=/home/nboldt/eclipse/44clean
-# rm -fr $target/eclipse $workspace
-# echo "Unpack $eclipse ..."
-# tar xzf $eclipse
-# ./installFromCentral.sh -ECLIPSE /home/nboldt/eclipse/44clean/eclipse/ -WORKSPACE /home/nboldt/eclipse/workspace-clean44 \
+# eclipse=${HOME}/tmp/Eclipse_Bundles/eclipse-jee-luna-M6-linux-gtk-x86_64.tar.gz
+# workspace=${HOME}/eclipse/workspace-clean44
+# target=${HOME}/eclipse/44clean; rm -fr ${target}/eclipse ${workspace}
+# echo "Unpack $eclipse ..."; pushd ${target}; tar xzf ${eclipse}; popd
+# ./installFromCentral.sh -ECLIPSE ${HOME}/eclipse/44clean/eclipse/ -WORKSPACE ${HOME}/eclipse/workspace-clean44 \
 # -INSTALL_PLAN http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/,http://www.qa.jboss.com/binaries/RHDS/discovery/nightly/core/master/devstudio-directory.xml \
-# | tee /tmp/log.txt; cat /tmp/log.txt | egrep -i "could not be found|FAILED|Missing"
+# | tee /tmp/log.txt; cat /tmp/log.txt | egrep -i "could not be found|FAILED|Missing|Only one of the following|being installed|Cannot satisfy dependency|cannot be installed"
 #
 # See also https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-install-p2director.install-tests.matrix_master/
 
