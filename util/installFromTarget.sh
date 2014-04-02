@@ -1,15 +1,13 @@
 #!/bin/bash
 
-# this Jenkins script is used to install a comma-separated list of IUs (.feature.groups) from update site(s) into a pre-existing Eclipse installation
+# this Jenkins script is used to install all IUs (plugins and feature.groups) from a target platform update site(s) into a pre-existing Eclipse installation
 # sample invocation:
-# eclipse=/home/nboldt/tmp/Eclipse_Bundles/eclipse-jee-luna-M6-linux-gtk-x86_64.tar.gz
-# workspace=/home/nboldt/eclipse/workspace-clean44
-# target=/home/nboldt/eclipse/44clean
-# rm -fr $target/eclipse $workspace
-# echo "Unpack $eclipse ..."
-# tar xzf $eclipse
-# ./installFromTarget.sh -ECLIPSE /home/nboldt/eclipse/44clean/eclipse/ -WORKSPACE /home/nboldt/eclipse/workspace-clean44 \
-# -INSTALL_PLAN file:///home/nboldt/eclipse/workspace-jboss/jbosstools-github-master/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/ \
+# eclipse=${HOME}/tmp/Eclipse_Bundles/eclipse-jee-luna-M6-linux-gtk-x86_64.tar.gz
+# workspace=${HOME}/eclipse/workspace-clean44
+# target=${HOME}/eclipse/44clean; rm -fr ${target}/eclipse ${workspace}
+# echo "Unpack $eclipse ..."; pushd ${target}; tar xzf ${eclipse}; popd
+# ./installFromTarget.sh -ECLIPSE ${target}/eclipse/ -WORKSPACE ${workspace} \
+# -INSTALL_PLAN file://${HOME}/eclipse/workspace-jboss/jbosstools-github-master/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/ \
 # | tee /tmp/log.txt; cat /tmp/log.txt | egrep -i "could not be found|FAILED|Missing|Only one of the following|being installed|Cannot satisfy dependency|cannot be installed"
 #
 # See also https://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/Target-Platforms/job/jbosstoolstargetplatforms-matrix/
@@ -18,7 +16,7 @@ usage ()
 {
   echo "Usage: $0 -ECLIPSE /path/to/eclipse-install/ -INSTALL_PLAN /path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/"
   echo "Example: $0 -ECLIPSE ${WORKSPACE}/eclipse/ -INSTALL_PLAN ${WORKSPACE}/jbosstools/multiple/target/jbosstools-multiple.target.repo/"
-  echo "Example: $0 -ECLIPSE ${HOME}/eclipse/44clean/eclipse/ -INSTALL_PLAN file:///home/nboldt/eclipse/workspace-jboss/jbosstools-github-master/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/"
+  echo "Example: $0 -ECLIPSE ${HOME}/eclipse/44clean/eclipse/ -INSTALL_PLAN file://${HOME}/eclipse/workspace-jboss/jbosstools-github-master/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/"
   exit 1;
 }
 
