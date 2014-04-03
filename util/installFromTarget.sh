@@ -8,7 +8,7 @@
 # echo "Unpack $eclipse ..."; pushd ${target}; tar xzf ${eclipse}; popd
 # ./installFromTarget.sh -ECLIPSE ${target}/eclipse/ -WORKSPACE ${workspace} \
 # -INSTALL_PLAN file://${HOME}/eclipse/workspace-jboss/jbosstools-github-master/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/ \
-# | tee /tmp/log.txt; cat /tmp/log.txt | egrep -i "could not be found|FAILED|Missing|Only one of the following|being installed|Cannot satisfy dependency|cannot be installed"
+# | tee /tmp/log.txt; cat /tmp/log.txt | egrep -i -A2 "could not be found|FAILED|Missing|Only one of the following|being installed|Cannot satisfy dependency|cannot be installed"
 #
 # See also https://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/Target-Platforms/job/jbosstoolstargetplatforms-matrix/
 
