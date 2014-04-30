@@ -4,10 +4,14 @@
 # whether the fresh installation differs from a previously cached install manifest (list of features/plugins)
 # if the install footprint is different from before, the composite site contains new content and we should fire a downstream job to produce a new aggregate site
 
+# NOTE: if no list of IUs is provided, this script will simply call installFromTarget.sh and install all plugins and features from the list of SITES 
+
 usage ()
 {
 	echo "Usage: $0 -COMP_PATH path/to/composite/ -SITES http://target-platform-site,http://composite-site/ -IUs a.feature.group,b.feature.group"
 	echo "Example: $0 -COMP_PATH builds/staging/_composite_/core/trunk/ -SITES http://download.jboss.org/jbosstools/updates/kepler/,http://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/ -IUs org.hibernate.eclipse.feature.feature.group,org.jboss.ide.eclipse.archives.feature.feature.group,..."
+	echo "Usage 2: $0 -COMP_PATH path/to/composite/ -SITES http://target-platform-site,http://composite-site/ # install everything"
+	echo "Example: $0 -COMP_PATH builds/staging/_composite_/core/trunk/ -SITES http://download.jboss.org/jbosstools/updates/kepler/,http://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/"
 	exit 1;
 }
 
@@ -18,7 +22,7 @@ fi
 #defaults
 COMP_PATH="builds/staging/_composite_/core/trunk/"
 SITES="http://download.jboss.org/jbosstools/updates/kepler/,http://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/"
-IUs="org.hibernate.eclipse.feature.feature.group,org.jboss.ide.eclipse.archives.feature.feature.group,org.jboss.ide.eclipse.as.feature.feature.group,org.jboss.ide.eclipse.freemarker.feature.feature.group,org.jboss.tools.cdi.deltaspike.feature.feature.group,org.jboss.tools.cdi.feature.feature.group,org.jboss.tools.cdi.seam.feature.feature.group,org.jboss.tools.common.jdt.feature.feature.group,org.jboss.tools.common.mylyn.feature.feature.group,org.jboss.tools.community.central.feature.feature.group,org.jboss.tools.community.project.examples.feature.feature.group,org.jboss.tools.forge.feature.feature.group,org.jboss.tools.jmx.feature.feature.group,org.jboss.tools.jsf.feature.feature.group,org.jboss.tools.jst.feature.feature.group,org.jboss.tools.maven.cdi.feature.feature.group,org.jboss.tools.maven.feature.feature.group,org.jboss.tools.maven.hibernate.feature.feature.group,org.jboss.tools.maven.jbosspackaging.feature.feature.group,org.jboss.tools.maven.jdt.feature.feature.group,org.jboss.tools.maven.portlet.feature.feature.group,org.jboss.tools.maven.profiles.feature.feature.group,org.jboss.tools.maven.project.examples.feature.feature.group,org.jboss.tools.maven.seam.feature.feature.group,org.jboss.tools.maven.sourcelookup.feature.feature.group,org.jboss.tools.openshift.egit.integration.feature.feature.group,org.jboss.tools.openshift.express.feature.feature.group,org.jboss.tools.portlet.feature.feature.group,org.jboss.tools.project.examples.feature.feature.group,org.jboss.tools.richfaces.feature.feature.group,org.jboss.tools.runtime.core.feature.feature.group,org.jboss.tools.runtime.seam.detector.feature.feature.group,org.jboss.tools.seam.feature.feature.group,org.jboss.tools.usage.feature.feature.group,org.jboss.tools.vpe.browsersim.feature.feature.group,org.jboss.tools.vpe.feature.feature.group,org.jboss.tools.ws.feature.feature.group,org.jboss.tools.ws.jaxrs.feature.feature.group"
+IUs=""
 DESTINATION="tools@filemgmt.jboss.org:/downloads_htdocs/tools"
 DEST_URL="http://download.jboss.org/jbosstools"
 manifest="composite.site.IUs.txt"
@@ -43,11 +47,20 @@ rm -f ${WORKSPACE}/${manifest}_PREVIOUS
 wget -q ${DEST_URL}/${COMP_PATH}/${manifest} -O ${WORKSPACE}/${manifest}_PREVIOUS --no-check-certificate -N
 touch ${WORKSPACE}/${manifest}_PREVIOUS 
 
-# run scripted installation via p2.director
-rm -f ${WORKSPACE}/director.xml
-wget ${DEST_URL}/updates/scripted-install/director.xml -q --no-check-certificate -N
-chmod +x ${WORKSPACE}/eclipse/eclipse
-${WORKSPACE}/eclipse/eclipse -consolelog -nosplash -data /tmp -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${WORKSPACE}/eclipse -DsourceSites=${SITES} -Dinstall=${IUs} 
+# if IUs are not defined via commandline, find all the IUs (plugins and features) on the specified SITES and install everything using installFromTarget.sh script
+if [[ ! $IUs ]]; then 
+	rm -f ${WORKSPACE}/installFromTarget.sh ${WORKSPACE}/data
+	wget https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/installFromTarget.sh -q --no-check-certificate -N
+	chmod +x ${WORKSPACE}/installFromTarget.sh ${WORKSPACE}/eclipse/eclipse
+	${WORKSPACE}/installFromTarget.sh -ECLIPSE ${WORKSPACE}/eclipse/ -INSTALL_PLAN ${SITES} -WORKSPACE ${WORKSPACE}/data
+else
+	# run scripted installation via p2.director
+	rm -f ${WORKSPACE}/director.xml ${WORKSPACE}/data
+	wget ${DEST_URL}/updates/scripted-install/director.xml -q --no-check-certificate -N
+	chmod +x ${WORKSPACE}/eclipse/eclipse
+	${WORKSPACE}/eclipse/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml \
+	-DtargetDir=${WORKSPACE}/eclipse -DsourceSites=${SITES} -Dinstall=${IUs} 
+fi
 
 # collect a list of IUs in the installation - if Eclipse version or any included IUs change, this will change and cause downstream to spin. THIS IS GOOD.
 pushd ${WORKSPACE}/eclipse/ >/dev/null
