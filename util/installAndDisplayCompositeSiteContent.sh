@@ -53,13 +53,20 @@ if [[ ! $IUs ]]; then
 	wget https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/installFromTarget.sh -q --no-check-certificate -N
 	chmod +x ${WORKSPACE}/installFromTarget.sh ${WORKSPACE}/eclipse/eclipse
 	${WORKSPACE}/installFromTarget.sh -ECLIPSE ${WORKSPACE}/eclipse/ -INSTALL_PLAN ${SITES} -WORKSPACE ${WORKSPACE}/data
+	res=$?
 else
 	# run scripted installation via p2.director
 	rm -f ${WORKSPACE}/director.xml ${WORKSPACE}/data
 	wget ${DEST_URL}/updates/scripted-install/director.xml -q --no-check-certificate -N
 	chmod +x ${WORKSPACE}/eclipse/eclipse
 	${WORKSPACE}/eclipse/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml \
-	-DtargetDir=${WORKSPACE}/eclipse -DsourceSites=${SITES} -Dinstall=${IUs} 
+	-DtargetDir=${WORKSPACE}/eclipse -DsourceSites=${SITES} -Dinstall=${IUs}
+	res=$?
+fi
+
+if [[ "${res}" -ne "0" ]]; then
+	echo Installation from composite failed
+	exit $res
 fi
 
 # collect a list of IUs in the installation - if Eclipse version or any included IUs change, this will change and cause downstream to spin. THIS IS GOOD.
