@@ -49,14 +49,14 @@ touch ${WORKSPACE}/${manifest}_PREVIOUS
 
 # if IUs are not defined via commandline, find all the IUs (plugins and features) on the specified SITES and install everything using installFromTarget.sh script
 if [[ ! $IUs ]]; then 
-	rm -f ${WORKSPACE}/installFromTarget.sh ${WORKSPACE}/data
+	rm -fr ${WORKSPACE}/installFromTarget.sh ${WORKSPACE}/data
 	wget https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/installFromTarget.sh -q --no-check-certificate -N
 	chmod +x ${WORKSPACE}/installFromTarget.sh ${WORKSPACE}/eclipse/eclipse
 	${WORKSPACE}/installFromTarget.sh -ECLIPSE ${WORKSPACE}/eclipse/ -INSTALL_PLAN ${SITES} -WORKSPACE ${WORKSPACE}/data
 	res=$?
 else
 	# run scripted installation via p2.director
-	rm -f ${WORKSPACE}/director.xml ${WORKSPACE}/data
+	rm -fr ${WORKSPACE}/director.xml ${WORKSPACE}/data
 	wget ${DEST_URL}/updates/scripted-install/director.xml -q --no-check-certificate -N
 	chmod +x ${WORKSPACE}/eclipse/eclipse
 	${WORKSPACE}/eclipse/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml \
@@ -65,7 +65,7 @@ else
 fi
 
 if [[ "${res}" -ne "0" ]]; then
-	echo Installation from composite failed
+	echo "Installation from composite failed with return code $res"
 	exit $res
 fi
 
