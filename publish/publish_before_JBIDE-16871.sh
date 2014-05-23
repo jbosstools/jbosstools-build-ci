@@ -48,11 +48,11 @@ else
 fi
 
 # define target update zip filename
-SNAPNAME="${JOB_NAME}-${ZIPSUFFIX}-updatesite.zip"
+SNAPNAME="${JOB_NAME}-Update-${ZIPSUFFIX}.zip"
 # define target sources zip filename
-SRCSNAME="${JOB_NAME}-${ZIPSUFFIX}-src.zip"
+SRCSNAME="${JOB_NAME}-Sources-${ZIPSUFFIX}.zip"
 # define suffix to use for additional update sites
-SUFFNAME="${ZIPSUFFIX}-updatesite.zip"
+SUFFNAME="-Update-${ZIPSUFFIX}.zip"
 
 # for JBDS, use DESTINATION=/qa/services/http/binaries/RHDS
 if [[ $DESTINATION == "" ]]; then DESTINATION="tools@filemgmt.jboss.org:/downloads_htdocs/tools"; fi
@@ -161,7 +161,7 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
   if [[ -d ${STAGINGDIR}/components ]]; then
     for f in `cd ${STAGINGDIR}/components; find . -maxdepth 1 -type f -name "*.zip" | sort`; do
       REV=
-      g=`echo $f | sed 's#\.\/\([^<>]\+\)(-Update|-updatesite).\+.zip#\1#g'`
+      g=`echo $f | sed 's#\.\/\([^<>]\+\)-Update-.\+.zip#\1#g'`
       if [[ ! `wget ${wgetParams} http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -O $tmpdir/${g}_GIT_REVISION.txt 2>&1 | egrep "ERROR 404"` ]]; then
         REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
       else
@@ -180,7 +180,7 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
         true;
       elif [[ ${f/zip/} != ${f} ]]; then
         REV=
-        g=`echo $f | sed 's#href=".\+zip">\([^<>]\+\)(-Update|-updatesite).\+.zip</a>.\+#\1#g'`
+        g=`echo $f | sed 's#href=".\+zip">\([^<>]\+\)-Update-.\+.zip</a>.\+#\1#g'`
         if [[ ! `wget ${wgetParams} http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -O $tmpdir/${g}_GIT_REVISION.txt 2>&1 | egrep "ERROR 404"` ]]; then
           REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
         else
@@ -392,14 +392,14 @@ for z in $(find ${WORKSPACE}/sources/*/site/target -type f -name "repository.zip
 done
 
 # if installer jars exist (should be 2 installers, 2 md5sums)
-for z in $(find ${WORKSPACE}/sources/product/installer/target -type f -name "jboss-devstudio*-installer*.jar*"); do 
+for z in $(find ${WORKSPACE}/sources/product/installer/target -type f -name "jbdevstudio-product*-universal*.jar*"); do 
   mkdir -p ${STAGINGDIR}/installer/
   rsync -aq $z ${STAGINGDIR}/installer/
 done
 
 # unless this is a product build, if zips exist produced & renamed by ant script, copy them too
 if [[ ${JOB_NAME/.product} == ${JOB_NAME} ]] && [[ ! -f ${STAGINGDIR}/all/${SNAPNAME} ]]; then
-  for z in $(find ${WORKSPACE} -maxdepth 5 -mindepth 3 -name "*updatesite-*.zip" | sort | tail -1); do 
+  for z in $(find ${WORKSPACE} -maxdepth 5 -mindepth 3 -name "*Update*.zip" | sort | tail -1); do 
     #echo "$z ..."
     if [[ -f $z ]]; then
       mkdir -p ${STAGINGDIR}/all
@@ -447,7 +447,7 @@ fi
 # collect component zips from upstream aggregated build jobs
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then
   mkdir -p ${STAGINGDIR}/components
-  for z in $(find ${WORKSPACE}/sources/aggregate/site/zips -name "*updatesite-*.zip"); do
+  for z in $(find ${WORKSPACE}/sources/aggregate/site/zips -name "*Update*.zip"); do
     # generate MD5 sum for zip (file contains only the hash, not the hash + filename)
     for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done
     mv $z ${z}.MD5 ${STAGINGDIR}/components
@@ -482,14 +482,14 @@ fi
 # JBIDE-9870 check if there's a sources update site and rename it if found (note, bottests-site/site/sources won't work; use bottests-site/souces)
 for z in $(find ${WORKSPACE}/sources/aggregate/*/sources/target/ -name "repository.zip" -o -name "site_assembly.zip"); do
   echo "Collect sources from update site in $z"
-  mv $z ${STAGINGDIR}/all/${SRCSNAME/-src/-updatesite-src}
+  mv $z ${STAGINGDIR}/all/${SRCSNAME/-Sources-/-Update-Sources-}
   for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done 
 done
 
 # generate list of zips in this job
 METAFILE=zip.list.txt
 echo "ALL_ZIPS = \\" >> ${STAGINGDIR}/logs/${METAFILE}
-for z in $(find ${STAGINGDIR} -name "*updatesite-*.zip") $(find ${STAGINGDIR} -name "*Sources*.zip"); do
+for z in $(find ${STAGINGDIR} -name "*Update*.zip") $(find ${STAGINGDIR} -name "*Sources*.zip"); do
   # list zips in staging dir
   echo "${z##${STAGINGDIR}/},\\"  >> ${STAGINGDIR}/logs/${METAFILE}
 done
@@ -500,11 +500,11 @@ pushd ${STAGINGDIR} >/dev/null
 md5sumsFile=${STAGINGDIR}/logs/md5sums.txt
 echo "# Update Site Zips" > ${md5sumsFile}
 echo "# ----------------" >> ${md5sumsFile}
-md5sum $(find . -name "*updatesite-*.zip" | egrep -v -i "aggregate-Sources|src|nightly-update") >> ${md5sumsFile}
+md5sum $(find . -name "*Update*.zip" | egrep -v "aggregate-Sources|nightly-Update") >> ${md5sumsFile}
 echo "  " >> ${md5sumsFile}
 echo "# Source Zips" >> ${md5sumsFile}
 echo "# -----------" >> ${md5sumsFile}
-md5sum $(find . -iname "*src*.zip" | egrep -v -i "aggregate-Sources|src|nightly-update") >> ${md5sumsFile}
+md5sum $(find . -iname "*source*.zip" | egrep -v "aggregate-Sources|nightly-Update") >> ${md5sumsFile}
 echo " " >> ${md5sumsFile}
 popd >/dev/null
 
