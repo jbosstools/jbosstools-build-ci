@@ -457,17 +457,21 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
   mkdir -p ${STAGINGDIR}/all/sources  
   # OLD: unpack component source zips like jbosstools-pi4soa-3.1_trunk-Sources-SNAPSHOT.zip or jbosstools-3.2_trunk.component--ws-Sources-SNAPSHOT.zip
   # NEW: JBIDE-16632: unpack component source zips like jbosstools-base_Alpha2-v20140221-1555-B437_184e18cc3ac7c339ce406974b6a4917f73909cc4_sources.zip
-  for z in $(find ${WORKSPACE}/sources/aggregate/site/zips -name "*Sources*.zip" -o -name "*_sources.zip"); do
-    zn=${z%*-Sources*.zip}; zn=${zn%*_sources.zip}; zn=${zn#*--}; zn=${zn##*/}; zn=${zn#jbosstools-}; 
+  for z in $(find ${WORKSPACE}/sources/aggregate/site/zips -name "*Sources*.zip" -o -name "*_sources.zip" -o -name "*-src.zip"); do
+    zn=${z%*-Sources*.zip}; zn=${zn%*_sources.zip}; zn=${zn%*-src.zip}; zn=${zn#*--}; zn=${zn##*/}; zn=${zn#jbosstools-}; 
     # zn=${zn%_trunk}; zn=${zn%_stable_branch};
     mkdir -p ${STAGINGDIR}/all/sources/${zn}/
-    unzip -qq -o -d ${STAGINGDIR}/all/sources/${zn}/ $z
+    # remove one level of folder nesting - don't want an extra jbosstools-base-184e18cc3ac7c339ce406974b6a4917f73909cc4 folder under jbosstools-base_Alpha2-v20140221-1555-B437_184e18cc3ac7c339ce406974b6a4917f73909cc4
+    unzip -qq -o -d ${tmpdir}/${zn}/ $z
+    mkdir -p ${STAGINGDIR}/all/sources/${zn}/
+    mv ${tmpdir}/${zn}/jbosstools-*/* ${STAGINGDIR}/all/sources/${zn}/
+    rm -fr ${tmpdir}/${zn}/
   done
   # add component sources into sources zip
   pushd ${STAGINGDIR}/all/sources
   zip ${STAGINGDIR}/all/${SRCSNAME} -q -r * -x hudson_workspace\* -x documentation\* -x download.jboss.org\* -x requirements\* \
     -x workingset\* -x labs\* -x build\* -x \*test\* -x \*target\* -x \*.class -x \*.svn\* -x \*classes\* -x \*bin\* -x \*.zip \
-    -x \*docs\* -x \*reference\* -x \*releng\* -x \*.git\* -x \*/lib/\*.jar
+    -x \*docs\* -x \*reference\* -x \*releng\* -x \*.git\* -x \*/lib/\*.jar -x getRemoteFile.\*
   popd
   rm -fr ${STAGINGDIR}/all/sources
   z=${STAGINGDIR}/all/${SRCSNAME}; for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done
