@@ -452,7 +452,7 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
     for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done
     mv $z ${z}.MD5 ${STAGINGDIR}/components
   done
-  
+
   # TODO :: JBIDE-9870 When we have a -Update-Sources- zip, this can be removed
   mkdir -p ${STAGINGDIR}/all/sources  
   # OLD: unpack component source zips like jbosstools-pi4soa-3.1_trunk-Sources-SNAPSHOT.zip or jbosstools-3.2_trunk.component--ws-Sources-SNAPSHOT.zip
@@ -671,6 +671,10 @@ if [[ $ec == "0" ]] && [[ $fc == "0" ]]; then
 
     # create a snapshot dir outside Hudson which is file:// accessible
     mkdir -p $INTRNALDEST/builds/staging/${JOB_NAME}.next/
+
+    # if empty, remove the components/ dir
+    if [[ ! `ls -A ${STAGINGDIR}/components` ]]; then rmdir ${STAGINGDIR}/components; fi
+
     date; rsync -arzq --delete ${STAGINGDIR}/* $INTRNALDEST/builds/staging/${JOB_NAME}.next/
 
     # cycle internal copy of ${JOB_NAME} in staging and staging.previous
