@@ -671,10 +671,6 @@ if [[ $ec == "0" ]] && [[ $fc == "0" ]]; then
 
     # create a snapshot dir outside Hudson which is file:// accessible
     mkdir -p $INTRNALDEST/builds/staging/${JOB_NAME}.next/
-
-    # if empty, remove the components/ dir
-    if [[ ! `ls -A ${STAGINGDIR}/components` ]]; then rmdir ${STAGINGDIR}/components; fi
-
     date; rsync -arzq --delete ${STAGINGDIR}/* $INTRNALDEST/builds/staging/${JOB_NAME}.next/
 
     # cycle internal copy of ${JOB_NAME} in staging and staging.previous
