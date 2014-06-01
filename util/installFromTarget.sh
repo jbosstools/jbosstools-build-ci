@@ -71,7 +71,10 @@ for f in feature.group.list.properties plugin.list.properties; do
   if [[ -f ${WORKSPACE}/${f} ]]; then 
     # TODO: find a better way to filter swt platform fragments like org.eclipse.swt.cocoa.macosx.x86_64 and org.eclipse.swt.cocoa.win32.win32.x86_64 
     # which are not identified as fragments and which cannot be installed onto a linux machine during this install test
-    ALL_IUS=`cat ${WORKSPACE}/${f} | egrep -v "win32|cocoa|macosx|x86|_64|ppc|aix|solaris|hpux|s390|ia64" | grep "=" | sed "s#\(.\+\)=.\+#\1#" | sort | uniq`
+    # also filter out any lines w/ spaces, as they are comments, not IU=version
+    # eg. if running with JDK 8: "Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=256m; support was removed in 8.0"
+    # or remove m2e log details: "org.eclipse.m2e.logback.configuration: The org.eclipse.m2e.logback.configuration bundle was activated before the state location was initialized.  Will retry after the state location is initialized."
+    ALL_IUS=`cat ${WORKSPACE}/${f} | egrep -v "win32|cocoa|macosx|x86|_64|ppc|aix|solaris|hpux|s390|ia64| " | grep "=" | sed "s#\(.\+\)=.\+#\1#" | sort | uniq`
     for f in $ALL_IUS; do BASE_IUs="${BASE_IUs},${f}"; done
   fi
 done
