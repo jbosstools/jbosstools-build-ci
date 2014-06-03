@@ -52,7 +52,11 @@ if [[ $# -lt 1 ]]; then
 fi
 
 # defaults
+MVN="mvn"
 targetplatformutilsversion=0.19.0-SNAPSHOT
+INSTALLSCRIPT=/tmp/installFromTarget.sh
+LOG_GREP_INCLUDES="Only one of the following|Missing requirement|Unresolved requirement|IllegalArgumentException|Could not resolve|could not be found|being installed|Cannot satisfy dependency|FAILED"
+LOG_GREP_EXCLUDES="Failed to execute goal org.jboss.tools.tycho-plugins:target-platform-utils"
 #BASEDIR=`pwd`
 #ECLIPSEZIP=${HOME}/tmp/Eclipse_Bundles/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz
 #UPSTREAM_SITES=file://$HOME/tru/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,http://download.jboss.org/jbosstools/updates/nightly/core/master/
@@ -67,6 +71,7 @@ while [[ "$#" -gt 0 ]]; do
     '-u') UPSTREAM_SITES="$2"; shift 1;;
     '-d') P2DIFF="$2"; shift 1;;
     '-p') PROJECTS="$PROJECTS $2"; shift 1;;
+    '-m') MVN="$2"; shift 1;;
        *) others="$others,$1"; shift 0;;
   esac
   shift 1
@@ -114,7 +119,7 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
   fi
 
   if [[ ! -d ${WORKDIR} ]]; then
-    echo "Error: cannot find WORKDIR = ${WORKDIR} - must exit."
+    echo "Error: cannot find WORKDIR = ${WORKDIR} - must exit!"
     exit 1
   fi
 
@@ -134,8 +139,10 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
   pushd ${WORKDIR}
 
   for tf in *.target; do 
-    mvn -U org.jboss.tools.tycho-plugins:target-platform-utils:${targetplatformutilsversion}:fix-versions -DtargetFile=${tf} \
-      | tee /tmp/fix-versions_${tf}_log_${PROJECT}_${NOW}.txt; if [[ "$?" != "0" ]]; then exit; fi
+    logfile=/tmp/fix-versions_${tf}_log_${PROJECT}_${NOW}.txt
+    echo "${MVN} -U org.jboss.tools.tycho-plugins:target-platform-utils:${targetplatformutilsversion}:fix-versions -DtargetFile=${tf}" | tee $logfile
+    ${MVN} -U org.jboss.tools.tycho-plugins:target-platform-utils:${targetplatformutilsversion}:fix-versions -DtargetFile=${tf} | tee -a $logfile
+    egrep -i -v "$LOG_GREP_EXCLUDES" $logfile | egrep -i -A2 "$LOG_GREP_INCLUDES"; if [[ "$?" == "0" ]]; then break 2; fi
     if [[ -f ${tf}_fixedVersion.target ]]; then rm -f ${tf} *_update_hints.txt; mv -f ${tf}{_fixedVersion.target,}; fi
   done
   popd
@@ -147,7 +154,11 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
 
   # TODO: if you removed IUs, be sure to do a `mvn clean install`, rather than just a `mvn install`; process will be much longer but will guarantee metadata is correct
   pushd ${WORKSPACE}
-  mvn install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ -Dmirror-target-to-repo.includeSources=true | tee /tmp/resolve_log_${PROJECT}_${NOW}.txt; if [[ "$?" != "0" ]]; then exit; fi
+  logfile=/tmp/resolve_log_${PROJECT}_${NOW}.txt
+  echo "${MVN} install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ -Dmirror-target-to-repo.includeSources=true" | tee $logfile
+  ${MVN} install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ -Dmirror-target-to-repo.includeSources=true | tee -a $logfile
+  egrep -i -v "$LOG_GREP_EXCLUDES" $logfile | egrep -i -A2 "$LOG_GREP_INCLUDES"; if [[ "$?" == "0" ]]; then break 2; fi
+
   popd
 
   if [[ -f ${ECLIPSEZIP} ]]; then 
@@ -156,7 +167,6 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
     echo "        to verify that everything can be installed ..."
     echo ""
     INSTALLDIR=/tmp/${PROJECT}target-install-test
-    INSTALLSCRIPT=/tmp/installFromTarget.sh
     rm -fr ${INSTALLDIR} && mkdir -p ${INSTALLDIR}
     pushd ${INSTALLDIR}
       echo "  Unpack ${ECLIPSEZIP} into ${INSTALLDIR} ..."
@@ -165,18 +175,19 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
       wget -q --no-check-certificate -N https://raw.githubusercontent.com/jbosstools/jbosstools-build-ci/master/util/installFromTarget.sh -O ${INSTALLSCRIPT}
       chmod +x ${INSTALLSCRIPT}
       echo "  Install..."
+      logfile=${INSTALLSCRIPT}_log_${PROJECT}_${NOW}.txt
       if [[ ${UPSTREAM_SITES} ]]; then
-        ${INSTALLSCRIPT} -ECLIPSE ${INSTALLDIR}/eclipse -INSTALL_PLAN ${UPSTREAM_SITES},file://${WORKDIR}/target/${REPODIR}/ | tee ${INSTALLSCRIPT}_log_${PROJECT}_${NOW}.txt
+        ${INSTALLSCRIPT} -ECLIPSE ${INSTALLDIR}/eclipse -INSTALL_PLAN ${UPSTREAM_SITES},file://${WORKDIR}/target/${REPODIR}/ | tee $logfile
       else
         echo ""
         echo "  No UPSTREAM_SITES specified. If installation fails, try adding more upstream sites to help resolving dependencies."
         echo ""
-        ${INSTALLSCRIPT} -ECLIPSE ${INSTALLDIR}/eclipse -INSTALL_PLAN file://${WORKDIR}/target/${REPODIR}/ | tee ${INSTALLSCRIPT}_log_${PROJECT}_${NOW}.txt
+        ${INSTALLSCRIPT} -ECLIPSE ${INSTALLDIR}/eclipse -INSTALL_PLAN file://${WORKDIR}/target/${REPODIR}/ | tee $logfile
       fi
       echo ""
       echo "  Scan log ( ${INSTALLSCRIPT}_log_${PROJECT}_${NOW}.txt ) for errors ..."
       echo ""
-      cat ${INSTALLSCRIPT}_log_${PROJECT}_${NOW}.txt | egrep -i -A2 "IllegalArgumentException|Could not resolve|error|Unresolved requirement|could not be found|FAILED|Missing|Only one of the following|being installed|Cannot satisfy dependency"; if [[ "$?" == "0" ]]; then break; fi
+      egrep -i -v "$LOG_GREP_EXCLUDES" $logfile | egrep -i -A2 "$LOG_GREP_INCLUDES"; if [[ "$?" == "0" ]]; then break 2; fi
     popd
   else
     echo ""
@@ -200,14 +211,11 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
 done
 
 echo ""
-echo "Logs & temporary files"
+echo "Logs & temporary files ($NOW)"
+echo "-----------------------------------------"
 echo ""
-for d in /tmp/${REPODIR}_${NOW} /tmp/fix-versions_log_${PROJECT}_${NOW}.txt /tmp/resolve_log_${PROJECT}_${NOW}.txt ${INSTALLSCRIPT}_log_${PROJECT}_${NOW}.txt /tmp/p2diff_log_${PROJECT}_${NOW}.txt; do
-  if [[ -f $d ]]; then
-    echo "F: $d"
-  elif [[ -d $d ]]; then
-    echo "D: $d"
-  else
-    echo "?: $d"
+for d in /tmp/${REPODIR}_${NOW} /tmp/fix-versions_*_log_${PROJECT}_${NOW}.txt /tmp/resolve_log_${PROJECT}_${NOW}.txt ${INSTALLSCRIPT}_log_${PROJECT}_${NOW}.txt ${INSTALLDIR} /tmp/p2diff_log_${PROJECT}_${NOW}.txt; do
+  if [[ -f $d ]] || [[ -d $d ]]; then
+    echo "* $d"
   fi
 done
