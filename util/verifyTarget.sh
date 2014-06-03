@@ -9,7 +9,7 @@
 # -b `pwd`
 
 # comma-separated list of projects to build
-# -p jbtcentral,jbearlyaccess
+# -p jbtcentral,jbtearlyaccess
 # -p jbosstools,jbdevstudio
 
 # OPTIONAL if you want to perform an install test, rather than just ensure that your TP can be validated and resolved locally
@@ -30,18 +30,26 @@ usage ()
 {
   echo "Usage: $0 -b BASEDIR -p PROJECT1,PROJECT2,... [-z ECLIPSEZIP] [-u UPSTREAM_SITES] [-d P2DIFF]"
   echo ""
-  echo "Example: $0 -b /path/to/jbosstools-target-platforms -p jbosstools,jbdevstudio \\"
+  echo "Example (JBT/JBDS): $0 \\"
+  echo "  -b /path/to/jbosstools-target-platforms -p jbosstools,jbdevstudio \\"
   echo "  -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff"
   echo ""
-  echo "Example: $0 -b /path/to/jbosstools-discovery -p jbtcentral,jbearlyaccess \\"
+  echo "Example (JBoss Central): $0 \\"
+  echo "  -b /path/to/jbosstools-discovery -p jbtcentral \\"
   echo "  -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz  -d /path/to/executable/p2diff \\"
-  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.40.0.Beta4-SNAPSHOT/REPO/,http://download.jboss.org/jbosstools/updates/nightly/core/master/"
-  echo ""
-  echo "Example: $0 -b /path/to/jbosstools-discovery -p jbtcentral,jbearlyaccess \\"
-  echo "  -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz  -d /path/to/executable/p2diff \\"
+  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.40.0.Beta4-SNAPSHOT/,http://download.jboss.org/jbosstools/updates/nightly/core/master/"
+  echo "          or, use locally built sites"
   echo "  -u file://path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,file://path/to/jbosstools-build-sites/aggregate/site/target/"
   echo ""
-  echo "Example: $0 -b /path/to/jbosstools-integration-stack -p target-platform \\"
+  echo "Example (JBoss Central Early Access): $0 \\"
+  echo "  -b /path/to/jbosstools-discovery -p jbtearlyaccess \\"
+  echo "  -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz  -d /path/to/executable/p2diff \\"
+  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.40.0.Beta4-SNAPSHOT/,http://download.jboss.org/jbosstools/updates/nightly/core/master/,http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.40.0.Beta3-SNAPSHOT/"
+  echo "          or, use locally built sites"
+  echo "  -u file://path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,file://path/to/jbosstools-build-sites/aggregate/site/target/,file://path/to/jbosstools-discovery/jbtearlyaccesstarget/multiple/target/jbtearlyaccess-multiple.target.repo/"
+  echo ""
+  echo "Example (JBoss Tools Integration Stack): $0 \\"
+  echo "  -b /path/to/jbosstools-integration-stack/target-platform -p target-platform \\"
   echo "  -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff"
   echo ""
   exit 1;
@@ -195,11 +203,14 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
     echo ""
   fi
 
-  if [[ ${P2DIFF} ]] && [[ -x ${P2DIFF} ]]; then
+  if [[ ${P2DIFF} ]] && [[ -x ${P2DIFF} ]] && [[ -d /tmp/${REPODIR}_${NOW} ]]; then
     echo ""
     echo "Step 4: produce p2diff report ..."
     echo ""
     ${P2DIFF} /tmp/${REPODIR}_${NOW} file://${WORKDIR}/target/${REPODIR}/ | tee /tmp/p2diff_log_${PROJECT}_${NOW}.txt
+  elif [[ ! -d /tmp/${REPODIR}_${NOW} ]]; then
+    echo ""
+    echo "Step 4: previous target platform does not exist in /tmp/${REPODIR}_${NOW} - nothing to diff."
   elif [[ ${P2DIFF} ]]; then
     echo ""
     echo "Step 4: cannot execute p2diff from ${P2DIFF} - nothing to do."
