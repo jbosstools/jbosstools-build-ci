@@ -63,7 +63,7 @@ fi
 MVN="mvn"
 targetplatformutilsversion=0.19.0-SNAPSHOT
 INSTALLSCRIPT=/tmp/installFromTarget.sh
-LOG_GREP_INCLUDES="Only one of the following|Missing requirement|Unresolved requirement|IllegalArgumentException|Could not resolve|could not be found|being installed|Cannot satisfy dependency|FAILED"
+LOG_GREP_INCLUDES="BUILD FAILURE|Only one of the following|Missing requirement|Unresolved requirement|IllegalArgumentException|Could not resolve|could not be found|being installed|Cannot satisfy dependency|FAILED"
 LOG_GREP_EXCLUDES="Failed to execute goal org.jboss.tools.tycho-plugins:target-platform-utils"
 #BASEDIR=`pwd`
 #ECLIPSEZIP=${HOME}/tmp/Eclipse_Bundles/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz
