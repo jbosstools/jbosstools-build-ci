@@ -47,7 +47,7 @@ if [[ ! ${WORKSPACE} ]]; then WORKSPACE=`pwd`; fi
 mkdir -p ${WORKSPACE}; cd ${WORKSPACE}
 
 # default path to Eclipse install for Jenkins 
-if [[ ! ${ECLIPSE} ]] && [[ -d ${WORKSPACE}/eclipse/ ]]
+if [[ ! ${ECLIPSE} ]] && [[ -d ${WORKSPACE}/eclipse/ ]]; then
   ECLIPSE=${WORKSPACE}/eclipse
 fi 
 
