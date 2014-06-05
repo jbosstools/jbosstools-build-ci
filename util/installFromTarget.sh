@@ -50,7 +50,9 @@ mkdir -p ${WORKSPACE}; cd ${WORKSPACE}
 if [[ ! ${ECLIPSE} ]] && [[ -d ${WORKSPACE}/eclipse/ ]]; then
   ECLIPSE=${WORKSPACE}/eclipse
 fi 
+# echo "ECLIPSE = ${ECLIPSE}"
 
+ECLIPSEEXEC=""
 if [[ -f ${ECLIPSE}/eclipse ]]; then 
   ECLIPSEEXEC=${ECLIPSE}/eclipse
 elif [[ -f ${ECLIPSE}/jbdevstudio ]]; then 
@@ -58,7 +60,14 @@ elif [[ -f ${ECLIPSE}/jbdevstudio ]]; then
 elif [[ -f ${ECLIPSE}/jboss-devstudio ]]; then 
   ECLIPSEEXEC=${ECLIPSE}/jboss-devstudio
 fi
-chmod +x ${ECLIPSEEXEC}
+if [[ -f ${ECLIPSEEXEC} ]]; then
+  chmod +x ${ECLIPSEEXEC}
+else
+  echo "Error, could not resolve executable file in folder ${ECLIPSE}"
+  echo ""
+  usage
+fi
+# echo "ECLIPSEEXEC = ${ECLIPSEEXEC}"
 
 # get director.xml script
 if [[ -f ${DIRECTORXML} ]]; then
@@ -72,10 +81,10 @@ rm -fr ${WORKSPACE}/data; mkdir -p ${WORKSPACE}/data
 
 # collect feature.groups to install
 ${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
-list.feature.groups -Doutput=${WORKSPACE}/feature.group.list.properties -DsourceSites=${INSTALL_PLAN}
+list.feature.groups -Doutput=${WORKSPACE}/feature.group.list.properties -DsourceSites=${INSTALL_PLAN} -Dexec=${ECLIPSEEXEC}
 # collect plugins to install (in case we have orphan plugins not inside feature.groups)
 ${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
-list.plugins -Doutput=${WORKSPACE}/plugin.list.properties -DsourceSites=${INSTALL_PLAN}
+list.plugins -Doutput=${WORKSPACE}/plugin.list.properties -DsourceSites=${INSTALL_PLAN} -Dexec=${ECLIPSEEXEC}
 BASE_IUs=""
 for f in feature.group.list.properties plugin.list.properties; do
   if [[ -f ${WORKSPACE}/${f} ]]; then 
@@ -93,7 +102,7 @@ date; du -sh ${ECLIPSE}
 
 # run scripted installation via p2.director
 ${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
--DsourceSites=${INSTALL_PLAN} -Dinstall=${BASE_IUs}
+-DsourceSites=${INSTALL_PLAN} -Dinstall=${BASE_IUs} -Dexec=${ECLIPSEEXEC}
 
 date; du -sh ${ECLIPSE}
 
