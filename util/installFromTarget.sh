@@ -47,8 +47,18 @@ if [[ ! ${WORKSPACE} ]]; then WORKSPACE=`pwd`; fi
 mkdir -p ${WORKSPACE}; cd ${WORKSPACE}
 
 # default path to Eclipse install for Jenkins 
-if [[ ! ${ECLIPSE} ]] && [[ -d ${WORKSPACE}/eclipse/ ]] && [[ -x ${WORKSPACE}/eclipse/eclipse ]]; then ECLIPSE=${WORKSPACE}/eclipse; fi 
-chmod +x ${ECLIPSE}/eclipse
+if [[ ! ${ECLIPSE} ]] && [[ -d ${WORKSPACE}/eclipse/ ]]
+  ECLIPSE=${WORKSPACE}/eclipse
+fi 
+
+if [[ -f ${ECLIPSE}/eclipse ]]; then 
+  ECLIPSEEXEC=${ECLIPSE}/eclipse
+elif [[ -f ${ECLIPSE}/jbdevstudio ]]; then 
+  ECLIPSEEXEC=${ECLIPSE}/jbdevstudio
+elif [[ -f ${ECLIPSE}/jboss-devstudio ]]; then 
+  ECLIPSEEXEC=${ECLIPSE}/jboss-devstudio
+fi
+chmod +x ${ECLIPSEEXEC}
 
 # get director.xml script
 if [[ -f ${DIRECTORXML} ]]; then
@@ -61,10 +71,10 @@ fi
 rm -fr ${WORKSPACE}/data; mkdir -p ${WORKSPACE}/data
 
 # collect feature.groups to install
-${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
+${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
 list.feature.groups -Doutput=${WORKSPACE}/feature.group.list.properties -DsourceSites=${INSTALL_PLAN}
 # collect plugins to install (in case we have orphan plugins not inside feature.groups)
-${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
+${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
 list.plugins -Doutput=${WORKSPACE}/plugin.list.properties -DsourceSites=${INSTALL_PLAN}
 BASE_IUs=""
 for f in feature.group.list.properties plugin.list.properties; do
@@ -82,7 +92,7 @@ BASE_IUs=${BASE_IUs:1}
 date; du -sh ${ECLIPSE}
 
 # run scripted installation via p2.director
-${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
+${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
 -DsourceSites=${INSTALL_PLAN} -Dinstall=${BASE_IUs}
 
 date; du -sh ${ECLIPSE}
