@@ -28,27 +28,27 @@
 
 usage ()
 {
-  echo "Usage: $0 -b BASEDIR -p PROJECT1,PROJECT2,... [-z ECLIPSEZIP] [-u UPSTREAM_SITES] [-d P2DIFF]"
+  echo "Usage: $0 -b BASEDIR -p PROJECT1,PROJECT2,... [-z ECLIPSEZIP] [-u UPSTREAM_SITES] [-d P2DIFF] [-x]"
   echo ""
-  echo "Example (JBT/JBDS): $0 \\"
+  echo "Example (JBT/JBDS - include sources): $0 \\"
   echo "  -b /path/to/jbosstools-target-platforms -p jbosstools,jbdevstudio \\"
   echo "  -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff"
   echo ""
-  echo "Example (JBoss Central): $0 \\"
-  echo "  -b /path/to/jbosstools-discovery -p jbtcentral \\"
+  echo "Example (JBoss Central - eXclude sources): $0 \\"
+  echo "  -b /path/to/jbosstools-discovery -p jbtcentral -x \\"
   echo "  -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz  -d /path/to/executable/p2diff \\"
   echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.40.0.Beta4-SNAPSHOT/,http://download.jboss.org/jbosstools/updates/nightly/core/master/"
   echo "          or, use locally built sites"
   echo "  -u file://path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,file://path/to/jbosstools-build-sites/aggregate/site/target/"
   echo ""
-  echo "Example (JBoss Central Early Access): $0 \\"
-  echo "  -b /path/to/jbosstools-discovery -p jbtearlyaccess \\"
-  echo "  -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz  -d /path/to/executable/p2diff \\"
+  echo "Example (JBoss Central Early Access - eXclude sources): $0 \\"
+  echo "  -b /path/to/jbosstools-discovery -p jbtearlyaccess -x \\"
+  echo "  -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff \\"
   echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.40.0.Beta4-SNAPSHOT/,http://download.jboss.org/jbosstools/updates/nightly/core/master/,http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.40.0.Beta3-SNAPSHOT/"
   echo "          or, use locally built sites"
   echo "  -u file://path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,file://path/to/jbosstools-build-sites/aggregate/site/target/,file://path/to/jbosstools-discovery/jbtearlyaccesstarget/multiple/target/jbtearlyaccess-multiple.target.repo/"
   echo ""
-  echo "Example (JBoss Tools Integration Stack): $0 \\"
+  echo "Example (JBoss Tools Integration Stack - include sources): $0 \\"
   echo "  -b /path/to/jbosstools-integration-stack/target-platform -p target-platform \\"
   echo "  -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff"
   echo ""
@@ -61,6 +61,7 @@ fi
 
 # defaults
 MVN="mvn"
+includeSources="-Dmirror-target-to-repo.includeSources=true" # by default, include sources
 targetplatformutilsversion=0.19.0-SNAPSHOT
 INSTALLSCRIPT=/tmp/installFromTarget.sh
 LOG_GREP_INCLUDES="BUILD FAILURE|Only one of the following|Missing requirement|Unresolved requirement|IllegalArgumentException|Could not resolve|could not be found|being installed|Cannot satisfy dependency|FAILED"
@@ -80,6 +81,7 @@ while [[ "$#" -gt 0 ]]; do
     '-d') P2DIFF="$2"; shift 1;;
     '-p') PROJECTS="$PROJECTS $2"; shift 1;;
     '-m') MVN="$2"; shift 1;;
+    '-x') includeSources=""; shift 0;;
        *) others="$others,$1"; shift 0;;
   esac
   shift 1
@@ -156,15 +158,19 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
   popd
 
   echo ""
-  echo "Step 2: Resolve target platform (including sources). This may take"
+  if [[ ${includeSources} ]]; then
+    echo "Step 2: Resolve target platform (including sources). This may take"
+  else
+    echo "Step 2: Resolve target platform (EXCLUDING sources). This may take"
+  fi
   echo "        more than an hour depending on network performance ... "
   echo ""
 
   # TODO: if you removed IUs, be sure to do a `mvn clean install`, rather than just a `mvn install`; process will be much longer but will guarantee metadata is correct
   pushd ${WORKSPACE}
   logfile=/tmp/resolve_log_${PROJECT}_${NOW}.txt
-  echo "${MVN} install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ -Dmirror-target-to-repo.includeSources=true" | tee $logfile
-  ${MVN} install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ -Dmirror-target-to-repo.includeSources=true | tee -a $logfile
+  echo "${MVN} install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources}" | tee $logfile
+  ${MVN} install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources} | tee -a $logfile
   egrep -i -v "$LOG_GREP_EXCLUDES" $logfile | egrep -i -A2 "$LOG_GREP_INCLUDES"; if [[ "$?" == "0" ]]; then break 2; fi
 
   popd
