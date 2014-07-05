@@ -25,6 +25,7 @@
 						<include name="*/plugins/*/target/classes/**/*.class"/>
 						<include name="tests/*/target/classes/**/*.class"/>
 						<include name="*/tests/*/target/classes/**/*.class"/>
+						<exclude name="plugins/org.jboss.tools.hibernate*/**/*.class" />
     					</fileset>
     				</classfiles>
     				<sourcefiles encoding="UTF-8">
@@ -33,6 +34,7 @@
     						<include name="*/plugins/*/src*"/>
     						<include name="tests/*/src*"/>
     						<include name="*/tests/*/src*"/>
+							<exclude name="plugins/org.jboss.tools.hibernate*/src/*" />
     					</dirset>
     				</sourcefiles>
     			</group>
