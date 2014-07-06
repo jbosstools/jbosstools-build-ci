@@ -5,41 +5,43 @@
 		<classpath path="${basedir}/jacocoant.jar" />
 	</taskdef>
 	
-    <!-- ================================= 
-          target: default              
-         ================================= -->
-    <target name="reports">
+	<!-- ================================= 
+		  target: default
+		 ================================= -->
+	<target name="reports">
 	<mkdir dir="${user.dir}/target/coverage-report"/>
-    	<report>
-    		<executiondata>
-    			<fileset dir="${user.dir}">
-    				<include name="target/*.exec" />
-    				<include name="*/target/*.exec" />
-    			</fileset>
-    		</executiondata>
-    		<structure name="JBoss Tools chunk">
-    			<group name="JBoss Tools chunk">
-    				<classfiles>
+		<report>
+			<executiondata>
+				<fileset dir="${user.dir}">
+					<include name="target/*.exec" />
+					<include name="*/target/*.exec" />
+				</fileset>
+			</executiondata>
+			<structure name="JBoss Tools chunk">
+				<group name="JBoss Tools chunk">
+					<classfiles>
 					<fileset dir="${user.dir}" >
 						<include name="plugins/*/target/classes/**/*.class"/>
 						<include name="*/plugins/*/target/classes/**/*.class"/>
 						<include name="tests/*/target/classes/**/*.class"/>
 						<include name="*/tests/*/target/classes/**/*.class"/>
-    					</fileset>
-    				</classfiles>
-    				<sourcefiles encoding="UTF-8">
+						<exclude name="plugins/org.jboss.tools.hibernate*/**/*.class" />
+					</fileset>
+					</classfiles>
+					<sourcefiles encoding="UTF-8">
 					<dirset dir="${user.dir}" >
-    						<include name="plugins/*/src*"/>
-    						<include name="*/plugins/*/src*"/>
-    						<include name="tests/*/src*"/>
-    						<include name="*/tests/*/src*"/>
-    					</dirset>
-    				</sourcefiles>
-    			</group>
-    		</structure>
-    		<html destdir="${user.dir}/target/coverage-report/html" />
-    		<xml destfile="${user.dir}/target/coverage-report/coverage-report.xml" />
-    		<csv destfile="${user.dir}/target/coverage-report/coverage-report.csv" />
-    	</report>
-    </target>
+							<include name="plugins/*/src*"/>
+							<include name="*/plugins/*/src*"/>
+							<include name="tests/*/src*"/>
+							<include name="*/tests/*/src*"/>
+							<exclude name="plugins/org.jboss.tools.hibernate*/src/*" />
+						</dirset>
+					</sourcefiles>
+				</group>
+			</structure>
+			<html destdir="${user.dir}/target/coverage-report/html" />
+			<xml destfile="${user.dir}/target/coverage-report/coverage-report.xml" />
+			<csv destfile="${user.dir}/target/coverage-report/coverage-report.csv" />
+		</report>
+	</target>
 </project>
