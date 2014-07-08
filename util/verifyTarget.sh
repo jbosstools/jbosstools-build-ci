@@ -14,7 +14,7 @@
 
 # OPTIONAL if you want to perform an install test, rather than just ensure that your TP can be validated and resolved locally
 # set path to where you have the latest compatible Eclipse bundle stored locally
-# -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz
+# -z /path/to/eclipse-jee-luna-R-linux-gtk-x86_64.tar.gz
 
 # OPTIONAL if you're testing a TP that's downstream from the jbosstoolstarget or jbdevstudiotarget, eg., Central, Early Access, or Integration Stack
 # set URL(s) for JBT / JBT Target so that all Central deps can be resolved; for more than one, separate w/ commas
@@ -32,25 +32,25 @@ usage ()
   echo ""
   echo "Example (JBT/JBDS - include sources): $0 \\"
   echo "  -b /path/to/jbosstools-target-platforms -p jbosstools,jbdevstudio \\"
-  echo "  -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff"
+  echo "  -z /path/to/eclipse-jee-luna-R-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff"
   echo ""
   echo "Example (JBoss Central - eXclude sources): $0 \\"
   echo "  -b /path/to/jbosstools-discovery -p jbtcentral -x \\"
-  echo "  -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz  -d /path/to/executable/p2diff \\"
+  echo "  -z /path/to/eclipse-jee-luna-R-linux-gtk-x86_64.tar.gz  -d /path/to/executable/p2diff \\"
   echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.40.0.Beta4-SNAPSHOT/,http://download.jboss.org/jbosstools/updates/nightly/core/master/"
   echo "          or, use locally built sites"
   echo "  -u file://path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,file://path/to/jbosstools-build-sites/aggregate/site/target/"
   echo ""
   echo "Example (JBoss Central Early Access - eXclude sources): $0 \\"
   echo "  -b /path/to/jbosstools-discovery -p jbtearlyaccess -x \\"
-  echo "  -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff \\"
+  echo "  -z /path/to/eclipse-jee-luna-R-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff \\"
   echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.40.0.Beta4-SNAPSHOT/,http://download.jboss.org/jbosstools/updates/nightly/core/master/,http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.40.0.Beta3-SNAPSHOT/"
   echo "          or, use locally built sites"
   echo "  -u file://path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,file://path/to/jbosstools-build-sites/aggregate/site/target/,file://path/to/jbosstools-discovery/jbtearlyaccesstarget/multiple/target/jbtearlyaccess-multiple.target.repo/"
   echo ""
   echo "Example (JBoss Tools Integration Stack - include sources): $0 \\"
   echo "  -b /path/to/jbosstools-integration-stack/target-platform -p target-platform \\"
-  echo "  -z /path/to/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff"
+  echo "  -z /path/to/eclipse-jee-luna-R-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff"
   echo ""
   exit 1;
 }
@@ -67,7 +67,7 @@ INSTALLSCRIPT=/tmp/installFromTarget.sh
 LOG_GREP_INCLUDES="BUILD FAILURE|Only one of the following|Missing requirement|Unresolved requirement|IllegalArgumentException|Could not resolve|could not be found|being installed|Cannot satisfy dependency|FAILED"
 LOG_GREP_EXCLUDES="Failed to execute goal org.jboss.tools.tycho-plugins:target-platform-utils"
 #BASEDIR=`pwd`
-#ECLIPSEZIP=${HOME}/tmp/Eclipse_Bundles/eclipse-jee-luna-M7-linux-gtk-x86_64.tar.gz
+#ECLIPSEZIP=${HOME}/tmp/Eclipse_Bundles/eclipse-jee-luna-R-linux-gtk-x86_64.tar.gz
 #UPSTREAM_SITES=file://$HOME/tru/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,http://download.jboss.org/jbosstools/updates/nightly/core/master/
 # for JBDS tests, use UPSTREAM_SITES=file://$HOME/tru/jbosstools-target-platforms/jbdevstudio/multiple/target/jbdevstudio-multiple.target.repo/,http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/
 #P2DIFF=${HOME}/tmp/p2diff/p2diff
