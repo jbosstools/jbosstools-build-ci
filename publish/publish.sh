@@ -355,23 +355,30 @@ echo "REV_LOG_DETAIL=\"${REV_LOG_DETAIL}\"" >> ${STAGINGDIR}/logs/${METAFILE}
 
 y=${STAGINGDIR}/logs/${METAFILE}; for m in $(md5sum ${y}); do if [[ $m != ${y} ]]; then echo $m > ${y}.MD5; fi; done
 
-#echo "$z ..."
-if [[ $z != "" ]] && [[ -f $z ]] ; then
-  # unzip into workspace for publishing as unpacked site
+# for product, just use the target repository (no need to unpack the zip, which contains different content)
+if [[ ${JOB_NAME/.product} == ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/product/site/target/repository ]]; then
+  rm -fr ${STAGINGDIR}/all/repo
   mkdir -p ${STAGINGDIR}/all/repo
-  unzip -u -o -q -d ${STAGINGDIR}/all/repo $z
+  rsync -aq ${WORKSPACE}/sources/product/site/target/repository/* ${STAGINGDIR}/all/repo/
+else
+  #echo "$z ..."
+  if [[ $z != "" ]] && [[ -f $z ]] ; then
+    # unzip into workspace for publishing as unpacked site
+    mkdir -p ${STAGINGDIR}/all/repo
+    unzip -u -o -q -d ${STAGINGDIR}/all/repo $z
 
-  # generate MD5 sum for zip (file contains only the hash, not the hash + filename)
-  for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done
+    # generate MD5 sum for zip (file contains only the hash, not the hash + filename)
+    for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done
 
-  # unless this is a product build, copy into workspace for access by bucky aggregator (same name every time)
-  # TODO: is this still needed?
-  if [[ ${JOB_NAME/.product} == ${JOB_NAME} ]]; then
-    rsync -aq $z ${STAGINGDIR}/all/${SNAPNAME}
-    rsync -aq ${z}.MD5 ${STAGINGDIR}/all/${SNAPNAME}.MD5
+    # unless this is a product build, copy into workspace for access by bucky aggregator (same name every time)
+    # TODO: is this still needed?
+    if [[ ${JOB_NAME/.product} == ${JOB_NAME} ]]; then
+      rsync -aq $z ${STAGINGDIR}/all/${SNAPNAME}
+      rsync -aq ${z}.MD5 ${STAGINGDIR}/all/${SNAPNAME}.MD5
+    fi
   fi
+  z=""
 fi
-z=""
 
 # if component zips exist, copy repository.zip (or site_assembly.zip) too
 for z in $(find ${WORKSPACE}/sources/*/site/target -type f -name "repository.zip" -o -name "site_assembly.zip"); do 
