@@ -356,7 +356,7 @@ echo "REV_LOG_DETAIL=\"${REV_LOG_DETAIL}\"" >> ${STAGINGDIR}/logs/${METAFILE}
 y=${STAGINGDIR}/logs/${METAFILE}; for m in $(md5sum ${y}); do if [[ $m != ${y} ]]; then echo $m > ${y}.MD5; fi; done
 
 # for product, just use the target repository (no need to unpack the zip, which contains different content)
-if [[ ${JOB_NAME/.product} == ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/product/site/target/repository ]]; then
+if [[ ${JOB_NAME/.product} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/product/site/target/repository ]]; then
   rm -fr ${STAGINGDIR}/all/repo
   mkdir -p ${STAGINGDIR}/all/repo
   rsync -aq ${WORKSPACE}/sources/product/site/target/repository/* ${STAGINGDIR}/all/repo/
@@ -723,6 +723,9 @@ date; rsync -arzq --delete ${STAGINGDIR}/logs $INTRNALDEST/builds/staging/${JOB_
 
 # purge tmpdir
 rm -fr $tmpdir
+
+# purge getRemoteFile tmpfiles
+find ${WORKSPACE} -maxdepth 2 -name "getRemoteFile*" -type f -exec rm -f {} \;
 
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
   # regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
