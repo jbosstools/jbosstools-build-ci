@@ -68,7 +68,7 @@ fi
 # defaults
 MVN="mvn"
 includeSources="-Dmirror-target-to-repo.includeSources=true" # by default, include sources
-targetplatformutilsversion=0.19.0-SNAPSHOT
+targetplatformutilsversion=0.21.0
 INSTALLSCRIPT=/tmp/installFromTarget.sh
 LOG_GREP_INCLUDES="BUILD FAILURE|Only one of the following|Missing requirement|Unresolved requirement|IllegalArgumentException|Could not resolve|could not be found|being installed|Cannot satisfy dependency|FAILED"
 LOG_GREP_EXCLUDES="Failed to execute goal org.jboss.tools.tycho-plugins:target-platform-utils"
