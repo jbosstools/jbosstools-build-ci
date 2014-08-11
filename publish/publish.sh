@@ -359,17 +359,17 @@ y=${STAGINGDIR}/logs/${METAFILE}; for m in $(md5sum ${y}); do if [[ $m != ${y} ]
 if [[ ${JOB_NAME/.product} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/product/site/target/repository ]]; then
   rm -fr ${STAGINGDIR}/all/repo
   mkdir -p ${STAGINGDIR}/all/repo
-  echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
-  echo "1. In ${WORKSPACE}/sources/product/site/target/repository/ ... "
-  echo -n "Packed jars found: "; find ${WORKSPACE}/sources/product/site/target/repository/* -name "*.pack.gz" | wc -l
-  echo -n "Jars found: "; find ${WORKSPACE}/sources/product/site/target/repository/* -name "*.jar" | wc -l
-  echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+  #echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+  #echo "1. In ${WORKSPACE}/sources/product/site/target/repository/ ... "
+  #echo -n "Packed jars found: "; find ${WORKSPACE}/sources/product/site/target/repository/* -name "*.pack.gz" | wc -l
+  #echo -n "Jars found: "; find ${WORKSPACE}/sources/product/site/target/repository/* -name "*.jar" | wc -l
+  #echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
   rsync -aq ${WORKSPACE}/sources/product/site/target/repository/* ${STAGINGDIR}/all/repo/
-  echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
-  echo "2. In ${STAGINGDIR}/all/repo/ ... "
-  echo -n "Packed jars found: "; find ${STAGINGDIR}/all/repo/* -name "*.pack.gz" | wc -l
-  echo -n "Jars found: "; find ${STAGINGDIR}/all/repo/* -name "*.jar" | wc -l
-  echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+  #echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
+  #echo "2. In ${STAGINGDIR}/all/repo/ ... "
+  #echo -n "Packed jars found: "; find ${STAGINGDIR}/all/repo/* -name "*.pack.gz" | wc -l
+  #echo -n "Jars found: "; find ${STAGINGDIR}/all/repo/* -name "*.jar" | wc -l
+  #echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-"
 else
   #echo "$z ..."
   if [[ $z != "" ]] && [[ -f $z ]] ; then
