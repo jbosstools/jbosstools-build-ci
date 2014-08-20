@@ -571,7 +571,7 @@ if [[ $ec == "0" ]] && [[ $fc == "0" ]]; then
     
     # if an aggregate build, put output elsewhere on disk
     if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
-      echo "<meta http-equiv=\"refresh\" content=\"0;url=${BUILD_ID}-B${BUILD_NUMBER}/\">" > $tmpdir/latestBuild.html
+      # JBIDE-18102 # echo "<meta http-equiv=\"refresh\" content=\"0;url=${BUILD_ID}-B${BUILD_NUMBER}/\">" > $tmpdir/latestBuild.html
       if [[ ${PUBLISHPATHSUFFIX} ]]; then
         date
         # create folders if not already there
@@ -584,15 +584,15 @@ if [[ $ec == "0" ]] && [[ $fc == "0" ]]; then
         # sftp only works with user@server, not with local $DESTINATIONS, so use rsync to push symlink instead
         # echo -e "rm latest\nln ${BUILD_ID}-B${BUILD_NUMBER} latest" | sftp ${DESTINATIONREDUX}/builds/nightly/${PUBLISHPATHSUFFIX}/ 
         pushd $tmpdir >/dev/null; ln -s ${BUILD_ID}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/builds/nightly/${PUBLISHPATHSUFFIX}/; rm -f latest; popd >/dev/null
-        date; rsync -arzq --protocol=28 --delete $tmpdir/latestBuild.html $DESTINATION/builds/nightly/${PUBLISHPATHSUFFIX}/
+        # JBIDE-18102 # date; rsync -arzq --protocol=28 --delete $tmpdir/latestBuild.html $DESTINATION/builds/nightly/${PUBLISHPATHSUFFIX}/
       else
-        date; rsync -arzq --protocol=28 --delete $tmpdir/latestBuild.html $DESTINATION/builds/nightly/${JOBNAMEREDUX}/ 
+        # JBIDE-18102 # date; rsync -arzq --protocol=28 --delete $tmpdir/latestBuild.html $DESTINATION/builds/nightly/${JOBNAMEREDUX}/ 
         # sftp only works with user@server, not with local $DESTINATIONS, so use rsync to push symlink instead
         # echo -e "rm latest\nln ${BUILD_ID}-B${BUILD_NUMBER} latest" | sftp ${DESTINATIONREDUX}/builds/nightly/${JOBNAMEREDUX}/
         pushd $tmpdir >/dev/null; ln -s ${BUILD_ID}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/builds/nightly/${JOBNAMEREDUX}/; rm -f latest; popd >/dev/null
         date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/* $DESTINATION/builds/nightly/${JOBNAMEREDUX}/${BUILD_ID}-B${BUILD_NUMBER}/
       fi
-      rm -f $tmpdir/latestBuild.html
+      # JBIDE-18102 # rm -f $tmpdir/latestBuild.html
     #else
       # COMMENTED OUT as this uses too much disk space
       # if a release build, create a named dir
