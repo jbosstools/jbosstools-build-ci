@@ -10,7 +10,7 @@ for j in aerogear arqullian base birt browsersim central forge freemarker hibern
   jenkinshash=`wget -q http://download.jboss.org/jbosstools/builds/staging/jbosstools-${j}_${stream}/logs/GIT_REVISION.txt -O - | grep jbosstools | \
   	sed "s#\(.\+\)\@\(.\+\)#\2 (${stream}, \1)#"`
   if [[ ! ${jenkinshash} ]]; then
-    echo "ERROR: branch $branch does not exist" | egrep ERROR
+    echo "ERROR: branch $branch does not exist: https://github.com/jbosstools/jbosstools-${j}/tree/jbosstools-${branch}" | egrep ERROR
   elif [[ ${githash%% *} == ${jenkinshash%% *} ]]; then # match
   	echo "PASS: ${jenkinshash}"
   else
@@ -29,7 +29,7 @@ for j in product; do
   jenkinshash=`wget -q http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.${j}_${stream}/logs/GIT_REVISION.txt -O - | grep jbosstools | \
     sed "s#\(.\+\)\@\(.\+\)#\2 (${stream}, \1)#"`
   if [[ ! ${jenkinshash} ]]; then
-    echo "ERROR: branch $branch does not exist" | egrep ERROR
+    echo "ERROR: branch $branch does not exist: https://github.com/jbdevstudio/jbdevstudio-${j}/tree/jbosstools-${branch}" | egrep ERROR
   elif [[ ${githash%% *} == ${jenkinshash%% *} ]]; then # match
     echo "PASS: ${jenkinshash}"
   else
