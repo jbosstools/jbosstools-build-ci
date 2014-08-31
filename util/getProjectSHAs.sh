@@ -24,18 +24,16 @@ done
 stream=8.0.luna
 for j in product; do
   echo "== ${j} =="
-  githash=`wget -q https://api.github.com/repos/jbdevstudio/jbdevstudio-${j}/commits/jbosstools-${branch} -O - | head -2 | grep sha | \
-    sed "s#  \"sha\": \"\(.\+\)\",#\1 (${branch})#"`
+  githash=`firefox https://github.com/jbdevstudio/jbdevstudio-product/commits/jbosstools-4.2.x` 
   jenkinshash=`wget -q http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.${j}_${stream}/logs/GIT_REVISION.txt -O - | grep jbosstools | \
     sed "s#\(.\+\)\@\(.\+\)#\2 (${stream}, \1)#"`
   if [[ ! ${jenkinshash} ]]; then
     echo "ERROR: branch $branch does not exist: https://github.com/jbdevstudio/jbdevstudio-${j}/tree/jbosstools-${branch}" | egrep ERROR
-  elif [[ ${githash%% *} == ${jenkinshash%% *} ]]; then # match
-    echo "PASS: ${jenkinshash}"
   else
-    echo "FAIL:" | grep FAIL
+    echo "Compare this hash from Jenkins:"
     echo "      $jenkinshash"
-    echo "      $githash"
+    echo "With the one from Github:"
+    echo "      https://github.com/jbdevstudio/jbdevstudio-product/commits/jbosstools-4.2.x"
   fi
   echo ""
 done
