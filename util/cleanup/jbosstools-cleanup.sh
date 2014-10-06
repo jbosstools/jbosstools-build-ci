@@ -19,7 +19,7 @@ echo "" | tee -a $log
 #defauls
 numbuildstokeep=1000 # keep X builds per branch
 threshholdwhendelete=365 # purge builds more than X days old
-dirsToScan="builds/staging/CI builds/nightly/core builds/nightly/coretests builds/nightly/soa-tooling builds/nightly/soatests builds/nightly/webtools builds/nightly/integrationtests"
+dirsToScan="builds/staging/CI builds/nightly/core builds/nightly/coretests builds/nightly/soa-tooling builds/nightly/soatests builds/nightly/webtools builds/nightly/hibernatetools builds/nightly/integrationtests"
 delete=1 # if 1, files will be deleted. if 0, files will be listed for delete but not actually removed
 checkTimeStamps=1 # if 1, check for timestamped folders, eg., 2012-09-30_04-01-36-H5622 and deduce the age from name. if 0, skip name-to-age parsing and delete nothing
 childFolderSuffix="/" # for component update sites, set to "/"; for aggregate builds (not update sites) use "/all/repo/"
