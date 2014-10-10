@@ -2,12 +2,17 @@
 
 usage ()
 {
-    echo "Usage:   $0 -branch GITHUBBRANCH -jbtstream JENKINSSTREAM -jbdsstream JENKINSSTREAM -ju JENKINSUSER -jp JENKINSPWD \\"
-    echo "           -gu GITHUBUSER -gp GITHUBPWD -jbt JBOSSTOOLS-PROJECT1,JBOSSTOOLS-PROJECT2,JBOSSTOOLS-PROJECT3,... \\"
-    echo "           -jbds JBDEVSTUDIO-PROJECT1,JBDEVSTUDIO-PROJECT2"
+    echo "Usage:     $0 -branch GITHUBBRANCH -jbtstream JENKINSSTREAM -jbdsstream JENKINSSTREAM -ju JENKINSUSER -jp JENKINSPWD \\"
+    echo "             -gu GITHUBUSER -gp GITHUBPWD -jbt JBOSSTOOLS-PROJECT1,JBOSSTOOLS-PROJECT2,JBOSSTOOLS-PROJECT3,... \\"
+    echo "             -jbds JBDEVSTUDIO-PROJECT1,JBDEVSTUDIO-PROJECT2 \\"
+    echo "             -iu issues.jboss.org_USER -ip issues.jboss.org_PWD -jbtm 4.2.0.MILESTONE -jbdsm 8.0.0.MILESTONE -respin a|b|c..."
     echo ""
-    echo "Example: $0 -branch jbosstools-4.2.x -jbtstream 4.2.luna -jbdsstream 8.0.luna -ju nboldt -jp j_pwd \\"
-    echo "           -gu nickboldt@gmail.com -gp g_pwd -jbt aerogear,discovery -jbds product"
+    echo "Example 1: $0 -branch jbosstools-4.2.x -jbtstream 4.2.luna -jbdsstream 8.0.luna -ju nboldt -jp j_pwd \\"
+    echo "             -gu nickboldt@gmail.com -gp g_pwd -iu nickboldt -ip i_pwd -jbtm 4.2.0.CR2 -jbdsm 8.0.0.CR2 -respin a"
+    echo ""
+    echo "Example 2: $0 -branch jbosstools-4.2.x -jbtstream 4.2.luna -jbdsstream 8.0.luna -ju nboldt -jp j_pwd \\"
+    echo "            -gu nickboldt@gmail.com -gp g_pwd -jbds product -jbt aerogear,arquillian,base,birt,browsersim,central,discovery,\\"
+    echo "forge,freemarker,hibernate,javaee,jst,livereload,openshift,portlet,server,vpe,webservices"
     exit 1;
 }
 
@@ -27,27 +32,174 @@ branch=jbosstools-4.2.x # or master
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
-    '-ju') j_user="${2/;/,}"; shift 1;; # replace ; with ,
-    '-jp') j_password="$2"; shift 1;;
+    # github credentials
     '-gu') g_user="$2"; shift 1;;
     '-gp') g_password="$2"; shift 1;;
+
+    # issues.jboss.org credentials
+    '-iu') i_user="$2"; shift 1;;
+    '-ip') i_password="$2"; shift 1;;
+
+    # jenkins credentials
+    '-ju') j_user="$2"; shift 1;;
+    '-jp') j_password="$2"; shift 1;;
+
+    # list of projects to check
     '-jbt') JBTPROJECT="$2"; shift 1;;
     '-jbds') JBDSPROJECT="$2"; shift 1;;
+
+    # script to use to perform Jenkins job enablement
     '-toggleJenkinsJobs') toggleJenkinsJobs="$2"; shift 1;;
+
+    # branch and stream
     '-branch') branch="$2"; shift 1;;
     '-jbtstream') jbtstream="$2"; shift 1;;
     '-jbdsstream') jbdsstream="$2"; shift 1;;
 
+    # milestone and respin-*
+    '-jbtm') jbtm="$2"; shift 1;;
+    '-jbdsm') jbdsm="$2"; shift 1;;
+    '-respin') respin="$2"; shift 1;;
   esac
   shift 1
 done
-JBTPROJECTS=`echo ${JBTPROJECT} | sed "s#,# #g"`
-JBDSPROJECTS=`echo ${JBDSPROJECT} | sed "s#,# #g"`
+JBTPROJECTS=" "`echo ${JBTPROJECT} | sed "s#,# #g"`
+JBDSPROJECTS=" "`echo ${JBDSPROJECT} | sed "s#,# #g"`
 
-if [[ ! ${JBTPROJECTS} ]] && [[ ! ${JBDSPROJECTS} ]]; then
+if [[ ! ${JBTPROJECTS} ]] && [[ ! ${JBDSPROJECTS} ]] && [[ ! ${jbtm} ]] && [[ ! ${jbdsm} ]]; then
   echo "ERROR: no projects specified!"
+  echo ""
+  echo "Use -jbt or -jbds to specify which projects to check, or"
+  echo "use -milestone to list milestone(s) to query for recently resolved issues."
   echo
   usage
+fi
+
+# for the milestone, find the related JIRAs and get the associated projects
+if [[ ${jbtm} ]]; then
+  echo "Search JIRA for milestone(s) = $jbtm (respin = $respin)..."
+  # for CR2
+  # ((project = "JBIDE" and fixVersion in ("4.2.0.CR2"))) and resolution != "Unresolved"
+  # for CR2a
+  # ((project = "JBIDE" and fixVersion in ("4.2.0.CR2"))) and resolution != "Unresolved" and labels in ("respin-a")
+  # for GA/Final
+  # ((project = "JBIDE" and fixVersion in ("4.2.0.Final"))) and resolution != "Unresolved"
+  query="%28" # (
+  if [[ ${jbtm} ]]; then 
+    query=${query}"%20%28project%20in%20%28%22JBIDE%22,%22TOOLSDOC%22%29%20and%20fixVersion%20in%20%28%22${jbtm}%22%29%29"
+  fi
+  query=${query}"%20%29%20and%20resolution%20!%3D%20%22Unresolved%22"
+  if [[ ${respin} ]]; then query=${query}"%20and%20labels%20in%20%28%22respin-${respin}%22%29"; fi
+  # echo $query
+
+  # https://issues.jboss.org/rest/api/2/search?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28%224.2.0.CR2%22%2C%20%224.2.0.Final%22%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28%228.0.0.CR2%22%2C%228.0.0.GA%22%29%29%29%20and%20resolution%20!%3D%20%22Unresolved%22%20and%20labels%20in%20%28%22respin-a%22%29&fields=key,components
+  wget --user=${i_user} --password="${i_password}" --no-check-certificate "https://issues.jboss.org/rest/api/2/search?fields=key,components&jql=${query}" -q -O /tmp/json.txt
+
+  json=`cat /tmp/json.txt`
+  rm -f /tmp/json.txt
+  components=""
+  while [[ $name != "," ]]; do
+    name=${json#*\"name\":\"} # trim off everything up to the first "name":"
+    name=${name%%\"*} # trim off everything after the quote
+    json=${json#*\"name\":\"${name}\"}
+    #echo $name
+    # echo $projects :: $name
+    if [[ ${components##* ${name}*} == $components ]] && [[ $name != "," ]]; then components="${components} ${name}"; fi
+  done
+  #echo "Got these issues.jboss.org components:${components}"
+
+  if [[ $components ]]; then
+    projects=""
+    # define mapping between JIRA components and jenkins project names
+    # if not listed then mapping between component and project are 1:1,eg., for forge, server, livereload, openshift, webservices, hibernate, birt, freemarker, browsersim, discovery
+    declare -A projectMap=( 
+      ["aerogear-hybrid"]="aerogear"
+      ["testing-tools"]="arquillian" 
+      ["usage"]="base"
+      ["updatesite"]="build-sites"
+      ["central"]="central"
+      ["maven"]="central"
+      ["project-examples"]="central"
+      ["common/jst/core"]="jst"
+      ["jsf"]="javaee"
+      ["seam2"]="javaee"
+      ["cdi"]="javaee"
+      ["cdi-extensions"]="javaee"
+      ["portal-gatein"]="portlet"
+      ["visual-page-editor-core"]="vpe"
+    )
+
+    # load list of projects from component::project mapping, adding only if unique
+    for c in $components; do
+      m=${projectMap[$c]}
+      if [[ "${m}" ]] && [[ ${JBTPROJECTS##* ${m}*} == $JBTPROJECTS ]] && [[ ${projects##* ${m}*} == $projects ]]; then 
+        projects="${projects} ${m}"
+      elif [[ ! "${m}" ]] && [[ ${JBTPROJECTS##* ${c}*} == $JBTPROJECTS ]] && [[ ${projects##* ${m}*} == $projects ]]; then
+        projects="${projects} ${c}"
+      fi
+    done
+  fi
+  if [[ $projects ]]; then
+    echo "Got these Jenkins and Github projects:${projects}"
+    JBTPROJECTS="${JBTPROJECTS} ${projects}"
+  fi
+fi
+
+# for the milestone, find the related JIRAs and get the associated projects
+if [[ ${jbdsm} ]]; then
+  echo "Search JIRA for milestone(s) = $jbdsm (respin = $respin)..."
+  # for CR2
+  # ((project = "JBDS" and fixversion in ("8.0.0.CR2"))) and resolution != "Unresolved"
+  # for CR2a
+  # ((project = "JBDS" and fixversion in ("8.0.0.CR2"))) and resolution != "Unresolved" and labels in ("respin-a")
+  # for GA/Final
+  # ((project = "JBDS" and fixversion in ("8.0.0.GA"))) and resolution != "Unresolved"
+  query="%28" # (
+  if [[ ${jbdsm} ]]; then query=${query}"%20%28project%20%3D%20%22JBDS%22%20and%20fixVersion%20in%20%28%22${jbdsm}%22%29%29"; fi
+  query=${query}"%20%29%20and%20resolution%20!%3D%20%22Unresolved%22"
+  if [[ ${respin} ]]; then query=${query}"%20and%20labels%20in%20%28%22respin-${respin}%22%29"; fi
+  # echo $query
+
+  # https://issues.jboss.org/rest/api/2/search?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28%224.2.0.CR2%22%2C%20%224.2.0.Final%22%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28%228.0.0.CR2%22%2C%228.0.0.GA%22%29%29%29%20and%20resolution%20!%3D%20%22Unresolved%22%20and%20labels%20in%20%28%22respin-a%22%29&fields=key,components
+  wget --user=${i_user} --password="${i_password}" --no-check-certificate "https://issues.jboss.org/rest/api/2/search?fields=key,components&jql=${query}" -q -O /tmp/json.txt
+
+  json=`cat /tmp/json.txt`
+  rm -f /tmp/json.txt
+  components=""
+  while [[ $name != "," ]]; do
+    name=${json#*\"name\":\"} # trim off everything up to the first "name":"
+    name=${name%%\"*} # trim off everything after the quote
+    json=${json#*\"name\":\"${name}\"}
+    #echo $name
+    # echo $projects :: $name
+    if [[ ${components##* ${name}*} == $components ]] && [[ $name != "," ]]; then components="${components} ${name}"; fi
+  done
+  #echo "Got these issues.jboss.org components:${components}"
+
+  projects=""
+  if [[ $components ]]; then
+    # define mapping between JIRA components and jenkins project names
+    # if not listed then mapping between component and project are 1:1,eg., for forge, server, livereload, openshift, webservices, hibernate, birt, freemarker, browsersim, discovery
+    declare -A projectMap=( 
+      ["updatesite"]="product"
+      ["target-platform"]="product"
+    )
+
+    # load list of projects from component::project mapping, adding only if unique
+    for c in $components; do
+      m=${projectMap[$c]}
+      if [[ "${m}" ]] && [[ ${JBDSPROJECTS##* ${m}*} == $JBDSPROJECTS ]] && [[ ${projects##* ${m}*} == $projects ]]; then 
+        projects="${projects} ${m}"
+      elif [[ ! "${m}" ]] && [[ ${JBDSPROJECTS##* ${c}*} == $JBDSPROJECTS ]] && [[ ${projects##* ${c}*} == $projects ]]; then
+        projects="${projects} ${c}"
+      fi
+    done
+  fi
+
+  if [[ $projects ]]; then
+    echo "Got these Jenkins and Github projects:${JBDSPROJECTS}"
+    JBDSPROJECTS="${JBDSPROJECTS} ${projects}"
+  fi
 fi
 
 for j in ${JBTPROJECTS}; do
@@ -78,12 +230,13 @@ for j in ${JBTPROJECTS}; do
   	echo "PASS: ${jenkinshash}"
   else
   	echo "FAIL:" | grep FAIL
-  	echo "      $jenkinshash"
-  	echo "      $githash"
+  	echo "      Jenkins: $jenkinshash"
+  	echo "      Github:  $githash"
     # because the SHAs don't match, prompt user to enable the job so it can run
     # echo "      ... enable job jbosstools-${j}_${jbtstream} ..."
     if [[ ${branch} == "master" ]]; then view=DevStudio_Master; else view=DevStudio_${jbdsstream}; fi
     python ${toggleJenkinsJobs} --task enable --view ${view} --include jbosstools-${j}_${jbtstream} -u ${j_user} -p ${j_password}
+    firefox https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-${j}_${jbtstream}/ &
   fi
   echo ""
 done
@@ -118,8 +271,8 @@ for j in ${JBDSPROJECTS}; do
     echo "PASS: ${jenkinshash}"
   else
     echo "FAIL:" | grep FAIL
-    echo "      $jenkinshash"
-    echo "      $githash"
+    echo "      Jenkins: $jenkinshash"
+    echo "      Github:  $githash"
     # because the SHAs don't match, prompt user to enable the job so it can run
     # echo "      ... enable job devstudio.${j}_${jbdsstream} ..."
     if [[ ${branch} == "master" ]]; then view=DevStudio_Master; else view=DevStudio_${jbdsstream}; fi
