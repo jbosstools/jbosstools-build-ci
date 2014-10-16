@@ -127,6 +127,7 @@ if [[ ${jbtm} ]]; then
       ["cdi-extensions"]="javaee"
       ["portal-gatein"]="portlet"
       ["visual-page-editor-core"]="vpe"
+      ["build"]="build.parent"
     )
 
     # load list of projects from component::project mapping, adding only if unique
@@ -202,82 +203,74 @@ if [[ ${jbdsm} ]]; then
   fi
 fi
 
-for j in ${JBTPROJECTS}; do
-  echo "== ${j} =="
-  githash=`wget -q https://api.github.com/repos/jbosstools/jbosstools-${j}/commits/${branch} -O - | head -2 | grep sha | \
-  	sed "s#  \"sha\": \"\(.\+\)\",#\1 (${branch})#"`
+jobsToCheck=""
+checkProjects () {
+  jenkins_prefix="https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/"
+  PROJECTS="$1" # ${JBTPROJECTS} or ${JBDSPROJECTS}
+  g_project_prefix="$2" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
+  staging_url="$3" # http://download.jboss.org/jbosstools/builds/staging/ or http://www.qa.jboss.com/binaries/RHDS/builds/staging/
+  jobname_prefix="$4" # jbosstools- or devstudio.
+  stream="$5" # ${jbtstream} or ${jbdsstream}
 
-  jenkinshash=`wget -q http://download.jboss.org/jbosstools/builds/staging/jbosstools-${j}_${jbtstream}/logs/GIT_REVISION.txt -O - | grep ${branch} | \
-  	sed "s#\(.\+\)\@\(.\+\)#\2 (${jbtstream}, \1)#"`
-  if [[ ! ${jenkinshash} ]]; then # try Jenkins XML API instead
-    jenkinshash=`wget -q --no-check-certificate --user=${j_user} --password="${j_password}" -q https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-${j}_${jbtstream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1 -O - | \
-    sed "s#<SHA1>\(.\+\)</SHA1>#\1#"`
-  fi
-
-  if [[ ! ${githash} ]] || [[ ! ${jenkinshash} ]]; then 
-    if [[ ! ${githash} ]]; then
-      echo "ERROR: branch $branch does not exist:" | egrep ERROR
-      echo " >> https://github.com/jbosstools/jbosstools-${j}/tree/${branch}"
-    elif [[ ! ${jenkinshash} ]]; then
-      echo "ERROR: could not retrieve GIT revision from:" | egrep ERROR
-      echo " >> http://download.jboss.org/jbosstools/builds/staging/jbosstools-${j}_${jbtstream}/logs/GIT_REVISION.txt (file not found?) or from "
-      echo " >> https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-${j}_${jbtstream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1 (auth error?)"
+  for j in ${PROJECTS}; do
+    # in most cases the github project and jobname are the same, but for jbosstools-build, the jobname is jbosstools-build.parent
+    if [[ ${j} == "build.parent" ]]; then 
+      g_project="build"
+      echo "== ${g_project} (${j}) =="
+    else
+      g_project="${j}"
+      echo "== ${g_project} =="
     fi
-    echo "Compare these URLs:"
-    echo " >> https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-${j}_${jbtstream}/lastBuild/git/"
-    echo " >> https://github.com/jbosstools/jbosstools-${j}/commits/${branch}"
-  elif [[ ${githash%% *} == ${jenkinshash%% *} ]]; then # match
-  	echo "PASS: ${jenkinshash}"
-  else
-  	echo "FAIL:" | grep FAIL
-  	echo "      Jenkins: $jenkinshash"
-  	echo "      Github:  $githash"
-    # because the SHAs don't match, prompt user to enable the job so it can run
-    # echo "      ... enable job jbosstools-${j}_${jbtstream} ..."
-    if [[ ${branch} == "master" ]]; then view=DevStudio_Master; else view=DevStudio_${jbdsstream}; fi
-    python ${toggleJenkinsJobs} --task enable --view ${view} --include jbosstools-${j}_${jbtstream} -u ${j_user} -p ${j_password}
-    firefox https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-${j}_${jbtstream}/ &
-  fi
-  echo ""
-done
 
-for j in ${JBDSPROJECTS}; do
-  echo "== ${j} =="
-  # githash=`firefox https://github.com/jbdevstudio/jbdevstudio-product/commits/jbosstools-4.2.x` 
-  # echo https://api.github.com/repos/jbdevstudio/jbdevstudio-${j}/commits/${branch}
-  tmp=`mktemp`
-  githash=`curl https://api.github.com/repos/jbdevstudio/jbdevstudio-${j}/commits/${branch} -u "${g_user}:${g_password}" -s -S > ${tmp} && cat ${tmp} | head -2 | grep sha | \
+    # githash=`firefox https://github.com/jbdevstudio/jbdevstudio-product/commits/jbosstools-4.2.x` 
+    # echo https://api.github.com/repos/jbdevstudio/jbdevstudio-${j}/commits/${branch}
+    tmp=`mktemp`
+    githash=`curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -u "${g_user}:${g_password}" -s -S > ${tmp} && cat ${tmp} | head -2 | grep sha | \
     sed "s#  \"sha\": \"\(.\+\)\",#\1 (${branch})#" && rm -f ${tmp}`
-  jenkinshash=`wget -q --no-check-certificate http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.${j}_${jbdsstream}/logs/GIT_REVISION.txt -O - | grep ${branch} | \
-    sed "s#\(.\+\)\@\(.\+\)#\2 (${jbdsstream}, \1)#"`
-  if [[ ! ${jenkinshash} ]]; then # try Jenkins XML API instead
-    jenkinshash=`wget -q --no-check-certificate --user=${j_user} --password="${j_password}" -q https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/devstudio.${j}_${jbtstream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1 -O - | \
-    sed "s#<SHA1>\(.\+\)</SHA1>#\1#"`
-  fi
+    # alternate approach to curl, using wget 
+    #githash=`wget -q --no-check-certificate https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -O - | head -2 | grep sha | \
+    #	sed "s#  \"sha\": \"\(.\+\)\",#\1 (${branch})#"`
 
-  if [[ ! ${githash} ]] || [[ ! ${jenkinshash} ]]; then 
-    if [[ ! ${githash} ]]; then
-      echo "ERROR: branch $branch does not exist:" | egrep ERROR
-      echo " >> https://github.com/jbdevstudio/jbdevstudio-${j}/tree/${branch}"
-    elif [[ ! ${jenkinshash} ]]; then
-      echo "ERROR: could not retrieve GIT revision from:" | egrep ERROR
-      echo " >> http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.${j}_${jbdsstream}/logs/GIT_REVISION.txt (file not found?) or from "
-      echo " >> https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/devstudio.${j}_${jbdsstream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1 (auth error?)"
+    jenkinshash=`wget -q --no-check-certificate ${staging_url}${jobname_prefix}${j}_${stream}/logs/GIT_REVISION.txt -O - | grep ${branch} | \
+    	sed "s#\(.\+\)\@\(.\+\)#\2 (${stream}, \1)#"`
+    if [[ ! ${jenkinshash} ]]; then # try Jenkins XML API instead
+      jenkinshash=`wget -q --no-check-certificate --user=${j_user} --password="${j_password}" -q ${jenkins_prefix}${jobname_prefix}${j}_${stream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1 -O - | \
+      sed "s#<SHA1>\(.\+\)</SHA1>#\1#"`
     fi
-    echo "Compare these URLs:"
-    echo " >> https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/devstudio.${j}_${jbdsstream}/lastBuild/git/"
-    echo " >> https://github.com/jbdevstudio/jbdevstudio-${j}/commits/${branch}"
-  elif [[ ${githash%% *} == ${jenkinshash%% *} ]]; then # match
-    echo "PASS: ${jenkinshash}"
-  else
-    echo "FAIL:" | grep FAIL
-    echo "      Jenkins: $jenkinshash"
-    echo "      Github:  $githash"
-    # because the SHAs don't match, prompt user to enable the job so it can run
-    # echo "      ... enable job devstudio.${j}_${jbdsstream} ..."
-    if [[ ${branch} == "master" ]]; then view=DevStudio_Master; else view=DevStudio_${jbdsstream}; fi
-    python ${toggleJenkinsJobs} --task enable --view ${view}   --include devstudio.${j}_${jbdsstream} -u ${j_user} -p ${j_password}
-  fi
-  echo ""
-done
 
+    if [[ ! ${githash} ]] || [[ ! ${jenkinshash} ]]; then 
+      if [[ ! ${githash} ]]; then
+        echo "ERROR: branch $branch does not exist:" | egrep ERROR
+        echo " >> https://github.com/${g_project_prefix}${j}/tree/${branch}"
+      elif [[ ! ${jenkinshash} ]]; then
+        echo "ERROR: could not retrieve GIT revision from:" | egrep ERROR
+        echo " >> ${staging_url}${jobname_prefix}${j}_${stream}/logs/GIT_REVISION.txt (file not found?) or from "
+        echo " >> ${jenkins_prefix}${jobname_prefix}${j}_${stream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1 (auth error?)"
+      fi
+      echo "Compare these URLs:"
+      echo " >> ${jenkins_prefix}${jobname_prefix}${j}_${stream}/lastBuild/git/"
+      echo " >> https://github.com/${g_project_prefix}${j}/commits/${branch}"
+    elif [[ ${githash%% *} == ${jenkinshash%% *} ]]; then # match
+    	echo "PASS: ${jenkinshash}"
+    else
+    	echo "FAIL:" | grep FAIL
+    	echo "      Jenkins: $jenkinshash"
+    	echo "      Github:  $githash"
+      # because the SHAs don't match, prompt user to enable the job so it can run
+      # echo "      ... enable job ${jobname_prefix}${j}_${stream} ..."
+      if [[ ${branch} == "master" ]]; then view=DevStudio_Master; else view=DevStudio_${jbdsstream}; fi
+      python ${toggleJenkinsJobs} --task enable --view ${view} --include ${jobname_prefix}${j}_${stream} -u ${j_user} -p ${j_password}
+      jobsToCheck="${jobsToCheck} ${jenkins_prefix}${jobname_prefix}${j}_${stream}/build"
+    fi
+    echo ""
+  done
+}
+
+checkProjects "${JBTPROJECTS}"  jbosstools/jbosstools-   http://download.jboss.org/jbosstools/builds/staging/ jbosstools- "${jbtstream}"
+checkProjects "${JBDSPROJECTS}" jbdevstudio/jbdevstudio- http://www.qa.jboss.com/binaries/RHDS/builds/staging/ devstudio.  "${jbdsstream}"
+
+if [[ ${jobsToCheck} ]]; then
+  echo "Run the following to build incomplete jobs:"
+  echo ""
+  echo "firefox${jobsToCheck}"
+fi
