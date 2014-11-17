@@ -114,6 +114,7 @@ if [[ ${jbtm} ]]; then
     # if not listed then mapping between component and project are 1:1,eg., for forge, server, livereload, openshift, webservices, hibernate, birt, freemarker, browsersim, discovery
     declare -A projectMap=( 
       ["aerogear-hybrid"]="aerogear"
+      ["cordovasim"]="aerogear"
       ["testing-tools"]="arquillian" 
       ["usage"]="base"
       ["updatesite"]="build-sites"
