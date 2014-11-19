@@ -4,7 +4,7 @@
 
 # 1. fetch and parse http://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job/jbosstoolstargetplatformrequirements-mirror-matrix/38/api/xml?xpath=//description
 tmpfile=/tmp/jbosstoolstargetplatformrequirements-mirror-matrix-descriptions.txt
-descriptionURL=http://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job/jbosstoolstargetplatformrequirements-mirror-matrix/38/api/xml?xpath=//description
+descriptionURL=http://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job/jbosstoolstargetplatformrequirements-mirror-matrix/lastBuild/api/xml?xpath=//description
 curl -s ${descriptionURL} > ${tmpfile}
 if [[ ! $(cat ${tmpfile} | grep "http://download.jboss.org/jbosstools/updates/requirements/") ]]; then
 	echo "Error: could not parse description from ${descriptionURL}"
