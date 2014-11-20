@@ -2,6 +2,20 @@
 # Hudson script used to publish Tycho-built p2 update sites
 # NOTE: sources MUST be checked out into ${WORKSPACE}/sources 
 
+if [ -z "${WORKSPACE}" ]; then
+	echo "WORKSPACE property must be set"
+	exit 1
+fi
+if [ ! -d "${WORKSPACE}/sources/site/target/repository" ]; then
+	echo "${WORKSPACE}/sources/site/target/repository should be a p2 repository"
+	exit 1
+fi
+if [ -z "${JOB_NAME}" ]; then
+	echo "JOB_NAME property must be set"
+	exit 1
+fi
+
+
 # to use timestamp when naming dirs instead of ${BUILD_ID}-B${BUILD_NUMBER}, use:
 # BUILD_ID=2010-08-31_19-16-10; timestamp=$(echo $BUILD_ID | tr -d "_-"); timestamp=${timestamp:0:12}; echo $timestamp; # 201008311916
 
@@ -738,13 +752,11 @@ rm -fr $tmpdir
 find ${WORKSPACE} -maxdepth 2 -name "getRemoteFile*" -type f -exec rm -f {} \;
 
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
-  # regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
-  if [[ ! -f jbosstools-cleanup.sh ]]; then 
-    wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/cleanup/jbosstools-cleanup.sh
-  fi
-  chmod +x jbosstools-cleanup.sh
-  ./jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/
-  rm -f jbosstools-cleanup.sh
+  	# regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
+	pushd ../util/cleanup
+	chmod +x jbosstools-cleanup.sh
+	./jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/
+	popd
 fi
 
 # to avoid looking for files that are still being synched/nfs-copied, wait a bit before trying to run tests (the next step usually)
