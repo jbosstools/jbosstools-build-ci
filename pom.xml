@@ -3,10 +3,10 @@
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.jboss.tools.releng</groupId>
-	<artifactId>publish</artifactId>
+	<artifactId>jbosstools-releng-publish</artifactId>
 	<version>4.3.0.Alpha1-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -20,9 +20,10 @@
               				<goal>single</goal>
             			</goals>
 		        		<configuration>
-		          			<descriptors>
-		            			<descriptor>publish-assembly.xml</descriptor>
-		          			</descriptors>
+					  <appendAssemblyId>false</appendAssemblyId>
+		          		  <descriptors>
+		            		    <descriptor>publish-assembly.xml</descriptor>
+		          		  </descriptors>
 		        		</configuration>
 		        	</execution>
 		        </executions>
