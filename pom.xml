@@ -1,0 +1,83 @@
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.jboss.tools.releng</groupId>
+	<artifactId>jbosstools-releng-publish</artifactId>
+	<version>4.3.0.Alpha1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+        		<version>2.5.1</version>
+        		<executions>
+         			<execution>
+            			<id>create-script-zip</id>
+            			<phase>package</phase>
+            			<goals>
+              				<goal>single</goal>
+            			</goals>
+		        		<configuration>
+					  <appendAssemblyId>false</appendAssemblyId>
+		          		  <descriptors>
+		            		    <descriptor>publish-assembly.xml</descriptor>
+		          		  </descriptors>
+		        		</configuration>
+		        	</execution>
+		        </executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>1.9.1</version>
+				<executions>
+         			<execution>
+            			<id>attach-artifacts</id>
+            			<phase>package</phase>
+            			<goals>
+              				<goal>attach-artifact</goal>
+            			</goals>
+            			<configuration>
+	              			<artifacts>
+	                			<artifact>
+	                  				<file>publish/promote.sh</file>
+	                  				<type>sh</type>
+	                  				<classifier>promote</classifier>
+	                			</artifact>
+	                			<artifact>
+	                  				<file>publish/publish.sh</file>
+	                  				<type>sh</type>
+	                  				<classifier>publish</classifier>
+	                			</artifact>
+	                			<artifact>
+	                  				<file>util/cleanup/jbosstools-cleanup.sh</file>
+	                  				<type>sh</type>
+	                  				<classifier>jbosstools-cleanup</classifier>
+	                			</artifact>
+				            </artifacts>
+						</configuration>
+	   				</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<!-- To deploy parent to Nexus -->
+	<!--  Don't change "id" since it should match credentials entry in $M2_REPO/settings.xml -->
+	<distributionManagement>
+		<snapshotRepository>
+			<id>jboss-snapshots-repository</id>
+			<name>JBoss Snapshots Repository</name>
+			<url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
+			<uniqueVersion>false</uniqueVersion>
+		</snapshotRepository>
+		<repository>
+			<id>jboss-staging-repository</id>
+			<name>JBoss Staging Service</name>
+			<uniqueVersion>false</uniqueVersion>
+			<url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+</project>
