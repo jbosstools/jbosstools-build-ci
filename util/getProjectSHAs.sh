@@ -96,6 +96,7 @@ if [[ ${jbtm} ]]; then
   wget --user=${i_user} --password="${i_password}" --no-check-certificate "https://issues.jboss.org/rest/api/2/search?fields=key,components&jql=${query}" -q -O /tmp/json.txt
 
   json=`cat /tmp/json.txt`
+  cp /tmp/json.txt /tmp/json-jbt.txt
   rm -f /tmp/json.txt
   components=""
   while [[ $name != "," ]]; do
@@ -113,6 +114,7 @@ if [[ ${jbtm} ]]; then
     # define mapping between JIRA components and jenkins project names
     # if not listed then mapping between component and project are 1:1,eg., for forge, server, livereload, openshift, webservices, hibernate, birt, freemarker, browsersim, discovery
     declare -A projectMap=( 
+      ["qa"]="jbdevstudio-qa"
       ["aerogear-hybrid"]="aerogear"
       ["cordovasim"]="aerogear"
       ["testing-tools"]="arquillian" 
@@ -134,7 +136,11 @@ if [[ ${jbtm} ]]; then
     # load list of projects from component::project mapping, adding only if unique
     for c in $components; do
       m=${projectMap[$c]}
-      if [[ "${m}" ]] && [[ ${JBTPROJECTS##* ${m}*} == $JBTPROJECTS ]] && [[ ${projects##* ${m}*} == $projects ]]; then 
+      if [[ "${m}" ]] && [[ ${m##*jbdevstudio-*} == "" ]]; then # jbds project, not jbt
+        if [[ ${JBDSPROJECTS##* ${m}*} == $JBDSPROJECTS ]]; then 
+          JBDSPROJECTS="${JBDSPROJECTS} ${c}"
+        fi
+      elif [[ "${m}" ]] && [[ ${JBTPROJECTS##* ${m}*} == $JBTPROJECTS ]] && [[ ${projects##* ${m}*} == $projects ]]; then 
         projects="${projects} ${m}"
       elif [[ ! "${m}" ]] && [[ ${JBTPROJECTS##* ${c}*} == $JBTPROJECTS ]] && [[ ${projects##* ${m}*} == $projects ]]; then
         projects="${projects} ${c}"
@@ -183,6 +189,7 @@ if [[ ${jbdsm} ]]; then
     # define mapping between JIRA components and jenkins project names
     # if not listed then mapping between component and project are 1:1,eg., for forge, server, livereload, openshift, webservices, hibernate, birt, freemarker, browsersim, discovery
     declare -A projectMap=( 
+      ["qa"]="qa"
       ["updatesite"]="product"
       ["target-platform"]="product"
     )
@@ -198,7 +205,7 @@ if [[ ${jbdsm} ]]; then
     done
   fi
 
-  if [[ $projects ]]; then
+  if [[ $projects ]] || [[ $JBDSPROJECTS ]]; then
     echo "Got these Jenkins and Github projects:${JBDSPROJECTS}"
     JBDSPROJECTS="${JBDSPROJECTS} ${projects}"
   fi
