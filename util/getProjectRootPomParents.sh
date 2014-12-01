@@ -1,12 +1,20 @@
 #!/bin/bash
 
+# This utility script will help you determine if all your projects have correctly updated their root poms to use the 
+# latest parent pom version. It will first pull down the latest sources from origin/master, then parse the root pom and
+# compare that to the requested parent pom version. Should any mismatches be found, the offending lines are shown and 
+# links to github (to review latest commits) and Jenkins (to run any missing builds) are provided.
+
+# This script is mostly used by releng right before a code freeze to determine which projects are building w/ an outdated
+# parent pom.
+
 usage ()
 {
     echo "Usage:     $0 -b GITHUBBRANCH -pv PARENTVERSION [-skipupdate]"
     echo ""
-    echo "Example 1: $0 -b jbosstools-4.2.x -pv 4.2.0.Final-SNAPSHOT"
+    echo "Example 1: $0 -b jbosstools-4.2.x -pv 4.2.1.CR1-SNAPSHOT"
     echo ""
-    echo "Example 2: $0 -pv 4.2.0.Final-SNAPSHOT -skipupdate"
+    echo "Example 2: $0 -pv 4.2.1.Final-SNAPSHOT -skipupdate"
     echo ""
     exit 1;
 }
@@ -16,7 +24,7 @@ if [[ $# -lt 1 ]]; then
 fi
 
 doGitUpdate=true
-parent=4.2.0.Final-SNAPSHOT # or 4.3.0.Alpha1-SNAPSHOT
+parent=4.2.1.Final-SNAPSHOT # or 4.3.0.Alpha1-SNAPSHOT
 branch=jbosstools-4.2.x # or master
 jbtstream=4.2.luna # or master
 jbdsstream=8.0.luna # or master 

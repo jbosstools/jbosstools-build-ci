@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# This utility script will help you determine if all the latest github commits have been built in Jenkins by 
+# comparing SHAs between those two systems. Should the script determine that there are commits in Github which have
+# not yet been built in Jenkins, the script will dump URLs for invoking those missing builds without having to do 
+#much more that selecting text and pasting it into a terminal to launch Firefox.
+#
+# See examples below for how to look for unbuilt commits, either based on a JIRA query or a list of projects.
+
 usage ()
 {
     echo "Usage:     $0 -branch GITHUBBRANCH -jbtstream JENKINSSTREAM -jbdsstream JENKINSSTREAM -ju JENKINSUSER -jp JENKINSPWD \\"
@@ -7,9 +14,11 @@ usage ()
     echo "             -jbds JBDEVSTUDIO-PROJECT1,JBDEVSTUDIO-PROJECT2 \\"
     echo "             -iu issues.jboss.org_USER -ip issues.jboss.org_PWD -jbtm 4.2.0.MILESTONE -jbdsm 8.0.0.MILESTONE -respin a|b|c..."
     echo ""
+    # for the milestone, find the related JIRAs and get the associated projects
     echo "Example 1: $0 -branch jbosstools-4.2.x -jbtstream 4.2.luna -jbdsstream 8.0.luna -ju nboldt -jp j_pwd \\"
     echo "             -gu nickboldt@gmail.com -gp g_pwd -iu nickboldt -ip i_pwd -jbtm 4.2.0.CR2 -jbdsm 8.0.0.CR2 -respin a"
     echo ""
+    # for a list of projects, find any unbuilt commits
     echo "Example 2: $0 -branch jbosstools-4.2.x -jbtstream 4.2.luna -jbdsstream 8.0.luna -ju nboldt -jp j_pwd \\"
     echo "            -gu nickboldt@gmail.com -gp g_pwd -jbds product -jbt aerogear,arquillian,base,birt,browsersim,central,discovery,\\"
     echo "forge,freemarker,hibernate,javaee,jst,livereload,openshift,portlet,server,vpe,webservices"
