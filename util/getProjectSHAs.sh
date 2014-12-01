@@ -275,7 +275,7 @@ checkProjects () {
 }
 
 checkProjects "${JBTPROJECTS}"  jbosstools/jbosstools-   http://download.jboss.org/jbosstools/builds/staging/ jbosstools- "${jbtstream}"
-checkProjects "${JBDSPROJECTS}" jbdevstudio/jbdevstudio- http://www.qa.jboss.com/binaries/RHDS/builds/staging/ devstudio.  "${jbdsstream}"
+checkProjects "${JBDSPROJECTS}" jbdevstudio/jbdevstudio- http://www.qa.jboss.com/binaries/RHDS/builds/staging/ devstudio. "${jbdsstream}"
 
 if [[ ${jobsToCheck} ]]; then
   echo "Run the following to build incomplete jobs:"
