@@ -6,10 +6,6 @@ if [ -z "${WORKSPACE}" ]; then
 	echo "WORKSPACE property must be set"
 	exit 1
 fi
-if [ ! -d "${WORKSPACE}/sources/site/target/repository" ]; then
-	echo "${WORKSPACE}/sources/site/target/repository should be a p2 repository"
-	exit 1
-fi
 if [ -z "${JOB_NAME}" ]; then
 	echo "JOB_NAME property must be set"
 	exit 1
