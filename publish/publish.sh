@@ -108,7 +108,7 @@ elif [[ -d ${WORKSPACE}/sources/site/target ]]; then
 fi
 
 
-# note the job name, build number, SVN rev, and build ID of the latest snapshot zip
+# note the job name, build number, SCM rev, and build ID of the latest snapshot zip
 mkdir -p ${STAGINGDIR}/logs
 bl=${STAGINGDIR}/logs/BUILDLOG.txt
 rm -f ${bl}; 
@@ -117,7 +117,7 @@ getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/$
 # calculate BUILD_ALIAS from parent pom version as recorded in the build log, eg., from org/jboss/tools/parent/4.0.0.Alpha2-SNAPSHOT get Alpha2
 BUILD_ALIAS=$(cat ${bl} | grep "org/jboss/tools/parent/" | head -1 | sed -e "s#.\+org/jboss/tools/parent/\(.\+\)/\(maven-metadata.xml\|parent.\+\)#\1#" | sed -e "s#-SNAPSHOT##" | sed -e "s#[0-9].[0-9].[0-9].##")
 
-# store details about the SVN or Git revision and where the detailed log is located, so we can easily see if this build's different from the previous
+# store details about the SCM revision and where the detailed log is located, so we can easily see if this build's different from the previous
 REV_LOG_URL=""
 REV_LOG_DETAIL=""
 
@@ -133,22 +133,8 @@ if [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then
   sed -e "s#<lastBuiltRevision><SHA1>\([a-f0-9]\+\)</SHA1><branch><SHA1>\([a-f0-9]\+\)</SHA1><name>\([^<>]\+\)</name></branch></lastBuiltRevision>#\3\@\1#g" ${rl}.xml | sed -e "s#<[^<>]\+>##g" > ${rl}.txt
   REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
   REV_LOG_DETAIL="`cat ${rl}.txt`"
-elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".svn") ]]; then
-  # Track svn source revision through hudson api: /job/${JOB_NAME}/api/xml?wrapper=changeSet&depth=1&xpath=//build[1]/changeSet/revision
-  rl=${STAGINGDIR}/logs/SVN_REVISION
-  rm -f ${rl}.txt ${rl}.xml
-  getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/api/xml?wrapper=changeSet&depth=1&xpath=//build[1]/changeSet/revision"; if [[ -w ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${rl}.xml; fi
-  if [[ $? -eq 0 ]]; then
-    sed -e "s#<module>\(http[^<>]\+\)</module><revision>\([0-9]\+\)</revision>#\1\@\2\n#g" ${rl}.xml | sed -e "s#<[^<>]\+>##g" > ${rl}.txt 
-    REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
-    REV_LOG_DETAIL="`cat ${rl}.txt`"
-  else
-    echo "UNKNOWN SVN REVISION(S)" > ${rl}.txt
-    REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/"
-    REV_LOG_DETAIL="Details"
-  fi
 else
-  # not git or svn... unsupported
+  # no git... unsupported
   echo "UNKNOWN REVISION(S)" > ${rl}.txt
   REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/"
   REV_LOG_DETAIL="Details"
@@ -214,26 +200,8 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
   ## work locally if posible
   if [[ -f ${STAGINGDIR}/logs/GIT_REVISION.txt ]]; then
     cp ${STAGINGDIR}/logs/GIT_REVISION.txt $tmpdir/devstudio_GIT_REVISION.txt
-  elif [[ -f ${STAGINGDIR}/logs/SVN_REVISION.txt ]]; then
-    cp ${STAGINGDIR}/logs/SVN_REVISION.txt $tmpdir/devstudio_SVN_REVISION.txt
-  else
-    # else fetch from server - try git then fall back to svn (deprecated)
-    getRemoteFile "http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
-    if [[ -w ${getRemoteFileReturn} ]]; then 
-      mv ${getRemoteFileReturn} $tmpdir/devstudio_GIT_REVISION.txt 
-      REV_LOG_URL="http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
-      REV_LOG_DETAIL="`cat $tmpdir/devstudio_GIT_REVISION.txt`"
-    else
-      getRemoteFile "http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
-      if [[ -w ${getRemoteFileReturn} ]]; then 
-        mv ${getRemoteFileReturn} $tmpdir/devstudio_SVN_REVISION.txt 
-        REV_LOG_URL="http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt"
-        REV_LOG_DETAIL="`cat $tmpdir/devstudio_SVN_REVISION.txt`"
-      fi
-    fi
   fi
   if [[ -f $tmpdir/devstudio_GIT_REVISION.txt ]]; then cat $tmpdir/devstudio_GIT_REVISION.txt >> $ALLREVS; fi
-  if [[ -f $tmpdir/devstudio_SVN_REVISION.txt ]]; then cat $tmpdir/devstudio_SVN_REVISION.txt >> $ALLREVS; fi
 
   # get name of upstream project (eg., for devstudio.product_70 want jbosstools-build-sites.aggregate.site_41)
   getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/api/xml?xpath=%28//upstreamProject/name%29[1]"; 
@@ -256,7 +224,7 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
     cat $tmpdir/upstream_ALL_REVISIONS.txt >> $ALLREVS
     echo "" >> $ALLREVS
   fi
-  rm -f $tmpdir/devstudio_GIT_REVISION.txt $tmpdir/devstudio_SVN_REVISION.txt $tmpdir/upstreamProject.name.xml $tmpdir/upstream_ALL_REVISIONS.txt
+  rm -f $tmpdir/devstudio_GIT_REVISION.txt $tmpdir/upstreamProject.name.xml $tmpdir/upstream_ALL_REVISIONS.txt
 fi
 
 PUBLISH_STATUS=""
@@ -296,20 +264,6 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
       # should never see this
       echo "WARNING: no GIT_REVISION found in ${rl}.txt"
       PUBLISH_STATUS=" (PUBLISHED: NO GIT_REVISION)"
-    fi
-  elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".svn") ]]; then # check previous build's SVN_REVISION log
-    if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
-      SVN_REVISION_URL=http://www.qa.jboss.com/binaries/RHDS/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt
-    else
-      SVN_REVISION_URL=http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/SVN_REVISION.txt
-    fi
-    REV_LOG_DETAIL="`cat ${rl}.txt`"
-    REV_LOG_URL="${SVN_REVISION_URL}"
-    rm -f ${PREV_REV_FILE}; PREV_REV_CHECK=`wget ${wgetParams} -O ${PREV_REV_FILE} ${SVN_REVISION_URL} 2>/dev/null && echo "found" || echo "not found"`
-    if [[ ! ${PREV_REV_CHECK%%*not found*} ]]; then 
-      echo "No previous log in ${SVN_REVISION_URL}"
-    elif [[ `cat ${rl}.txt` == `cat ${PREV_REV_FILE}` ]]; then 
-      showUnchangedMessage SVN 
     fi
   fi
   PREV_REV_CHECK=""
@@ -459,7 +413,7 @@ if [[ $foundSourcesZip -eq 0 ]]; then
     srczipname=${SRCSNAME}
   fi
   zip ${STAGINGDIR}/all/${srczipname} -q -r * -x hudson_workspace\* -x documentation\* -x download.jboss.org\* -x requirements\* \
-    -x workingset\* -x labs\* -x build\* -x \*test\* -x \*target\* -x \*.class -x \*.svn\* -x \*classes\* -x \*bin\* -x \*.zip \
+    -x workingset\* -x labs\* -x build\* -x \*test\* -x \*target\* -x \*.class -x \*classes\* -x \*bin\* -x \*.zip \
     -x \*docs\* -x \*reference\* -x \*releng\* -x \*.git\* -x \*/lib/\*.jar -x \*getRemoteFile\*
   popd
   z=${STAGINGDIR}/all/${srczipname}; for m in $(md5sum ${z}); do if [[ $m != ${z} ]]; then echo $m > ${z}.MD5; fi; done
@@ -497,7 +451,7 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
   # add component sources into sources zip
   pushd ${STAGINGDIR}/all/sources
   zip ${STAGINGDIR}/all/${SRCSNAME} -q -r * -x hudson_workspace\* -x documentation\* -x download.jboss.org\* -x requirements\* \
-    -x workingset\* -x labs\* -x build\* -x \*test\* -x \*target\* -x \*.class -x \*.svn\* -x \*classes\* -x \*bin\* -x \*.zip \
+    -x workingset\* -x labs\* -x build\* -x \*test\* -x \*target\* -x \*.class -x \*classes\* -x \*bin\* -x \*.zip \
     -x \*docs\* -x \*reference\* -x \*releng\* -x \*.git\* -x \*/lib/\*.jar -x \*getRemoteFile\*
   popd
   rm -fr ${STAGINGDIR}/all/sources
