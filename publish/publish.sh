@@ -703,7 +703,7 @@ find ${WORKSPACE} -maxdepth 2 -name "getRemoteFile*" -type f -exec rm -f {} \;
 
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
   	# regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
-	pushd ../util/cleanup
+	pushd ${WORKSPACE}/sources/util/cleanup
 	chmod +x jbosstools-cleanup.sh
 	./jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/
 	popd
