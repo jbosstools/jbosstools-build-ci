@@ -37,8 +37,8 @@ usage ()
   echo "Example (JBoss Central - eXclude sources): $0 \\"
   echo "  -b /path/to/jbosstools-discovery -p jbtcentral -x \\"
   echo "  -z /path/to/eclipse-jee-luna-SR1-linux-gtk-x86_64.tar.gz  -d /path/to/executable/p2diff \\"
-  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.41.1.CR1/,\\
-http://download.jboss.org/jbosstools/updates/nightly/core/master/"
+  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.41.1.Final/,\\
+http://download.jboss.org/jbosstools/updates/nightly/core/4.2.luna/"
   echo "          or, use locally built sites"
   echo "  -u file:///path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,\\
 file:///path/to/jbosstools-build-sites/aggregate/site/target/"
@@ -46,9 +46,9 @@ file:///path/to/jbosstools-build-sites/aggregate/site/target/"
   echo "Example (JBoss Central Early Access - eXclude sources): $0 \\"
   echo "  -b /path/to/jbosstools-discovery -p jbtearlyaccess -x \\"
   echo "  -z /path/to/eclipse-jee-luna-SR1-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff \\"
-  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.41.1.CR1/,\\
-http://download.jboss.org/jbosstools/updates/nightly/core/master/,\\
-http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.41.1.CR1-SNAPSHOT/"
+  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.41.1.Final/,\\
+http://download.jboss.org/jbosstools/updates/nightly/core/4.2.luna/,\\
+http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.41.1.Final-SNAPSHOT/"
   echo "          or, use locally built sites"
   echo "  -u file:///path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,\\
 file:///path/to/jbosstools-build-sites/aggregate/site/target/,\\
