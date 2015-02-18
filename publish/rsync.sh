@@ -45,8 +45,6 @@ usage ()
 
 if [[ $# -lt 1 ]]; then usage; fi
 
-alias scpr='rsync -arzq --protocol=28'
-
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -67,13 +65,13 @@ done
 
 # build the target_path with sftp to ensure intermediate folders exist
 if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
-  seg="."; for d in ${TARGET_PATH/\// }; do seg=$seg/$d; echo -e "mkdir ${seg:2}" | sftp $DESTINATION/; done; seg=""
+  seg="."; for d in ${TARGET_PATH//\// }; do seg=$seg/$d; echo -e "mkdir ${seg:2}" | sftp $DESTINATION/; done; seg=""
 else
   mkdir -p $DESTINATION/${TARGET_PATH}
 fi
 
 # copy the source into the target
-scpr ${SOURCE_PATH}/* ${TARGET_PATH}/
+rsync -arzq --protocol=28 ${SOURCE_PATH}/* ${TARGET_PATH}/
 
 # for JBT aggregates only: regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
@@ -86,7 +84,7 @@ fi
 
 # store a copy of the build log in the target folder
 wget -q --no-check-certificate -N https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-base_master/lastBuild/consoleText -O ${tmpdir}/BUILDLOG.txt
-scpr ${tmpdir}/BUILDLOG.txt ${TARGET_PATH}/
+rsync -arzq --protocol=28 ${tmpdir}/BUILDLOG.txt ${TARGET_PATH}/
 
 # purge temp folder
 rm -fr ${tmpdir}
