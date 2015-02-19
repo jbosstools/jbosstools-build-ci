@@ -75,16 +75,22 @@ rsync -arzq --protocol=28 ${SOURCE_PATH}/* ${TARGET_PATH}/
 
 # for JBT aggregates only: regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
-  if [[ ! -f jbosstools-cleanup.sh ]]; then 
-    wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/cleanup/jbosstools-cleanup.sh -O ${tmpdir}/jbosstools-cleanup.sh
+  # regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
+  # new approach using publish script from Nexus via jbosstools-build-ci-scripts_4.3.x
+  if [[ -f ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh ]]; then
+    cd ${WORKSPACE}/sources/util/cleanup
+  elif [[ ! -f jbosstools-cleanup.sh ]]; then 
+    wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/cleanup/jbosstools-cleanup.sh
   fi
-  chmod +x ${tmpdir}/jbosstools-cleanup.sh
-  ${tmpdir}/jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /repo/
+  chmod +x jbosstools-cleanup.sh
+  ./jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/
 fi
 
-# store a copy of the build log in the target folder
-wget -q --no-check-certificate -N https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-base_master/lastBuild/consoleText -O ${tmpdir}/BUILDLOG.txt
-rsync -arzq --protocol=28 ${tmpdir}/BUILDLOG.txt ${TARGET_PATH}/
+# store a copy of this build's log in the target folder (if JOB_NAME is defined)
+if [[ ${JOB_NAME} ]]; then 
+  wget -q --no-check-certificate -N https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/lastBuild/consoleText -O ${tmpdir}/BUILDLOG.txt
+  rsync -arzq --protocol=28 ${tmpdir}/BUILDLOG.txt ${TARGET_PATH}/
+fi
 
 # purge temp folder
 rm -fr ${tmpdir}
