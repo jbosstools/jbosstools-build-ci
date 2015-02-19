@@ -2,6 +2,16 @@
 # Hudson script used to publish Tycho-built p2 update sites
 # NOTE: sources MUST be checked out into ${WORKSPACE}/sources 
 
+if [ -z "${WORKSPACE}" ]; then
+	echo "WORKSPACE property must be set"
+	exit 1
+fi
+if [ -z "${JOB_NAME}" ]; then
+	echo "JOB_NAME property must be set"
+	exit 1
+fi
+
+
 # to use timestamp when naming dirs instead of ${BUILD_ID}-B${BUILD_NUMBER}, use:
 # BUILD_ID=2010-08-31_19-16-10; timestamp=$(echo $BUILD_ID | tr -d "_-"); timestamp=${timestamp:0:12}; echo $timestamp; # 201008311916
 
@@ -107,7 +117,7 @@ getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/$
 # calculate BUILD_ALIAS from parent pom version as recorded in the build log, eg., from org/jboss/tools/parent/4.0.0.Alpha2-SNAPSHOT get Alpha2
 BUILD_ALIAS=$(cat ${bl} | grep "org/jboss/tools/parent/" | head -1 | sed -e "s#.\+org/jboss/tools/parent/\(.\+\)/\(maven-metadata.xml\|parent.\+\)#\1#" | sed -e "s#-SNAPSHOT##" | sed -e "s#[0-9].[0-9].[0-9].##")
 
-# store details about the SVN or Git revision and where the detailed log is located, so we can easily see if this build's different from the previous
+# store details about the SCM revision and where the detailed log is located, so we can easily see if this build's different from the previous
 REV_LOG_URL=""
 REV_LOG_DETAIL=""
 
@@ -742,9 +752,11 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
   if [[ ! -f jbosstools-cleanup.sh ]]; then 
     wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/cleanup/jbosstools-cleanup.sh
   fi
+  #pushd ${WORKSPACE}/sources/util/cleanup
   chmod +x jbosstools-cleanup.sh
   ./jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/
   rm -f jbosstools-cleanup.sh
+  #popd
 fi
 
 # to avoid looking for files that are still being synched/nfs-copied, wait a bit before trying to run tests (the next step usually)
