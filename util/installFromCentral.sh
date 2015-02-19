@@ -63,7 +63,7 @@ rm -fr ${WORKSPACE}/data; mkdir -p ${WORKSPACE}/data
 # get list of sites from which to resolve IUs (based on list in INSTALL_PLAN);  and trim /*-directory.xml at the end
 SITES=${INSTALL_PLAN%/*directory.xml}/
 # trim double // at end of URL 
-SITES=${SITES%//}/ 
+SITES=${SITES%//}/
 
 # get a list of IUs to install from the JBT or JBDS update site (using p2.director -list)
 BASE_URL=${SITES%,*}
@@ -141,7 +141,7 @@ XSLT
 
   # run scripted installation via p2.director
   ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
-  -DsourceSites=${SITES},${EXTRA_SITES} -Dinstall=${CENTRAL_IUs}
+  -Djboss.discovery.site.url=${CENTRAL_URL} -Djboss.discovery.earlyaccess.site.url=${CENTRAL_URL} -DsourceSites=${SITES},${EXTRA_SITES} -Dinstall=${CENTRAL_IUs}
 
   date; du -sh ${ECLIPSE}
 
