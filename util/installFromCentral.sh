@@ -25,7 +25,7 @@ if [[ $# -lt 1 ]]; then
 fi
 
 #director.xml script is used with Eclipse's AntRunner to launch p2.director
-DIRECTORXML="http://download.jboss.org/jbosstools/updates/scripted-installation/director.xml"
+DIRECTORXML="http://download.jboss.org/jbosstools/updates/scripted-install/director.xml"
 
 # read commandline args
 # NOTE: Jenkins matrix jobs require semi-colons here, but to pass to shell, must use quotes
@@ -89,14 +89,14 @@ echo "BASE FEATURES INSTALLED"
 echo "--------------------------------"
 
 # get a list of IUs to install from the Central site (based on the discovery.xml -> plugin.jar -> plugin.xml)
-CENTRAL_URL=${INSTALL_PLAN#*,} # includes discovery.xml
+CENTRAL_URL=${INSTALL_PLAN#*,} # includes discovery.xml # echo CENTRAL_URL = $CENTRAL_URL
 
 if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then 
   # echo $CENTRAL_URL
   wget ${CENTRAL_URL} -q --no-check-certificate -N -O directory.xml
   PLUGINJAR=`cat ${WORKSPACE}/directory.xml | egrep "org.jboss.tools.central.discovery_|com.jboss.jbds.central.discovery_" | sed "s#.\+url=\"\(.\+\).jar\".\+#\1.jar#"`
   # echo "Got $PLUGINJAR"
-  CENTRAL_URL=${SITES#*,} # excludes discovery.xml
+  CENTRAL_URL=${SITES#*,} # excludes discovery.xml #  echo CENTRAL_URL = $CENTRAL_URL
   wget ${CENTRAL_URL}/${PLUGINJAR} -q --no-check-certificate -N -O plugin.jar
   unzip -oq plugin.jar plugin.xml
 
@@ -134,14 +134,17 @@ XSLT
   CENTRAL_IUs=""; for f in $FEATURES; do CENTRAL_IUs="${CENTRAL_IUs},${f}.feature.group"; done; CENTRAL_IUs=${CENTRAL_IUs:1}; #echo $CENTRAL_IUs
 
   # parse the list of 3rd party siteUrl values from plugin.transformed.xml; exclude jboss.discovery.site.url entries
-  EXTRA_URLS=`cat ${WORKSPACE}/plugin.transformed.xml | grep -i siteUrl | grep -v jboss.discovery.site.url | sed "s#.\+siteUrl=\"\(.\+\)\"\ *>#\1#" | sort | uniq`
-  EXTRA_SITES=""; for e in $EXTRA_URLS; do EXTRA_SITES="${EXTRA_SITES},${e}"; done; EXTRA_SITES=${EXTRA_SITES:1}; #echo $EXTRA_SITES
+  EXTRA_URLS=`cat ${WORKSPACE}/plugin.transformed.xml | grep -i siteUrl | egrep -v "jboss.discovery.site.url|jboss.discovery.earlyaccess.site.url" | sed "s#.\+siteUrl=\"\(.\+\)\"\ *>#\1#" | sort | uniq`
+  EXTRA_SITES=""; for e in $EXTRA_URLS; do 
+    if [[ ${e/http/} != ${e} ]] || [[ ${e/ftp:/} != ${e} ]]; then EXTRA_SITES="${EXTRA_SITES},${e}"; else echo "[WARN] Skip EXTRA_SITE = $e"; fi
+  done
+  EXTRA_SITES=${EXTRA_SITES:1}; # echo $EXTRA_SITES
 
   date; du -sh ${ECLIPSE}
 
   # run scripted installation via p2.director
   ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
-  -Djboss.discovery.site.url=${CENTRAL_URL} -Djboss.discovery.earlyaccess.site.url=${CENTRAL_URL} -DsourceSites=${SITES},${EXTRA_SITES} -Dinstall=${CENTRAL_IUs}
+  -DsourceSites=${SITES},${EXTRA_SITES} -Dinstall=${CENTRAL_IUs}
 
   date; du -sh ${ECLIPSE}
 
