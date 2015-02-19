@@ -749,14 +749,14 @@ find ${WORKSPACE} -maxdepth 2 -name "getRemoteFile*" -type f -exec rm -f {} \;
 
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
   # regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
-  if [[ ! -f jbosstools-cleanup.sh ]]; then 
+  # new approach using publish script from Nexus via jbosstools-build-ci-scripts_4.3.x
+  if [[ -f ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh ]]; then
+    cd ${WORKSPACE}/sources/util/cleanup
+  elif [[ ! -f jbosstools-cleanup.sh ]]; then 
     wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/cleanup/jbosstools-cleanup.sh
   fi
-  #pushd ${WORKSPACE}/sources/util/cleanup
   chmod +x jbosstools-cleanup.sh
   ./jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/
-  rm -f jbosstools-cleanup.sh
-  #popd
 fi
 
 # to avoid looking for files that are still being synched/nfs-copied, wait a bit before trying to run tests (the next step usually)
