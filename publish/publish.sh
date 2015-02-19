@@ -576,7 +576,7 @@ if [[ $ec == "0" ]] && [[ $fc == "0" ]]; then
         date
         # create folders if not already there
         if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
-          seg="."; for d in ${PUBLISHPATHSUFFIX/\// }; do seg=$seg/$d; echo -e "mkdir ${seg:2}" | sftp $DESTINATION/builds/nightly/; done; seg=""
+          seg="."; for d in ${PUBLISHPATHSUFFIX//\// }; do seg=$seg/$d; echo -e "mkdir ${seg:2}" | sftp $DESTINATION/builds/nightly/; done; seg=""
         else
           mkdir -p $DESTINATION/builds/nightly/${PUBLISHPATHSUFFIX}
         fi
@@ -705,7 +705,7 @@ if [[ $ec == "0" ]] && [[ $fc == "0" ]]; then
     if [[ ${PUBLISHPATHSUFFIX} ]]; then 
       # create folders if not already there
       if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
-        seg="."; for d in ${PUBLISHPATHSUFFIX/\// }; do seg=$seg/$d; echo -e "mkdir ${seg:2}" | sftp $DESTINATION/updates/nightly/; done; seg=""
+        seg="."; for d in ${PUBLISHPATHSUFFIX//\// }; do seg=$seg/$d; echo -e "mkdir ${seg:2}" | sftp $DESTINATION/updates/nightly/; done; seg=""
       else
         mkdir -p $DESTINATION/updates/nightly/${PUBLISHPATHSUFFIX}
       fi
