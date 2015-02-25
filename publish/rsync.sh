@@ -25,7 +25,7 @@ fi
 # can be used to publish a build (including installers, site zips, MD5s, build log) or just an update site folder
 usage ()
 {
-  echo "Usage  : $0 [-DESTINATION destination] [-URL URL] -s source_path -t target_path"
+  echo "Usage  : $0 [-d destination] [-u URL] -s source_path -t target_path"
   echo ""
 
   echo "To push a project build folder from Jenkins to staging:"
@@ -38,8 +38,8 @@ usage ()
   echo ""
 
   echo "To push JBDS build + update site folders:"
-  echo "   $0 -DESTINATION /qa/services/http/binaries/RHDS -URL http://www.qa.jboss.com/binaries/RHDS           -s sources/results                   -t 9.0/snapshots/builds/devstudio.product_master/"
-  echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio -URL https://devstudio.redhat.com -s sources/site/target/fullSite/repo -t 9.0/snapshots/updates/core/master/"
+  echo "   $0 -d /qa/services/http/binaries/RHDS -u http://www.qa.jboss.com/binaries/RHDS           -s sources/results                   -t 9.0/snapshots/builds/devstudio.product_master/"
+  echo "   $0 -d devstudio@filemgmt.jboss.org:/www_htdocs/devstudio -u https://devstudio.redhat.com -s sources/site/target/fullSite/repo -t 9.0/snapshots/updates/core/master/"
   echo ""
 }
 
@@ -48,8 +48,8 @@ if [[ $# -lt 1 ]]; then usage; fi
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
   case $1 in
-    '-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., /qa/services/http/binaries/RHDS
-    '-URL') URL="$2"; shift 1;; # override for JBDS publishing, eg., http://www.qa.jboss.com/binaries/RHDS
+    '-d'|'-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., /qa/services/http/binaries/RHDS
+    '-u'|'-URL') URL="$2"; shift 1;; # override for JBDS publishing, eg., http://www.qa.jboss.com/binaries/RHDS
     '-s') SOURCE_PATH="$2"; shift 1;; # ${WORKSPACE}/sources/site/target/repository/
     '-t') TARGET_PATH="$2"; shift 1;; # mars/snapshots/builds/<job-name>/<build-number>/, mars/snapshots/updates/core/{4.3.0.Alpha1, master}/
   esac
@@ -73,24 +73,19 @@ fi
 # copy the source into the target
 rsync -arzq --protocol=28 ${SOURCE_PATH}/* ${TARGET_PATH}/
 
-# for JBT aggregates only: regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
-if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
-  # regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
-  # new approach using publish script from Nexus via jbosstools-build-ci-scripts_4.3.x
-  if [[ -f ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh ]]; then
-    cd ${WORKSPACE}/sources/util/cleanup
-  elif [[ ! -f jbosstools-cleanup.sh ]]; then 
-    wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/cleanup/jbosstools-cleanup.sh
-  fi
-  chmod +x jbosstools-cleanup.sh
-  ./jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/
+# for JBT aggregate build folders only: regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
+if [[ -f ../util/jbosstools-cleanup.sh ]] &&  [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ ${TARGET_PATH/builds/} != ${TARGET_PATH} ]]; then
+  chmod +x ../util/jbosstools-cleanup.sh
+  ../util/jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/ -d "${TARGET_PATH}/"
+else
+  echo "[WARNING] Could not find ../util/jbosstools-cleanup.sh in ${WORKSPACE}"
 fi
 
-# store a copy of this build's log in the target folder (if JOB_NAME is defined)
-if [[ ${JOB_NAME} ]]; then 
-  wget -q --no-check-certificate -N https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/lastBuild/consoleText -O ${tmpdir}/BUILDLOG.txt
-  rsync -arzq --protocol=28 ${tmpdir}/BUILDLOG.txt ${TARGET_PATH}/
-fi
+# Max doesn't like the notion of storing a copy of this build's log in the target folder (if JOB_NAME is defined), so comment this out until someone complains they want it back
+#if [[ ${JOB_NAME} ]]; then 
+#  wget -q --no-check-certificate -N https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/lastBuild/consoleText -O ${tmpdir}/BUILDLOG.txt
+#  rsync -arzq --protocol=28 ${tmpdir}/BUILDLOG.txt ${TARGET_PATH}/
+#fi
 
 # purge temp folder
 rm -fr ${tmpdir}
