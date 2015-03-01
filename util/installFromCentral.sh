@@ -27,6 +27,9 @@ fi
 #director.xml script is used with Eclipse's AntRunner to launch p2.director
 DIRECTORXML="http://download.jboss.org/jbosstools/updates/scripted-install/director.xml"
 
+# use Eclipse VM from JAVA_HOME if available
+if [[ -x ${JAVA_HOME}/bin/java ]]; then VM="-vm ${JAVA_HOME}/bin/java"; fi
+
 # read commandline args
 # NOTE: Jenkins matrix jobs require semi-colons here, but to pass to shell, must use quotes
 # On commandline, can use comma-separated pair instead so quotes aren't needed
@@ -37,6 +40,7 @@ while [[ "$#" -gt 0 ]]; do
     '-WORKSPACE') WORKSPACE="$2"; shift 1;;
     '-DIRECTORXML') DIRECTORXML="$2"; shift 1;;
     '-CLEAN') CLEAN="$2"; shift 1;;
+    '-VM') VM="-vm $2"
   esac
   shift 1
 done
@@ -68,7 +72,7 @@ SITES=${SITES%//}/
 # get a list of IUs to install from the JBT or JBDS update site (using p2.director -list)
 BASE_URL=${SITES%,*}
 # include source features too?
-${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
+${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
 list.feature.groups -Doutput=${WORKSPACE}/feature.groups.properties -DsourceSites=${BASE_URL}
 BASE_IUs=""
 if [[ -f ${WORKSPACE}/feature.groups.properties ]]; then 
@@ -79,7 +83,7 @@ fi
 date; du -sh ${ECLIPSE}
 
 # run scripted installation via p2.director
-${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
+${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
 -DsourceSites=${SITES} -Dinstall=${BASE_IUs}
 
 date; du -sh ${ECLIPSE}
@@ -126,7 +130,7 @@ if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then
 </xsl:stylesheet>
 XSLT
 
-  ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml \
+  ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} \
   transform -Dxslt=${WORKSPACE}/get-ius-and-siteUrls.xsl -Dinput=${WORKSPACE}/plugin.xml -Doutput=${WORKSPACE}/plugin.transformed.xml -q
 
   # parse the list of features from plugin.transformed.xml
@@ -143,7 +147,7 @@ XSLT
   date; du -sh ${ECLIPSE}
 
   # run scripted installation via p2.director
-  ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
+  ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
   -DsourceSites=${SITES},${EXTRA_SITES} -Dinstall=${CENTRAL_IUs}
 
   date; du -sh ${ECLIPSE}
