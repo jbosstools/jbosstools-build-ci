@@ -40,7 +40,7 @@ while [[ "$#" -gt 0 ]]; do
     '-WORKSPACE') WORKSPACE="$2"; shift 1;;
     '-DIRECTORXML') DIRECTORXML="$2"; shift 1;;
     '-CLEAN') CLEAN="$2"; shift 1;;
-    '-VM') VM="-vm $2"
+    '-vm') VM="-vm $2"; shift 1;;
   esac
   shift 1
 done

@@ -14,7 +14,7 @@
 
 # OPTIONAL if you want to perform an install test, rather than just ensure that your TP can be validated and resolved locally
 # set path to where you have the latest compatible Eclipse bundle stored locally
-# -z /path/to/eclipse-jee-mars-M3-linux-gtk-x86_64.tar.gz
+# -z /path/to/eclipse-jee-mars-M5-linux-gtk-x86_64.tar.gz
 
 # OPTIONAL if you're testing a TP that's downstream from the jbosstoolstarget or jbdevstudiotarget, eg., Central, Early Access, or Integration Stack
 # set URL(s) for JBT / JBT Target so that all Central deps can be resolved; for more than one, separate w/ commas
@@ -32,11 +32,11 @@ usage ()
   echo ""
   echo "Example (JBT/JBDS - include sources): $0 \\"
   echo "  -b /path/to/jbosstools-target-platforms -p jbosstools,jbdevstudio \\"
-  echo "  -z /path/to/eclipse-jee-mars-M3-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff"
+  echo "  -z /path/to/eclipse-jee-mars-M5-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff"
   echo ""
   echo "Example (JBoss Central - eXclude sources): $0 \\"
   echo "  -b /path/to/jbosstools-discovery -p jbtcentral -x \\"
-  echo "  -z /path/to/eclipse-jee-mars-M3-linux-gtk-x86_64.tar.gz  -d /path/to/executable/p2diff \\"
+  echo "  -z /path/to/eclipse-jee-mars-M5-linux-gtk-x86_64.tar.gz  -d /path/to/executable/p2diff \\"
   echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.50.0.Alpha1-SNAPSHOT/,\\
 http://download.jboss.org/jbosstools/updates/nightly/core/master/"
   echo "          or, use locally built sites"
@@ -45,7 +45,7 @@ file:///path/to/jbosstools-build-sites/aggregate/site/target/"
   echo ""
   echo "Example (JBoss Central Early Access - eXclude sources): $0 \\"
   echo "  -b /path/to/jbosstools-discovery -p jbtearlyaccess -x \\"
-  echo "  -z /path/to/eclipse-jee-mars-M3-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff \\"
+  echo "  -z /path/to/eclipse-jee-mars-M5-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff \\"
   echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.50.0.Alpha1-SNAPSHOT/,\\
 http://download.jboss.org/jbosstools/updates/nightly/core/master/,\\
 http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.50.0.Alpha1-SNAPSHOT/"
@@ -56,7 +56,7 @@ file:///path/to/jbosstools-discovery/jbtcentraltarget/multiple/target/jbtcentral
   echo ""
   echo "Example (JBoss Tools Integration Stack - include sources): $0 \\"
   echo "  -b /path/to/jbosstools-integration-stack/target-platform -p target-platform \\"
-  echo "  -z /path/to/eclipse-jee-mars-M3-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff"
+  echo "  -z /path/to/eclipse-jee-mars-M5-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff"
   echo ""
   exit 1;
 }
@@ -72,10 +72,13 @@ INSTALLSCRIPT=/tmp/installFromTarget.sh
 LOG_GREP_INCLUDES="BUILD FAILURE|Only one of the following|Missing requirement|Unresolved requirement|IllegalArgumentException|Could not resolve|could not be found|being installed|Cannot satisfy dependency|FAILED"
 LOG_GREP_EXCLUDES="Failed to execute goal org.jboss.tools.tycho-plugins:target-platform-utils|Checksum validation failed, no checksums available from the repository"
 #BASEDIR=`pwd`
-#ECLIPSEZIP=${HOME}/tmp/Eclipse_Bundles/eclipse-jee-mars-M3-linux-gtk-x86_64.tar.gz
+#ECLIPSEZIP=${HOME}/tmp/Eclipse_Bundles/eclipse-jee-mars-M5-linux-gtk-x86_64.tar.gz
 #UPSTREAM_SITES=file://$HOME/tru/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,http://download.jboss.org/jbosstools/updates/nightly/core/master/
 # for JBDS tests, use UPSTREAM_SITES=file://$HOME/tru/jbosstools-target-platforms/jbdevstudio/multiple/target/jbdevstudio-multiple.target.repo/,http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/
 #P2DIFF=${HOME}/tmp/p2diff/p2diff
+
+# use Eclipse VM from JAVA_HOME if available
+if [[ -x ${JAVA_HOME}/bin/java ]]; then VM="-vm ${JAVA_HOME}/bin/java"; fi
 
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
@@ -88,6 +91,7 @@ while [[ "$#" -gt 0 ]]; do
     '-m') MVN="$2"; shift 1;;
     '-x') includeSources=""; shift 0;;
     '-V') targetplatformutilsversion="$2"; shift 1;;
+    '-vm') VM="-vm $2"; shift 1;;
        *) others="$others,$1"; shift 0;;
   esac
   shift 1
@@ -202,12 +206,12 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
       echo "  Install..."
       logfile=${INSTALLSCRIPT}_log_${PROJECT}_${NOW}.txt
       if [[ ${UPSTREAM_SITES} ]]; then
-        ${INSTALLSCRIPT} -ECLIPSE ${INSTALLDIR}/eclipse -INSTALL_PLAN ${UPSTREAM_SITES},file://${WORKDIR}/target/${REPODIR}/ | tee $logfile
+        ${INSTALLSCRIPT} -ECLIPSE ${INSTALLDIR}/eclipse ${VM} -INSTALL_PLAN ${UPSTREAM_SITES},file://${WORKDIR}/target/${REPODIR}/ | tee $logfile
       else
         echo ""
         echo "  No UPSTREAM_SITES specified. If installation fails, try adding more upstream sites to help resolving dependencies."
         echo ""
-        ${INSTALLSCRIPT} -ECLIPSE ${INSTALLDIR}/eclipse -INSTALL_PLAN file://${WORKDIR}/target/${REPODIR}/ | tee $logfile
+        ${INSTALLSCRIPT} -ECLIPSE ${INSTALLDIR}/eclipse ${VM} -INSTALL_PLAN file://${WORKDIR}/target/${REPODIR}/ | tee $logfile
       fi
       echo ""
       echo "  Scan log ( ${INSTALLSCRIPT}_log_${PROJECT}_${NOW}.txt ) for errors ..."
