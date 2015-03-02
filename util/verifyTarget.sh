@@ -77,6 +77,9 @@ LOG_GREP_EXCLUDES="Failed to execute goal org.jboss.tools.tycho-plugins:target-p
 # for JBDS tests, use UPSTREAM_SITES=file://$HOME/tru/jbosstools-target-platforms/jbdevstudio/multiple/target/jbdevstudio-multiple.target.repo/,http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/
 #P2DIFF=${HOME}/tmp/p2diff/p2diff
 
+# use Eclipse VM from JAVA_HOME if available
+if [[ -x ${JAVA_HOME}/bin/java ]]; then VM="-vm ${JAVA_HOME}/bin/java"; fi
+
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -88,6 +91,7 @@ while [[ "$#" -gt 0 ]]; do
     '-m') MVN="$2"; shift 1;;
     '-x') includeSources=""; shift 0;;
     '-V') targetplatformutilsversion="$2"; shift 1;;
+    '-vm') VM="-vm $2"; shift 1;;
        *) others="$others,$1"; shift 0;;
   esac
   shift 1
@@ -202,12 +206,12 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
       echo "  Install..."
       logfile=${INSTALLSCRIPT}_log_${PROJECT}_${NOW}.txt
       if [[ ${UPSTREAM_SITES} ]]; then
-        ${INSTALLSCRIPT} -ECLIPSE ${INSTALLDIR}/eclipse -INSTALL_PLAN ${UPSTREAM_SITES},file://${WORKDIR}/target/${REPODIR}/ | tee $logfile
+        ${INSTALLSCRIPT} -ECLIPSE ${INSTALLDIR}/eclipse ${VM} -INSTALL_PLAN ${UPSTREAM_SITES},file://${WORKDIR}/target/${REPODIR}/ | tee $logfile
       else
         echo ""
         echo "  No UPSTREAM_SITES specified. If installation fails, try adding more upstream sites to help resolving dependencies."
         echo ""
-        ${INSTALLSCRIPT} -ECLIPSE ${INSTALLDIR}/eclipse -INSTALL_PLAN file://${WORKDIR}/target/${REPODIR}/ | tee $logfile
+        ${INSTALLSCRIPT} -ECLIPSE ${INSTALLDIR}/eclipse ${VM} -INSTALL_PLAN file://${WORKDIR}/target/${REPODIR}/ | tee $logfile
       fi
       echo ""
       echo "  Scan log ( ${INSTALLSCRIPT}_log_${PROJECT}_${NOW}.txt ) for errors ..."

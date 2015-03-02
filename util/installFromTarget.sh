@@ -27,6 +27,9 @@ fi
 #director.xml script is used with Eclipse's AntRunner to launch p2.director
 DIRECTORXML="http://download.jboss.org/jbosstools/updates/scripted-installation/director.xml"
 
+# use Eclipse VM from JAVA_HOME if available
+if [[ -x ${JAVA_HOME}/bin/java ]]; then VM="-vm ${JAVA_HOME}/bin/java"; fi
+
 # read commandline args
 # NOTE: Jenkins matrix jobs require semi-colons here, but to pass to shell, must use quotes
 # On commandline, can use comma-separated pair instead so quotes aren't needed
@@ -37,6 +40,7 @@ while [[ "$#" -gt 0 ]]; do
     '-WORKSPACE') WORKSPACE="$2"; shift 1;;
     '-DIRECTORXML') DIRECTORXML="$2"; shift 1;;
     '-CLEAN') CLEAN="$2"; shift 1;;
+    '-vm') VM="-vm $2"; shift 1;;
   esac
   shift 1
 done
@@ -80,10 +84,10 @@ fi
 rm -fr ${WORKSPACE}/data; mkdir -p ${WORKSPACE}/data
 
 # collect feature.groups to install
-${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
+${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
 list.feature.groups -Doutput=${WORKSPACE}/feature.group.list.properties -DsourceSites=${INSTALL_PLAN} -Dexec=${ECLIPSEEXEC}
 # collect plugins to install (in case we have orphan plugins not inside feature.groups)
-${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
+${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
 list.plugins -Doutput=${WORKSPACE}/plugin.list.properties -DsourceSites=${INSTALL_PLAN} -Dexec=${ECLIPSEEXEC}
 BASE_IUs=""
 for f in feature.group.list.properties plugin.list.properties; do
@@ -101,7 +105,7 @@ BASE_IUs=${BASE_IUs:1}
 date; du -sh ${ECLIPSE}
 
 # run scripted installation via p2.director
-${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml -DtargetDir=${ECLIPSE} \
+${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
 -DsourceSites=${INSTALL_PLAN} -Dinstall=${BASE_IUs} -Dexec=${ECLIPSEEXEC}
 
 date; du -sh ${ECLIPSE}
