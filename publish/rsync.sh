@@ -101,5 +101,5 @@ fi
 
 BUILD_DESCRIPTION='<li><a href='${URL}'/'${TARGET_PATH}'>'${URL}'/'${TARGET_PATH}'</a></li>'
 
-# purge temp folder
-rm -fr ${tmpdir}
+# purge temp folder & temp files
+rm -fr ${tmpdir} ${WORKSPACE}/getRemoteFile.*
