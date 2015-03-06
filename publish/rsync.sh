@@ -6,9 +6,6 @@
 tmpdir=`mktemp -d`
 mkdir -p $tmpdir
 
-# where to create the stuff to publish
-STAGINGDIR=${WORKSPACE}/results/${JOB_NAME}
-
 DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /qa/services/http/binaries/RHDS
 URL=http://download.jboss.org/jbosstools # or https://devstudio.redhat.com or http://www.qa.jboss.com/binaries/RHDS
 
@@ -29,7 +26,7 @@ usage ()
   echo ""
 
   echo "To push a project build folder from Jenkins to staging:"
-  echo "   $0 -s sources/site/target/fullSite/ -t mars/snapshots/builds/jbosstools-base_4.3.mars/"
+  echo "   $0 -s sources/site/target/repository/ -t mars/snapshots/builds/jbosstools-base_4.3.mars/"
   echo ""
 
   echo "To push JBT build + update site folders:"
@@ -74,12 +71,8 @@ fi
 rsync -arzq --protocol=28 ${SOURCE_PATH}/* $DESTINATION/${TARGET_PATH}/
 
 # for JBT aggregates only: regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
-if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
-  if [[ ! -f jbosstools-cleanup.sh ]]; then 
-    wget -q --no-check-certificate -N https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/cleanup/jbosstools-cleanup.sh -O ${tmpdir}/jbosstools-cleanup.sh
-  fi
-  chmod +x ${tmpdir}/jbosstools-cleanup.sh
-  ${tmpdir}/jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /repo/
+if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -f ${WORKSPACE}/sources/util/jbosstools-cleanup.sh ]]; then
+  . ${WORKSPACE}/sources/util/jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /repo/
 fi
 
 # store a copy of the build log in the target folder
