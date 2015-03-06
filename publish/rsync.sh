@@ -74,7 +74,8 @@ rsync -arzq --protocol=28 ${SOURCE_PATH}/* $DESTINATION/${TARGET_PATH}/
 # for published builds on download.jboss.org ONLY!
 # regenerate http://download.jboss.org/jbosstools/builds/${TARGET_PATH}/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
 if [[ ${TARGET_PATH/builds/} != ${TARGET_PATH} ]] && [[ ${DESTINATION} = "tools@filemgmt.jboss.org:/downloads_htdocs/tools" ]] && [[ -f ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh ]]; then
-  PARENT_PATH=${TARGET_PATH:0:-1}; PARENT_PATH=${PARENT_PATH%/*} # trim last character (could be a /) then remove last path seg
+  PARENT_PATH=${TARGET_PATH:0:-1}; PARENT_PATH=${PARENT_PATH/\/all\/repo/}; PARENT_PATH=${PARENT_PATH%/*} # trim last character (could be a /) then remove /all/repo, then last path seg (eg., B646-2015-03-06_17-55-14)
+  # should end up with /downloads_htdocs/tools/mars/snapshots/builds/jbosstools-base_master/
   . ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/ -d ${PARENT_PATH}
 fi
 
