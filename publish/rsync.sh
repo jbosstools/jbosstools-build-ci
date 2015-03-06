@@ -71,10 +71,9 @@ fi
 # copy the source into the target
 rsync -arzq --protocol=28 ${SOURCE_PATH}/* $DESTINATION/${TARGET_PATH}/
 
-# regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
-# new approach using publish script from Nexus via jbosstools-build-ci-scripts_4.3.x
-if [[ -f ${WORKSPACE}/sources/util/jbosstools-cleanup.sh ]]; then
-  . ${WORKSPACE}/sources/util/jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/
+# regenerate http://download.jboss.org/jbosstools/builds/${TARGET_PATH}/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
+if [[ ${DESTINATION} = "tools@filemgmt.jboss.org:/downloads_htdocs/tools" ]] && [[ -f ${WORKSPACE}/sources/util/jbosstools-cleanup.sh ]]; then
+  . ${WORKSPACE}/sources/util/jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/ -d ${TARGET_PATH}
 fi
 
 wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate -q"
