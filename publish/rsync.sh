@@ -70,14 +70,33 @@ fi
 # copy the source into the target
 rsync -arzq --protocol=28 ${SOURCE_PATH}/* $DESTINATION/${TARGET_PATH}/
 
-# for JBT aggregates only: regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
-if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -f ${WORKSPACE}/sources/util/jbosstools-cleanup.sh ]]; then
-  . ${WORKSPACE}/sources/util/jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /repo/
+# regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
+# new approach using publish script from Nexus via jbosstools-build-ci-scripts_4.3.x
+if [[ -f ${WORKSPACE}/sources/util/jbosstools-cleanup.sh ]]; then
+  . ${WORKSPACE}/sources/util/jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/
 fi
 
-# store a copy of the build log in the target folder
-wget -q --no-check-certificate -N https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-base_master/lastBuild/consoleText -O ${tmpdir}/BUILDLOG.txt
-rsync -arzq --protocol=28 ${tmpdir}/BUILDLOG.txt $DESTINATION/${TARGET_PATH}/
+wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate -q"
+getRemoteFile ()
+{
+  # requires $wgetParams and $tmpdir to be defined (above)
+  getRemoteFileReturn=""
+  URL="$1"
+  output=`mktemp getRemoteFile.XXXXXX`
+  if [[ ! `wget ${wgetParams} ${URL} -O ${tmpdir}/${output} 2>&1 | egrep "ERROR 404"` ]]; then # file downloaded
+    getRemoteFileReturn=${tmpdir}/${output}
+  else
+    getRemoteFileReturn=""
+    rm -f ${tmpdir}/${output}
+  fi
+}
+
+# store a copy of this build's log in the target folder (if JOB_NAME is defined)
+if [[ ${JOB_NAME} ]]; then 
+  bl=${tmpdir}/BUILDLOG.txt
+  getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText"; if [[ -w ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${bl}; fi
+  touch ${bl}; rsync -arzq --protocol=28 ${bl} $DESTINATION/${TARGET_PATH}/logs/
+fi
 
 # purge temp folder
 rm -fr ${tmpdir}
