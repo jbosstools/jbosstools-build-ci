@@ -26,11 +26,11 @@ usage ()
   echo ""
 
   echo "To push a project build folder from Jenkins to staging:"
-  echo "   $0 -s \${WORKSPACE}/sources/site/target/repository/ -t mars/snapshots/builds/jbosstools-base_4.3.mars/"
+  echo "   $0 -s \${WORKSPACE}/sources/site/target/repository/ -t mars/snapshots/builds/\${JOB_NAME}/B\${BUILD_NUMBER}-\${BUILD_ID}/all/repo/"
   echo ""
 
   echo "To push JBT build + update site folders:"
-  echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite          -t mars/snapshots/builds/\${JOB_NAME}/B${BUILD_NUMBER}-${BUILD_ID}"
+  echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite          -t mars/snapshots/builds/\${JOB_NAME}/B\${BUILD_NUMBER}-\${BUILD_ID}"
   echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite/all/repo -t mars/snapshots/updates/core/\${stream}"
   echo ""
 
@@ -71,9 +71,10 @@ fi
 # copy the source into the target
 rsync -arzq --protocol=28 ${SOURCE_PATH}/* $DESTINATION/${TARGET_PATH}/
 
+# for published builds on download.jboss.org ONLY!
 # regenerate http://download.jboss.org/jbosstools/builds/${TARGET_PATH}/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
-if [[ ${DESTINATION} = "tools@filemgmt.jboss.org:/downloads_htdocs/tools" ]] && [[ -f ${WORKSPACE}/sources/util/jbosstools-cleanup.sh ]]; then
-  . ${WORKSPACE}/sources/util/jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/ -d ${TARGET_PATH}
+if [[ ${TARGET_PATH/builds/} != ${TARGET_PATH} ]] && [[ ${DESTINATION} = "tools@filemgmt.jboss.org:/downloads_htdocs/tools" ]] && [[ -f ${WORKSPACE}/sources/util/jbosstools-cleanup.sh ]]; then
+  . ${WORKSPACE}/sources/util/jbosstools-cleanup.sh --keep 5 --age-to-delete 5 --childFolderSuffix /all/repo/ -d ${TARGET_PATH}/..
 fi
 
 wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate -q"
