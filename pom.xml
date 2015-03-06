@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.jboss.tools.releng</groupId>
 	<artifactId>jbosstools-releng-publish</artifactId>
-	<version>4.3.0.Alpha1-SNAPSHOT</version>
+	<version>4.3.0.Alpha2-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<build>
@@ -41,6 +41,11 @@
             			</goals>
             			<configuration>
 	              			<artifacts>
+	                			<artifact>
+	                  				<file>publish/rsync.sh</file>
+	                  				<type>sh</type>
+	                  				<classifier>rsync</classifier>
+	                			</artifact>
 	                			<artifact>
 	                  				<file>publish/promote.sh</file>
 	                  				<type>sh</type>
