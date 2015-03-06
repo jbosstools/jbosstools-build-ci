@@ -11,6 +11,7 @@
       <directory>${project.basedir}</directory>
       <outputDirectory>/</outputDirectory>
       <includes>
+        <include>publish/rsync.sh</include>
         <include>publish/publish.sh</include>
         <include>publish/promote.sh</include>
         <include>util/cleanup/jbosstools-cleanup.sh</include>
