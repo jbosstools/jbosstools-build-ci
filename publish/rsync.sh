@@ -71,7 +71,7 @@ else
 fi
 
 # copy the source into the target
-rsync -arzq --protocol=28 ${SOURCE_PATH}/* ${TARGET_PATH}/
+rsync -arzq --protocol=28 ${SOURCE_PATH}/* $DESTINATION/${TARGET_PATH}/
 
 # for JBT aggregates only: regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
@@ -84,7 +84,7 @@ fi
 
 # store a copy of the build log in the target folder
 wget -q --no-check-certificate -N https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-base_master/lastBuild/consoleText -O ${tmpdir}/BUILDLOG.txt
-rsync -arzq --protocol=28 ${tmpdir}/BUILDLOG.txt ${TARGET_PATH}/
+rsync -arzq --protocol=28 ${tmpdir}/BUILDLOG.txt $DESTINATION/${TARGET_PATH}/
 
 # purge temp folder
 rm -fr ${tmpdir}
