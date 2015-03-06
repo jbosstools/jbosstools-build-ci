@@ -26,18 +26,19 @@ usage ()
   echo ""
 
   echo "To push a project build folder from Jenkins to staging:"
-  echo "   $0 -s sources/site/target/repository/ -t mars/snapshots/builds/jbosstools-base_4.3.mars/"
+  echo "   $0 -s \${WORKSPACE}/sources/site/target/repository/ -t mars/snapshots/builds/jbosstools-base_4.3.mars/"
   echo ""
 
   echo "To push JBT build + update site folders:"
-  echo "   $0 -s sources/site/target/fullSite      -t mars/snapshots/builds/jbosstools-build-sites.aggregate.site_4.3.mars/B${BUILD_NUMBER}-${BUILD_ID}"
-  echo "   $0 -s sources/site/target/fullSite/repo -t mars/snapshots/updates/core/master"
+  echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite          -t mars/snapshots/builds/\${JOB_NAME}/B${BUILD_NUMBER}-${BUILD_ID}"
+  echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite/all/repo -t mars/snapshots/updates/core/\${stream}"
   echo ""
 
   echo "To push JBDS build + update site folders:"
-  echo "   $0 -DESTINATION /qa/services/http/binaries/RHDS -URL http://www.qa.jboss.com/binaries/RHDS           -s sources/results                   -t 9.0/snapshots/builds/devstudio.product_master/"
-  echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio -URL https://devstudio.redhat.com -s sources/site/target/fullSite/repo -t 9.0/snapshots/updates/core/master/"
+  echo "   $0 -DESTINATION /qa/services/http/binaries/RHDS -URL http://www.qa.jboss.com/binaries/RHDS           -s \${WORKSPACE}/sources/results                   -t 9.0/snapshots/builds/devstudio.product_master/"
+  echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio -URL https://devstudio.redhat.com -s \${WORKSPACE}/sources/site/target/fullSite/repo -t 9.0/snapshots/updates/core/master/"
   echo ""
+  exit 1;
 }
 
 if [[ $# -lt 1 ]]; then usage; fi
@@ -97,6 +98,8 @@ if [[ ${JOB_NAME} ]]; then
   getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText"; if [[ -w ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${bl}; fi
   touch ${bl}; rsync -arzq --protocol=28 ${bl} $DESTINATION/${TARGET_PATH}/logs/
 fi
+
+BUILD_DESCRIPTION='<li><a href='${URL}'/'${TARGET_PATH}'>'${URL}'/'${TARGET_PATH}'</a></li>'
 
 # purge temp folder
 rm -fr ${tmpdir}
