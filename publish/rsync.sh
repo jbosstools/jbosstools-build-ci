@@ -58,14 +58,15 @@ fi
 # copy the source into the target
 rsync -arzq --protocol=28 ${SOURCE_PATH}/* $DESTINATION/${TARGET_PATH}/
 
+# given /downloads_htdocs/tools/mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master/B13-2015-03-06_17-58-07/all/repo/
+# return mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master
+PARENT_PATH=$(echo $TARGET_PATH | sed -e "s#/\?downloads_htdocs/tools/##" -e "s#/\?all/repo/\?##" -e "s#/\$##" -e "s#^/##" -e "s#\(.\+\)/[^/]\+#\1#")
+
 # for published builds on download.jboss.org ONLY!
 # regenerate http://download.jboss.org/jbosstools/builds/${TARGET_PATH}/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
 if [[ ${TARGET_PATH/builds/} != ${TARGET_PATH} ]] && [[ ${DESTINATION} = "tools@filemgmt.jboss.org:/downloads_htdocs/tools" ]] && [[ -f ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh ]]; then
-  # given /downloads_htdocs/tools/mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master/B13-2015-03-06_17-58-07/all/repo/
-  # return mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master
-  PARENT_PATH=$(echo $TARGET_PATH | sed -e "s#/\?downloads_htdocs/tools/##" -e "s#/\?all/repo/\?##" -e "s#/\$##" -e "s#^/##" -e "s#\(.\+\)/[^/]\+#\1#")
-  . ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh -d ${PARENT_PATH} --no-subdirs --childFolderSuffix /all/repo/ --keep 5 --age-to-delete 5
-  . ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh -d ${PARENT_PATH} --no-subdirs --childFolderSuffix /all/repo/ --regen-metadata-only 
+  PARENT_PARENT_PATH=$(echo $PARENT_PATH | sed -e "s#\(.\+\)/[^/]\+#\1#")
+  . ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh -d ${PARENT_PARENT_PATH} --no-subdirs --childFolderSuffix /all/repo/ --keep 5 --age-to-delete 5
 fi
 
 wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate -q"

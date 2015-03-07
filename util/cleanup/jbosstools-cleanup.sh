@@ -4,7 +4,11 @@
 # --------------------------------------------------------------------------------
 # clean JBT builds from sftp://tools@filemgmt.jboss.org/downloads_htdocs/tools/builds/nightly
 
-log=/tmp/${0##*/}.log.`date +%Y%m%d-%H%M`.txt
+#set up tmpdir
+tmpdir=`mktemp -d`
+mkdir -p $tmpdir
+
+log=${tmpdir}/${0##*/}.log.`date +%Y%m%d-%H%M`.txt
 
 echo "Logfile: $log" | tee -a $log
 echo "" | tee -a $log
@@ -131,10 +135,10 @@ clean ()
 						if [[ $delete -eq 1 ]]; then
 							if [[ $USER == "hudson" ]]; then
 								# can't delete the dir, but can at least purge its contents
-								rm -fr /tmp/$dd; mkdir /tmp/$dd; pushd /tmp/$dd >/dev/null
+								rm -fr ${tmpdir}/$dd; mkdir ${tmpdir}/$dd; pushd ${tmpdir}/$dd >/dev/null
 								rsync --rsh=ssh --protocol=28 -r --delete . tools@filemgmt.jboss.org:$sd/$dd 2>&1 | tee -a $log
 								echo -e "rmdir $dd" | sftp tools@filemgmt.jboss.org:$sd/
-								popd >/dev/null; rm -fr /tmp/$dd
+								popd >/dev/null; rm -fr ${tmpdir}/$dd
 							fi
 							echo "" | tee -a $log
 						else
@@ -175,11 +179,11 @@ regenProcess ()
 	if [[ $subdirCount -gt 0 ]]; then
 		siteName=${sd##*/downloads_htdocs/tools/}
 		echo "Generate metadata for ${subdirCount} subdir(s) in $sd/ (siteName = ${siteName}" | tee -a $log
-		mkdir -p /tmp/cleanup-fresh-metadata/
-		regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "/tmp/cleanup-fresh-metadata/compositeContent.xml"
-		regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "/tmp/cleanup-fresh-metadata/compositeArtifacts.xml"
-		rsync --rsh=ssh --protocol=28 -q /tmp/cleanup-fresh-metadata/composite*.xml tools@filemgmt.jboss.org:$sd/
-		rm -fr /tmp/cleanup-fresh-metadata/
+		mkdir -p ${tmpdir}/cleanup-fresh-metadata/
+		regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "${tmpdir}/cleanup-fresh-metadata/compositeContent.xml"
+		regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "${tmpdir}/cleanup-fresh-metadata/compositeArtifacts.xml"
+		rsync --rsh=ssh --protocol=28 -q ${tmpdir}/cleanup-fresh-metadata/composite*.xml tools@filemgmt.jboss.org:$sd/
+		rm -fr ${tmpdir}/cleanup-fresh-metadata/
 	else
 		echo "No subdirs found in $sd/" | tee -a $log	
 		# TODO delete composite*.xml from $sd/ folder if there are no subdirs present
@@ -212,3 +216,6 @@ regenCompositeMetadata ()
 for dir in $dirsToScan; do
 	clean $dir $numbuildstokeep $threshholdwhendelete
 done
+
+# purge temp folder
+rm -fr ${tmpdir} 
