@@ -116,7 +116,7 @@ clean ()
 				rm -f $tmp
 				for dd in $all; do
 					keep=0;
-					# convert buildID (folder) to timestamp, then to # seconds since 2009-01-01 00:00:00 (1230786000)
+					# convert buildID (folder) - ${BUILD_ID}-B${BUILD_NUMBER} - to timestamp, then to # seconds since 2009-01-01 00:00:00 (1230786000)
 					sec=$(date -d "$(echo $dd | perl -pe "s/(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})-(H|B)(\d+)/\1-\2-\3\ \4:\5:\6/")" +%s); (( sec = sec - 1230786000 ))
 					now=$(date +%s); (( now = now - 1230786000 ))
 					(( day = now - sec )) 

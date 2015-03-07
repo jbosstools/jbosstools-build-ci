@@ -696,7 +696,7 @@ date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/logs $DESTINATION/builds/
 date; rsync -arzq --delete ${STAGINGDIR}/logs $INTRNALDEST/builds/staging/${JOB_NAME}/
 
 # purge tmpdir
-rm -fr $tmpdir
+rm -fr $tmpdir 
 
 # purge getRemoteFile tmpfiles
 find ${WORKSPACE} -maxdepth 2 -name "getRemoteFile*" -type f -exec rm -f {} \;
