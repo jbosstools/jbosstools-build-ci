@@ -72,7 +72,8 @@ fi
 # regenerate http://download.jboss.org/jbosstools/builds/${TARGET_PATH}/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
 if [[ ${TARGET_PATH/builds/} != ${TARGET_PATH} ]] && [[ ${DESTINATION} = "tools@filemgmt.jboss.org:/downloads_htdocs/tools" ]] && [[ -f ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh ]]; then
   PARENT_PARENT_PATH=$(echo $PARENT_PATH | sed -e "s#\(.\+\)/[^/]\+#\1#")
-  . ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh -d ${PARENT_PARENT_PATH} --no-subdirs --childFolderSuffix /all/repo/ --keep 5 --age-to-delete 5
+  chmod +x ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh
+  ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh -d ${PARENT_PARENT_PATH} --no-subdirs --childFolderSuffix /all/repo/ --keep 5 --age-to-delete 5
 fi
 
 wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate -q"
