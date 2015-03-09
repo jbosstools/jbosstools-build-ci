@@ -78,8 +78,8 @@ rm -fr ${tmpdir}
 
 if [[ ${SHA1} ]] && [[ ${SHA2} ]] &&  [[ "${SHA1}" == "${SHA2}" ]]; then # SHAs match - return false
 	# echo "[INFO] SHAs match: ${SHA1} == ${SHA2}"
-	echo "FALSE"
+	echo "false"
 else # SHAs are different - return true
 	# echo "[INFO] SHAs differ: ${SHA1} != ${SHA2}"
-	echo "TRUE"
+	echo "true"
 fi

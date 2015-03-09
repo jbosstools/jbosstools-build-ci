@@ -57,6 +57,11 @@
 	                  				<classifier>publish</classifier>
 	                			</artifact>
 	                			<artifact>
+	                  				<file>util/checkLatestPublishedSHA.sh</file>
+	                  				<type>sh</type>
+	                  				<classifier>check-latest-published-sha</classifier>
+	                			</artifact>
+	                			<artifact>
 	                  				<file>util/cleanup/jbosstools-cleanup.sh</file>
 	                  				<type>sh</type>
 	                  				<classifier>jbosstools-cleanup</classifier>
