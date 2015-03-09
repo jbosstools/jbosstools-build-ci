@@ -12,7 +12,7 @@ usage ()
   echo ""
 
   echo "To compare the generated json file to its published snapshot location:"
-  echo "Usage  : $0 -s \${WORKSPACE}/sources/site/target/repository/ -t http://download.jboss.org/jbosstools/mars/snapshots/builds/\${JOB_NAME}/latest/all/repo/"
+  echo "Usage  : $0 -s \${WORKSPACE}/sources/site/target/repository -t http://download.jboss.org/jbosstools/mars/snapshots/builds/\${JOB_NAME}/latest/all/repo"
 
   echo ""
   echo "If SHAs match, return FALSE."
@@ -25,11 +25,15 @@ if [[ $# -lt 1 ]]; then usage; fi
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
   case $1 in
-    '-s') SOURCE_PATH="$2"; shift 1;; # ${WORKSPACE}/sources/site/target/repository/
-    '-t') TARGET_PATH="$2"; shift 1;; # mars/snapshots/builds/<job-name>/<build-number>/, mars/snapshots/updates/core/{4.3.0.Alpha1, master}/
+    '-s') SOURCE_PATH="$2"; SOURCE_PATH=${SOURCE_PATH%/}; shift 1;; # ${WORKSPACE}/sources/site/target/repository [trim trailing slash]
+    '-t') TARGET_PATH="$2"; TARGET_PATH=${TARGET_PATH%/}; shift 1;; # mars/snapshots/builds/<job-name>/<build-number> [trim trailing slash]
   esac
   shift 1
 done
+
+# if paths don't already include /buildinfo.json, add it on at the end
+if [[ ${SOURCE_PATH%/buildinfo.json} == ${SOURCE_PATH} ]]; then SOURCE_PATH=${SOURCE_PATH}/buildinfo.json; fi
+if [[ ${TARGET_PATH%/buildinfo.json} == ${TARGET_PATH} ]]; then TARGET_PATH=${TARGET_PATH}/buildinfo.json; fi
 
 wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate"
 getRemoteFile ()
@@ -62,16 +66,16 @@ getSHA ()
 
 # get remote buildinfo.json
 json=${tmpdir}/target.json
-getRemoteFile "${TARGET_PATH}/buildinfo.json"
+getRemoteFile "${TARGET_PATH}"
 if [[ ${getRemoteFileReturn} ]]; then 
 	mv ${getRemoteFileReturn} ${json}
 else 
-	echo "[WARNING] Could not fetch ${TARGET_PATH}/buildinfo.json!"; echo 
+	echo "[WARNING] Could not fetch ${TARGET_PATH}!"; echo 
 fi
 
 # get SHAs from the buildinfo.json files
-getSHA ${json}; if [[ ${getSHAReturn} ]]; then SHA1="${getSHAReturn}"; fi
-getSHA "${SOURCE_PATH}/buildinfo.json"; if [[ ${getSHAReturn} ]]; then SHA2="${getSHAReturn}"; fi
+getSHA "${json}";        if [[ ${getSHAReturn} ]]; then SHA1="${getSHAReturn}"; fi
+getSHA "${SOURCE_PATH}"; if [[ ${getSHAReturn} ]]; then SHA2="${getSHAReturn}"; fi
 
 # purge temp folder
 rm -fr ${tmpdir} 
