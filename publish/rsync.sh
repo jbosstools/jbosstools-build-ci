@@ -28,7 +28,7 @@ usage ()
   echo "   $0 -DESTINATION /qa/services/http/binaries/RHDS -URL http://www.qa.jboss.com/binaries/RHDS           -s \${WORKSPACE}/sources/results                   -t 9.0/snapshots/builds/devstudio.product_master/"
   echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio -URL https://devstudio.redhat.com -s \${WORKSPACE}/sources/site/target/fullSite/repo -t 9.0/snapshots/updates/core/master/"
   echo ""
-  exit 1;
+  exit 1
 }
 
 if [[ $# -lt 1 ]]; then usage; fi
@@ -58,9 +58,15 @@ fi
 # copy the source into the target
 rsync -arzq --protocol=28 ${SOURCE_PATH}/* $DESTINATION/${TARGET_PATH}/
 
-# given /downloads_htdocs/tools/mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master/B13-2015-03-06_17-58-07/all/repo/
+# given TARGET_PATH=/downloads_htdocs/tools/mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master/2015-03-06_17-58-07-B13/all/repo/
 # return mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master
 PARENT_PATH=$(echo $TARGET_PATH | sed -e "s#/\?downloads_htdocs/tools/##" -e "s#/\?all/repo/\?##" -e "s#/\$##" -e "s#^/##" -e "s#\(.\+\)/[^/]\+#\1#")
+
+# if TARGET_PATH contains a BUILD_ID-B# folder,
+# create symlink: jbosstools-build-sites.aggregate.earlyaccess-site_master/latest -> jbosstools-build-sites.aggregate.earlyaccess-site_master/${BUILD_ID}-B${BUILD_NUMBER}
+if [[ ${TARGET_PATH/${BUILD_ID}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
+  pushd $tmpdir >/dev/null; ln -s ${BUILD_ID}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
+fi
 
 # for published builds on download.jboss.org ONLY!
 # regenerate http://download.jboss.org/jbosstools/builds/${TARGET_PATH}/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
@@ -75,12 +81,12 @@ getRemoteFile ()
   # requires $wgetParams and $tmpdir to be defined (above)
   getRemoteFileReturn=""
   grfURL="$1"
-  output=`mktemp --tmpdir ${tmpdir} getRemoteFile.XXXXXX`
-  if [[ ! `wget ${wgetParams} ${grfURL} -O ${tmpdir}/${output} 2>&1 | egrep "ERROR 404"` ]]; then # file downloaded
-    getRemoteFileReturn=${tmpdir}/${output}
+  output=`mktemp --tmpdir=${tmpdir} getRemoteFile.XXXXXX`
+  if [[ ! `wget ${wgetParams} ${grfURL} -O ${output} 2>&1 | egrep "ERROR 404"` ]]; then # file downloaded
+    getRemoteFileReturn=${output}
   else
     getRemoteFileReturn=""
-    rm -f ${tmpdir}/${output}
+    rm -f ${output}
   fi
 }
 
