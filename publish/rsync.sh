@@ -95,7 +95,7 @@ getRemoteFile ()
 if [[ ${JOB_NAME} ]]; then 
   bl=${tmpdir}/BUILDLOG.txt
   getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText"; if [[ -w ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${bl}; fi
-  touch ${bl}; chmod 664 ${bl}; rsync -arzq --protocol=28 ${bl} $DESTINATION/${TARGET_PATH}/logs/
+  touch ${bl}; chmod 664 ${bl}; rsync -arzq --protocol=28 ${bl} $DESTINATION/${TARGET_PATH/\/all\/repo/}/logs/
 fi
 
 # TODO: create BUILD_DESCRIPTION variable (HTML string) in Jenkins log containing:
