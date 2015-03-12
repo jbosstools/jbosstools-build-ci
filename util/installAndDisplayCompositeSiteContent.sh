@@ -50,7 +50,14 @@ touch ${WORKSPACE}/${manifest}_PREVIOUS
 # if IUs are not defined via commandline, find all the IUs (plugins and features) on the specified SITES and install everything using installFromTarget.sh script
 if [[ ! $IUs ]]; then 
 	rm -fr ${WORKSPACE}/installFromTarget.sh ${WORKSPACE}/data
-	wget https://raw.github.com/jbosstools/jbosstools-build-ci/master/util/installFromTarget.sh -q --no-check-certificate -N
+  # this file should already be in the workspace if you're running with Jenkins using
+  # https://repository.jboss.org/nexus/content/repositories/snapshots/org/jboss/tools/releng/jbosstools-releng-publish/
+  # but just in case fall back to github
+  if [[ ! -f ${WORKSPACE}/sources/util/installFromTarget.sh ]]; then
+		wget https://raw.github.com/jbosstools/jbosstools-build-ci/4.3.x/util/installFromTarget.sh -q --no-check-certificate -N
+  else
+    cp -f ${WORKSPACE}/sources/util/installFromTarget.sh ${WORKSPACE}/installFromTarget.sh
+	fi
 	chmod +x ${WORKSPACE}/installFromTarget.sh ${WORKSPACE}/eclipse/eclipse
 	${WORKSPACE}/installFromTarget.sh -ECLIPSE ${WORKSPACE}/eclipse/ -INSTALL_PLAN ${SITES} -WORKSPACE ${WORKSPACE}/data
 	res=$?

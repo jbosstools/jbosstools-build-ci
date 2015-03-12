@@ -200,8 +200,15 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
     pushd ${INSTALLDIR}
       echo "  Unpack ${ECLIPSEZIP} into ${INSTALLDIR} ..."
       tar xzf ${ECLIPSEZIP}
-      echo "  Fetch target install script to ${INSTALLSCRIPT} ..." 
-      wget -q --no-check-certificate -N https://raw.githubusercontent.com/jbosstools/jbosstools-build-ci/master/util/installFromTarget.sh -O ${INSTALLSCRIPT}
+      # this file should already be in the workspace if you're running with Jenkins using
+      # https://repository.jboss.org/nexus/content/repositories/snapshots/org/jboss/tools/releng/jbosstools-releng-publish/
+      # but just in case fall back to github
+      if [[ ! -f ${WORKSPACE}/sources/util/installFromTarget.sh ]]; then
+        echo "  Fetch target install script to ${INSTALLSCRIPT} ..." 
+        wget -q --no-check-certificate -N https://raw.githubusercontent.com/jbosstools/jbosstools-build-ci/4.3.x/util/installFromTarget.sh -O ${INSTALLSCRIPT}
+      else
+        cp -f ${WORKSPACE}/sources/util/installFromTarget.sh ${INSTALLSCRIPT}
+      fi
       chmod +x ${INSTALLSCRIPT}
       echo "  Install..."
       logfile=${INSTALLSCRIPT}_log_${PROJECT}_${NOW}.txt

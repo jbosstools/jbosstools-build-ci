@@ -25,7 +25,7 @@ if [[ $# -lt 1 ]]; then
 fi
 
 #director.xml script is used with Eclipse's AntRunner to launch p2.director
-DIRECTORXML="http://download.jboss.org/jbosstools/updates/scripted-installation/director.xml"
+DIRECTORXML="http://download.jboss.org/jbosstools/updates/scripted-install/director.xml"
 
 # use Eclipse VM from JAVA_HOME if available
 if [[ -x ${JAVA_HOME}/bin/java ]]; then VM="-vm ${JAVA_HOME}/bin/java"; fi
@@ -92,7 +92,7 @@ list.plugins -Doutput=${WORKSPACE}/plugin.list.properties -DsourceSites=${INSTAL
 BASE_IUs=""
 for f in feature.group.list.properties plugin.list.properties; do
   if [[ -f ${WORKSPACE}/${f} ]]; then 
-    # TODO: find a better way to filter swt platform fragments like org.eclipse.swt.cocoa.macosx.x86_64 and org.eclipse.swt.cocoa.win32.win32.x86_64 
+    # TODO JBIDE-19449: find a better way to filter swt platform fragments like org.eclipse.swt.cocoa.macosx.x86_64 and org.eclipse.swt.cocoa.win32.win32.x86_64 
     # which are not identified as fragments and which cannot be installed onto a linux machine during this install test
     # also filter out any lines w/ spaces, as they are comments, not IU=version
     # eg. if running with JDK 8: "Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=256m; support was removed in 8.0"

@@ -67,6 +67,21 @@
 														<classifier>install-and-display-composite-site-content</classifier>
 												</artifact>
 												<artifact>
+														<file>util/installFromCentral.sh</file>
+														<type>sh</type>
+														<classifier>install-from-central</classifier>
+												</artifact>
+												<artifact>
+														<file>util/installFromTarget.sh</file>
+														<type>sh</type>
+														<classifier>install-from-target</classifier>
+												</artifact>
+												<artifact>
+														<file>util/verifyTarget.sh</file>
+														<type>sh</type>
+														<classifier>verify-target</classifier>
+												</artifact>
+												<artifact>
 														<file>util/cleanup/jbosstools-cleanup.sh</file>
 														<type>sh</type>
 														<classifier>jbosstools-cleanup</classifier>
