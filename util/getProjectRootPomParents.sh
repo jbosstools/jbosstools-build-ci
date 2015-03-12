@@ -10,11 +10,11 @@
 
 usage ()
 {
-    echo "Usage:     $0 -b GITHUBBRANCH -pv PARENTVERSION [-skipupdate]"
+    echo "Usage:     $0 -b GITHUBBRANCH -pv PARENTVERSION [-skipupdate] -w1 [/path/to/jbosstools-projects/parent-folder] -w2 [/path/to/jbdevstudio-projects/parent-folder]"
     echo ""
-    echo "Example 1: $0 -b jbosstools-4.2.x -pv 4.2.1.CR1-SNAPSHOT"
+    echo "Example 1: $0 -b jbosstools-4.2.x -pv 4.2.3.CR1-SNAPSHOT -w1 /home/nboldt/42x -w2 /home/nboldt/42xx"
     echo ""
-    echo "Example 2: $0 -pv 4.2.1.Final-SNAPSHOT -skipupdate"
+    echo "Example 2: $0 -pv 4.3.0.Alpha2-SNAPSHOT -skipupdate -w1 /home/nboldt/tru -w2 /home/nboldt/truu"
     echo ""
     exit 1;
 }
@@ -24,16 +24,21 @@ if [[ $# -lt 1 ]]; then
 fi
 
 doGitUpdate=true
-parent=4.2.1.Final-SNAPSHOT # or 4.3.0.Alpha1-SNAPSHOT
+parent=4.2.3.Final-SNAPSHOT # or 4.3.0.Alpha1-SNAPSHOT
 branch=jbosstools-4.2.x # or master
-jbtstream=4.2.luna # or master
-jbdsstream=8.0.luna # or master 
+jbtstream=4.2.luna  # or 4.3.mars or master
+jbdsstream=8.0.luna # or 9.0.mars or master 
+
+WORKSPACE1=${HOME}/tru
+WORKSPACE2=${HOME}/truu
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     '-b') branch="$2"; shift 1;;
     '-pv') parent="$2"; shift 1;;
     '-skipupdate'|'-k') doGitUpdate=false; shift 0;;
+    '-w1') WORKSPACE1="$2"; shift 1;;
+    '-w2') WORKSPACE2="$2"; shift 1;;
   esac
   shift 1
 done
@@ -48,8 +53,8 @@ elif [[ ${branch/4.3/} != ${branch} ]]; then
 fi
 
 # TODO parameterize these?
-logfile=/tmp/log.txt
-errfile=/tmp/err.txt
+logfile=/tmp/getProjectRootPomParents.log.txt
+errfile=/tmp/getProjectRootPomParents.err.txt
 
 gitUpdate () {
   branch=$1
@@ -99,9 +104,9 @@ checkProjects () {
 echo "Found these root pom versions   [CORRECT]:" > ${logfile}; echo "" >> ${logfile}
 echo "Found these root pom versions [INCORRECT]:" > ${errfile}; echo "" >> ${errfile}
 
-checkProjects /home/nboldt/tru/jbosstools- "aerogear arquillian base birt browsersim central discovery forge freemarker hibernate javaee jst livereload openshift portlet server vpe webservices" pom.xml jbosstools- jbosstools/jbosstools- "${jbtstream}"
-checkProjects /home/nboldt/tru/jbosstools- "build-sites" aggregate/pom.xml jbosstools- jbosstools/jbosstools- "${jbtstream}"
-checkProjects  /home/nboldt/truu/jbdevstudio- "product" pom.xml devstudio. jbdevstudio/jbdevstudio- "${jbdsstream}"
+checkProjects ${WORKSPACE1}/jbosstools- "aerogear arquillian base birt browsersim central discovery forge freemarker hibernate javaee jst livereload openshift portlet server vpe webservices" pom.xml jbosstools- jbosstools/jbosstools- "${jbtstream}"
+checkProjects ${WORKSPACE1}/jbosstools- "build-sites" aggregate/pom.xml jbosstools- jbosstools/jbosstools- "${jbtstream}"
+checkProjects ${WORKSPACE2}/jbdevstudio- "product" pom.xml devstudio. jbdevstudio/jbdevstudio- "${jbdsstream}"
 
 cat $logfile
 echo ""
