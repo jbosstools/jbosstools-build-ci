@@ -24,7 +24,7 @@ echo "" | tee -a $log
 numbuildstokeep=1000 # keep X builds per branch
 threshholdwhendelete=365 # purge builds more than X days old
 dirsToScan="mars/snapshots/builds builds/staging/CI builds/nightly/core builds/nightly/coretests builds/nightly/soa-tooling builds/nightly/soatests builds/nightly/webtools builds/nightly/hibernatetools builds/nightly/integrationtests"
-excludes="sftp>|empty_composite_site|*.*ml|\.properties|\.jar|\.zip|\.MD5|\.md5|\.blobstore|web|plugins|features|binary" # when dir matching, exclude *.*ml, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
+excludes="sftp>|((\.properties|\.jar|\.zip|\.MD5|\.md5)$)|(^(*.*ml|\.blobstore|web|plugins|features|binary|empty_composite_site)$)" # when dir matching, exclude *.*ml, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
 includes=""; # regex pattern to match within subdirs to make cleanup faster + more restrictive; eg., jbosstools-build-sites.aggregate.earlyaccess-site_master
 delete=1 # if 1, files will be deleted. if 0, files will be listed for delete but not actually removed
 checkTimeStamps=1 # if 1, check for timestamped folders, eg., 2012-09-30_04-01-36-H5622 and deduce the age from name. if 0, skip name-to-age parsing and delete nothing
@@ -81,13 +81,17 @@ getSubDirs ()
 		i=0
 		for c in $dirs; do #exclude *.*ml, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
 			# old way... if [[ $i -gt 2 ]] && [[ $c != "sftp>" ]] && [[ ${c##*.} != "" ]] && [[ ${c##*/*.*ml} != "" ]] && [[ ${c##*/*.properties} != "" ]] && [[ ${c##*/*.jar} != "" ]] && [[ ${c##*/*.zip} != "" ]] && [[ ${c##*/*.MD5} != "" ]] && [[ ${c##*/*.md5} != "" ]] && [[ ${c##*/web} != "" ]] && [[ ${c##*/plugins} != "" ]] && [[ ${c##*/features} != "" ]] && [[ ${c##*/binary} != "" ]] && [[ ${c##*/.blobstore} != "" ]]; then
+			#echo -n "$c ..."
 			if [[ $i -gt 2 ]] && [[ ${c##*.} != "" ]] && [[ ! $(echo "$c" | egrep "${excludes}") ]]; then
 				# if no include pattern set, or pattern matches, include this folder.
+				#echo -n "not excluded ..."
 				if [[ ! $includePattern ]] || [[ $(echo "$c" | egrep "$includePattern")	]]; then 
+					#echo -n "is included ..."
 					getSubDirsReturn=$getSubDirsReturn" "$c
 				fi
 			fi
 			(( i++ ))
+			#echo ""
 		done
 		rm -f $tmp
 	fi
