@@ -113,7 +113,7 @@ NOW=`date +%F_%H-%M`
 
 if [[ ! $targetplatformutilsversion ]]; then
   # eg., 0.22.1-SNAPSHOT
-  targetplatformutilsversion=`cat ${BASEDIR}/pom.xml | grep util -B2 -A2 | grep version | sed -e "s#.\+<version>\(.\+\)</version>.*#\1#"`
+  targetplatformutilsversion=`cat ${BASEDIR}/pom.xml | egrep "jbossTychoPluginsVersion|util" -B2 -A2 | egrep "version|jbossTychoPluginsVersion" | sed -e "s#.\+<version>\(.\+\)</version>.*#\1#" -e "s#.\+<jbossTychoPluginsVersion>\(.\+\)</jbossTychoPluginsVersion>.*#\1#" | head -1`
 fi
 
 for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
