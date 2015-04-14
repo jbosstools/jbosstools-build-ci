@@ -44,6 +44,14 @@ while [[ "$#" -gt 0 ]]; do
   shift 1
 done
 
+# verify SOURCE_PATH exists, for local path (not user@ server path)
+if [[ ${SOURCE_PATH##*@*:*} != "" ]]; then
+  if [[ ! -d ${SOURCE_PATH} ]]; then
+    echo "[ERROR] No SOURCE_PATH folder exists in ${SOURCE_PATH}"
+    exit 1
+  fi
+fi
+
 # TODO: make sure we have source zips for all aggregates and JBDS
 
 # TODO: make sure we have MD5 sums for all zip/jar artifacts
