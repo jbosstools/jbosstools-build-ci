@@ -2,7 +2,7 @@
 # This script is run here: http://hudson.qa.jboss.com/hudson/job/jbosstools-cleanup/configure
 # And archived here: http://anonsvn.jboss.org/repos/jbosstools/trunk/build/util/cleanup/jbosstools-cleanup.sh
 # --------------------------------------------------------------------------------
-# clean JBT builds from sftp://tools@filemgmt.jboss.org/downloads_htdocs/tools/builds/nightly
+# clean JBT/JBDS snapshot builds from sftp://tools@filemgmt.jboss.org:/downloads_htdocs/tools/ or devstudio@filemgmt.jboss.org:/www_htdocs/devstudio/
 
 #set up tmpdir
 tmpdir=`mktemp -d`
@@ -31,6 +31,8 @@ checkTimeStamps=1 # if 1, check for timestamped folders, eg., 2012-09-30_04-01-3
 childFolderSuffix="/" # for component update sites, set to "/"; for aggregate builds (not update sites) use "/all/repo/"
 regenMetadataOnly=0 # set to 1 if only regenerating metadata, not cleaning up old build folders
 noSubDirs=0 # normally, we want to scan for subdirs, but for a project like Locus, there's one less level of nesting so we need to override this with noSubDirs=1
+DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or devstudio@filemgmt.jboss.org:/www_htdocs/devstudio
+
 if [[ $# -lt 1 ]]; then
 	echo "Usage: $0 [-k num-builds-to-keep] [-a num-days-at-which-to-delete] [-d dirs-to-scan] [-i subdir-include-pattern] [--regen-metadata-only] [--childFolderSuffix /all/repo/]"
 	echo "Example (Jenkins):    $0 --keep 1 --age-to-delete 2 --childFolderSuffix /all/repo/"
@@ -51,9 +53,14 @@ while [[ "$#" -gt 0 ]]; do
 		'-S'|'--childFolderSuffix') childFolderSuffix="$2"; shift 1;;
 		'-M'|'--regen-metadata-only') delete=0; checkTimeStamps=0; regenMetadataOnly=1; shift 0;;
 		'-N'|'--no-subdirs') noSubDirs=1; shift 0;;
+		'-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., devstudio@filemgmt.jboss.org:/www_htdocs/devstudio
 	esac
 	shift 1
 done
+
+# split DESTINATION by colon, eg., tools@filemgmt.jboss.org:/downloads_htdocs/tools
+DEST_SERV=${DESTINATION%%:*}; # tools@filemgmt.jboss.org
+DEST_PATH=${DESTINATION##*:}; # /downloads_htdocs/tools
 
 getSubDirs () 
 {
@@ -77,7 +84,7 @@ getSubDirs ()
 		fi
 		tmp=`mktemp`
 		echo "ls $dir" > $tmp
-		dirs=$(sftp -b $tmp tools@filemgmt.jboss.org 2>/dev/null)
+		dirs=$(sftp -b $tmp ${DEST_SERV} 2>/dev/null)
 		i=0
 		for c in $dirs; do #exclude *.*ml, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
 			# old way... if [[ $i -gt 2 ]] && [[ $c != "sftp>" ]] && [[ ${c##*.} != "" ]] && [[ ${c##*/*.*ml} != "" ]] && [[ ${c##*/*.properties} != "" ]] && [[ ${c##*/*.jar} != "" ]] && [[ ${c##*/*.zip} != "" ]] && [[ ${c##*/*.MD5} != "" ]] && [[ ${c##*/*.md5} != "" ]] && [[ ${c##*/web} != "" ]] && [[ ${c##*/plugins} != "" ]] && [[ ${c##*/features} != "" ]] && [[ ${c##*/binary} != "" ]] && [[ ${c##*/.blobstore} != "" ]]; then
@@ -107,7 +114,7 @@ clean ()
 	somepath=${somepath//\/\//\/}; # repeat to replace /// with /
 	echo "Check for $somepath builds more than $threshhold days old; keep minimum $numkeep builds per branch" | tee -a $log 
 
-	getSubDirs /downloads_htdocs/tools/$somepath/ 0 $includes
+	getSubDirs ${DEST_PATH}/$somepath/ 0 $includes
 	subdirs=$getSubDirsReturn
 
 	# special case for Locus builds - only work in subfolders (3 levels: /updates/integration/locus/x.y.z/, not sub-subfolders (5 levels: /updates/integration/kepler/core/project/x.y.z/)
@@ -120,7 +127,7 @@ clean ()
 			# echo "[${subdirCount}] Found $buildid"
 			echo $buildid >> $tmp
 		done
-		regenProcess ${subdirCount} /downloads_htdocs/tools/$somepath/
+		regenProcess ${subdirCount} ${DEST_PATH}/$somepath/
 	else # for everyone else, work in sub-subfolders
 		for sd in $subdirs; do
 			getSubDirs $sd 1
@@ -155,8 +162,8 @@ clean ()
 							if [[ $USER == "hudson" ]]; then
 								# can't delete the dir, but can at least purge its contents
 								rm -fr ${tmpdir}/$dd; mkdir ${tmpdir}/$dd; pushd ${tmpdir}/$dd >/dev/null
-								rsync --rsh=ssh --protocol=28 -r --delete . tools@filemgmt.jboss.org:$sd/$dd 2>&1 | tee -a $log
-								echo -e "rmdir $dd" | sftp tools@filemgmt.jboss.org:$sd/
+								rsync --rsh=ssh --protocol=28 -r --delete . ${DEST_SERV}:$sd/$dd 2>&1 | tee -a $log
+								echo -e "rmdir $dd" | sftp ${DEST_SERV}:$sd/
 								popd >/dev/null; rm -fr ${tmpdir}/$dd
 							fi
 							echo "" | tee -a $log
@@ -196,12 +203,12 @@ regenProcess ()
 	all=$(cat $tmp | sort -r) # check these
 	rm -f $tmp
 	if [[ $subdirCount -gt 0 ]]; then
-		siteName=${sd##*/downloads_htdocs/tools/}
+		siteName=${sd##*${DEST_PATH}/}
 		echo "Generate metadata for ${subdirCount} subdir(s) in $sd/ (siteName = ${siteName}" | tee -a $log
 		mkdir -p ${tmpdir}/cleanup-fresh-metadata/
 		regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "${tmpdir}/cleanup-fresh-metadata/compositeContent.xml"
 		regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "${tmpdir}/cleanup-fresh-metadata/compositeArtifacts.xml"
-		rsync --rsh=ssh --protocol=28 -q ${tmpdir}/cleanup-fresh-metadata/composite*.xml tools@filemgmt.jboss.org:$sd/
+		rsync --rsh=ssh --protocol=28 -q ${tmpdir}/cleanup-fresh-metadata/composite*.xml ${DEST_SERV}:$sd/
 		rm -fr ${tmpdir}/cleanup-fresh-metadata/
 	else
 		echo "No subdirs found in $sd/" | tee -a $log	

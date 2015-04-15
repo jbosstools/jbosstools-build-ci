@@ -75,7 +75,7 @@ if [[ ${TARGET_PATH/builds/} != ${TARGET_PATH} ]] && [[ ${DESTINATION} = "tools@
   PARENT_PARENT_PATH=$(echo $PARENT_PATH | sed -e "s#\(.\+\)/[^/]\+#\1#")
   chmod +x ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh
   # given above, ${PARENT_PATH#${PARENT_PARENT_PATH}/} returns last path segment jbosstools-build-sites.aggregate.earlyaccess-site_master
-  ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh -k 2 -a 2 -S /all/repo/ -d ${PARENT_PARENT_PATH} -i ${PARENT_PATH#${PARENT_PARENT_PATH}/}
+  ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh -k 2 -a 2 -S /all/repo/ -d ${PARENT_PARENT_PATH} -i ${PARENT_PATH#${PARENT_PARENT_PATH}/} -DESTINATION ${DESTINATION}
 fi
 
 wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate -q"
