@@ -54,7 +54,7 @@ getRemoteFile ()
 getSHA ()
 {
 	getSHAReturn=""
-	if [[ -f "$1" ]]; then
+	if [[ "$1" ]] && [[ -f "$1" ]]; then
 		# {
 		#  "timestamp" : 1425345819988,
 		#  "revision" : {
@@ -69,21 +69,22 @@ json=${tmpdir}/target.json
 getRemoteFile "${TARGET_PATH}"
 if [[ ${getRemoteFileReturn} ]]; then 
 	mv ${getRemoteFileReturn} ${json}
-else 
-	echo "[WARNING] Could not fetch ${TARGET_PATH}!"; echo 
+else
+  json=""
 fi
+# if ${TARGET_PATH} not found, no old version to compare so this is the first build; therefore return true below
 
 # get SHAs from the buildinfo.json files
-getSHA "${json}";        if [[ ${getSHAReturn} ]]; then SHA1="${getSHAReturn}"; fi
-getSHA "${SOURCE_PATH}"; if [[ ${getSHAReturn} ]]; then SHA2="${getSHAReturn}"; fi
+SHA1=""; getSHA "${json}";        if [[ ${getSHAReturn} ]]; then SHA1="${getSHAReturn}"; fi
+SHA2=""; getSHA "${SOURCE_PATH}"; if [[ ${getSHAReturn} ]]; then SHA2="${getSHAReturn}"; fi
 
 # purge temp folder
 rm -fr ${tmpdir} 
 
-if [[ ${SHA1} ]] && [[ ${SHA2} ]] &&  [[ "${SHA1}" == "${SHA2}" ]]; then # SHAs match - return false
+if [[ "${SHA1}" ]] && [[ "${SHA2}" ]] &&  [[ "${SHA1}" == "${SHA2}" ]]; then # SHAs match - return false
 	# echo "[INFO] SHAs match: ${SHA1} == ${SHA2}"
 	echo "false"
-else # SHAs are different - return true
+else # SHAs are different (or one is null because no previous SHA) - return true
 	# echo "[INFO] SHAs differ: ${SHA1} != ${SHA2}"
 	echo "true"
 fi

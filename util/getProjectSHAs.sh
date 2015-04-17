@@ -15,11 +15,11 @@ usage ()
     echo "             -iu issues.jboss.org_USER -ip issues.jboss.org_PWD -jbtm 4.2.0.MILESTONE -jbdsm 8.0.0.MILESTONE -respin a|b|c..."
     echo ""
     # for the milestone, find the related JIRAs and get the associated projects
-    echo "Example 1: $0 -branch jbosstools-4.2.x -jbtstream 4.2.luna -jbdsstream 8.0.luna -ju nboldt -jp j_pwd \\"
-    echo "             -gu nickboldt@gmail.com -gp g_pwd -iu nickboldt -ip i_pwd -jbtm 4.2.0.CR2 -jbdsm 8.0.0.CR2 -respin a"
+    echo "Example 1: $0 -branch jbosstools-4.3.0.Alpha2x -jbtstream 4.3.mars -jbdsstream 9.0.mars -ju nboldt -jp j_pwd \\"
+    echo "             -gu nickboldt@gmail.com -gp g_pwd -iu nickboldt -ip i_pwd -jbtm 4.3.0.Alpha2 -jbdsm 9.0.0.Alpha2 -respin a"
     echo ""
     # for a list of projects, find any unbuilt commits
-    echo "Example 2: $0 -branch jbosstools-4.2.x -jbtstream 4.2.luna -jbdsstream 8.0.luna -ju nboldt -jp j_pwd \\"
+    echo "Example 2: $0 -branch jbosstools-4.3.0.Alpha2x -jbtstream 4.3.mars -jbdsstream 9.0.mars -ju nboldt -jp j_pwd \\"
     echo "            -gu nickboldt@gmail.com -gp g_pwd -jbds product -jbt aerogear,arquillian,base,birt,browsersim,central,discovery,\\"
     echo "forge,freemarker,hibernate,javaee,jst,livereload,openshift,portlet,server,vpe,webservices"
     exit 1;
@@ -35,9 +35,11 @@ toggleJenkinsJobs=~/truu/jbdevstudio-ci/bin/toggleJenkinsJobs.py
 JBTPROJECT=""
 #JBDSPROJECT="product"
 JBDSPROJECT=""
-jbtstream=4.2.luna # or master
-jbdsstream=8.0.luna # or master 
-branch=jbosstools-4.2.x # or master
+jbtstream=4.3.mars # or master
+jbdsstream=9.0.mars # or master 
+branch=jbosstools-4.3.0.Alpha2x # or master
+jbtpath=mars/snapshots/builds # or builds/staging, from JBDS 8 and before
+jbdspath=build/staging # JBDS-3208 TODO change this to 9.0/snapshots/builds
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -126,7 +128,7 @@ if [[ ${jbtm} ]]; then
       ["qa"]="jbdevstudio-qa"
       ["aerogear-hybrid"]="aerogear"
       ["cordovasim"]="aerogear"
-      ["testing-tools"]="arquillian" 
+      ["arquillian"]="arquillian" 
       ["usage"]="base"
       ["updatesite"]="build-sites"
       ["central"]="central"
@@ -225,7 +227,7 @@ checkProjects () {
   jenkins_prefix="https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/"
   PROJECTS="$1" # ${JBTPROJECTS} or ${JBDSPROJECTS}
   g_project_prefix="$2" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
-  staging_url="$3" # http://download.jboss.org/jbosstools/builds/staging/ or http://www.qa.jboss.com/binaries/RHDS/builds/staging/
+  staging_url="$3" # http://download.jboss.org/jbosstools/${jbtpath}/ or http://www.qa.jboss.com/binaries/RHDS/${jbdspath}/
   jobname_prefix="$4" # jbosstools- or devstudio.
   stream="$5" # ${jbtstream} or ${jbdsstream}
 
@@ -239,7 +241,7 @@ checkProjects () {
       echo "== ${g_project} =="
     fi
 
-    # githash=`firefox https://github.com/jbdevstudio/jbdevstudio-product/commits/jbosstools-4.2.x` 
+    # githash=`firefox https://github.com/jbdevstudio/jbdevstudio-product/commits/jbosstools-4.3.0.Alpha2x` 
     # echo https://api.github.com/repos/jbdevstudio/jbdevstudio-${j}/commits/${branch}
     tmp=`mktemp`
     githash=`curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -u "${g_user}:${g_password}" -s -S > ${tmp} && cat ${tmp} | head -2 | grep sha | \
@@ -248,11 +250,13 @@ checkProjects () {
     #githash=`wget -q --no-check-certificate https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -O - | head -2 | grep sha | \
     #	sed "s#  \"sha\": \"\(.\+\)\",#\1 (${branch})#"`
 
-    jenkinshash=`wget -q --no-check-certificate ${staging_url}${jobname_prefix}${j}_${stream}/logs/GIT_REVISION.txt -O - | grep ${branch} | \
-    	sed "s#\(.\+\)\@\(.\+\)#\2 (${stream}, \1)#"`
+    # new for JBDS 9 (used to pull logs/GIT_REVISION.txt) - use buildinfo.json
+    jenkinshash=`wget -q --no-check-certificate ${staging_url}${jobname_prefix}${j}_${stream}/latest/all/repo/buildinfo.json -O - | \
+      grep HEAD | grep -v currentBranch | head -1 | sed -e "s/.\+\"HEAD\" : \"\(.\+\)\",/\1/"`
     if [[ ! ${jenkinshash} ]]; then # try Jenkins XML API instead
-      jenkinshash=`wget -q --no-check-certificate --user=${j_user} --password="${j_password}" -q ${jenkins_prefix}${jobname_prefix}${j}_${stream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1 -O - | \
-      sed "s#<SHA1>\(.\+\)</SHA1>#\1#"`
+      jenkinshash=`wget -q --no-check-certificate --user=${j_user} --password="${j_password}" ${jenkins_prefix}${jobname_prefix}${j}_${stream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1 -O - | \
+        sed "s#<SHA1>\(.\+\)</SHA1>#\1#"`
+      echo "backup: $jenkinshash from ${jenkins_prefix}${jobname_prefix}${j}_${stream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1"
     fi
 
     if [[ ! ${githash} ]] || [[ ! ${jenkinshash} ]]; then 
@@ -261,7 +265,7 @@ checkProjects () {
         echo " >> https://github.com/${g_project_prefix}${j}/tree/${branch}"
       elif [[ ! ${jenkinshash} ]]; then
         echo "ERROR: could not retrieve GIT revision from:" | egrep ERROR
-        echo " >> ${staging_url}${jobname_prefix}${j}_${stream}/logs/GIT_REVISION.txt (file not found?) or from "
+        echo " >> ${staging_url}${jobname_prefix}${j}_${stream}/latest/all/repo/buildinfo.json (file not found?) or from "
         echo " >> ${jenkins_prefix}${jobname_prefix}${j}_${stream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1 (auth error?)"
       fi
       echo "Compare these URLs:"
@@ -283,8 +287,9 @@ checkProjects () {
   done
 }
 
-checkProjects "${JBTPROJECTS}"  jbosstools/jbosstools-   http://download.jboss.org/jbosstools/builds/staging/ jbosstools- "${jbtstream}"
-checkProjects "${JBDSPROJECTS}" jbdevstudio/jbdevstudio- http://www.qa.jboss.com/binaries/RHDS/builds/staging/ devstudio. "${jbdsstream}"
+# TODO: JBDS-3208 switch this to use new mars-based path conventions
+checkProjects "${JBTPROJECTS}"  jbosstools/jbosstools-   http://download.jboss.org/jbosstools/${jbtpath}/ jbosstools- "${jbtstream}"
+checkProjects "${JBDSPROJECTS}" jbdevstudio/jbdevstudio- http://www.qa.jboss.com/binaries/RHDS/${jbdspath}/ devstudio. "${jbdsstream}"
 
 if [[ ${jobsToCheck} ]]; then
   echo "Run the following to build incomplete jobs:"
