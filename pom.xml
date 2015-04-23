@@ -11,71 +11,76 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
-        		<version>2.5.1</version>
-        		<executions>
-         			<execution>
-            			<id>create-script-zip</id>
-            			<phase>package</phase>
-            			<goals>
-              				<goal>single</goal>
-            			</goals>
-		        		<configuration>
-					  <appendAssemblyId>false</appendAssemblyId>
-		          		  <descriptors>
-		            		    <descriptor>publish-assembly.xml</descriptor>
-		          		  </descriptors>
-		        		</configuration>
-		        	</execution>
-		        </executions>
+						<version>2.5.1</version>
+						<executions>
+				 			<execution>
+									<id>create-script-zip</id>
+									<phase>package</phase>
+									<goals>
+											<goal>single</goal>
+									</goals>
+								<configuration>
+						<appendAssemblyId>false</appendAssemblyId>
+										<descriptors>
+												<descriptor>publish-assembly.xml</descriptor>
+										</descriptors>
+								</configuration>
+							</execution>
+						</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
 				<version>1.9.1</version>
 				<executions>
-         			<execution>
-            			<id>attach-artifacts</id>
-            			<phase>package</phase>
-            			<goals>
-              				<goal>attach-artifact</goal>
-            			</goals>
-            			<configuration>
-	              			<artifacts>
-	                			<artifact>
-	                  				<file>publish/rsync.sh</file>
-	                  				<type>sh</type>
-	                  				<classifier>rsync</classifier>
-	                			</artifact>
-	                			<artifact>
-	                  				<file>publish/promote.sh</file>
-	                  				<type>sh</type>
-	                  				<classifier>promote</classifier>
-	                			</artifact>
-	                			<artifact>
-	                  				<file>publish/publish.sh</file>
-	                  				<type>sh</type>
-	                  				<classifier>publish</classifier>
-	                			</artifact>
-	                			<artifact>
-	                  				<file>util/checkLatestPublishedSHA.sh</file>
-	                  				<type>sh</type>
-	                  				<classifier>check-latest-published-sha</classifier>
-	                			</artifact>
-	                			<artifact>
-	                  				<file>util/cleanup/jbosstools-cleanup.sh</file>
-	                  				<type>sh</type>
-	                  				<classifier>jbosstools-cleanup</classifier>
-	                			</artifact>
-				            </artifacts>
+				 			<execution>
+									<id>attach-artifacts</id>
+									<phase>package</phase>
+									<goals>
+											<goal>attach-artifact</goal>
+									</goals>
+									<configuration>
+											<artifacts>
+												<artifact>
+														<file>publish/rsync.sh</file>
+														<type>sh</type>
+														<classifier>rsync</classifier>
+												</artifact>
+												<artifact>
+														<file>publish/promote.sh</file>
+														<type>sh</type>
+														<classifier>promote</classifier>
+												</artifact>
+												<artifact>
+														<file>publish/publish.sh</file>
+														<type>sh</type>
+														<classifier>publish</classifier>
+												</artifact>
+												<artifact>
+														<file>util/checkLatestPublishedSHA.sh</file>
+														<type>sh</type>
+														<classifier>check-latest-published-sha</classifier>
+												</artifact>
+												<artifact>
+														<file>util/installAndDisplayCompositeSiteContent.sh</file>
+														<type>sh</type>
+														<classifier>install-and-display-composite-site-content</classifier>
+												</artifact>
+												<artifact>
+														<file>util/cleanup/jbosstools-cleanup.sh</file>
+														<type>sh</type>
+														<classifier>jbosstools-cleanup</classifier>
+												</artifact>
+										</artifacts>
 						</configuration>
-	   				</execution>
+		 				</execution>
 				</executions>
 			</plugin>
 		</plugins>
 	</build>
 
 	<!-- To deploy parent to Nexus -->
-	<!--  Don't change "id" since it should match credentials entry in $M2_REPO/settings.xml -->
+	<!--	Don't change "id" since it should match credentials entry in $M2_REPO/settings.xml -->
 	<distributionManagement>
 		<snapshotRepository>
 			<id>jboss-snapshots-repository</id>
