@@ -1,0 +1,108 @@
+- job:
+    name: jjb
+    scm:
+      - git:
+          url: https://github.com/maxandersen/jenkins-job-builder
+    builders:
+      - shell: |
+               mkdir -p lb
+               export PYTHONPATH=lb
+               pwd
+               python setup.py develop --install-dir=lb
+               rm -rf buildchow
+               git clone https://github.com/maxandersen/buildchow
+               cd buildchow
+               git checkout jenkinsbuilderexp
+               ../lb/jenkins-jobs --conf jenkinsman.ini update jobs.yaml
+     
+- job-template:
+    name: 'jbosstools-{name}'
+
+    parameters:
+      - string:
+          name: MAVEN_FLAGS
+          default: "-B -U -fae -e"
+          description: "Default flags passed to maven targets"
+      - string:
+          name: TARGET_PLATFORM_VERSION
+          default: 4.31.0.Final
+          description: "Target platform to use for build/compilation"
+      - string:
+          name: TARGET_PLATFORM_VERSION_MAXIMUM
+          default: "4.31.0.Final"
+          description: "Target platform used for testing."
+      - string:  ## TODO: what is this parameter used for ?
+          name: JAVA17
+          default: jdk1.7.0_last
+          description: "Variable used to define which version of JDK 7 to use in /qa/tools/opt/"
+      - bool:
+          name: skipRevisionCheckWhenPublishing
+          default: false
+
+    scm:
+      - git:
+          url: https://github.com/jbosstools/jbosstools-{name}
+          wipe-workspace: false
+          branches: 
+            - master
+    builders:
+      - maven-target:
+          maven-version: mvn30
+          goals: clean verify -B -U -fae -e
+          settings: /Users/cijoe/.m2/local-settings.xml
+          private-repository: true
+          java-opts: 
+            - "-Xms512m -Xmx1024m -XX:PermSize=128m -XX:MaxPermSize=256m"
+          properties: 
+            - skipTests=true
+
+- project:
+    name: livereload
+    jobs:
+      - 'jbosstools-{name}':
+          
+- project:
+    name: birt
+    jobs:
+      - 'jbosstools-{name}':
+
+- project:
+    name: forge
+    jobs:
+      - 'jbosstools-{name}':
+
+- project:
+    name: openshift
+    jobs:
+      - 'jbosstools-{name}':
+
+- project:
+    name: webservices
+    jobs:
+      - 'jbosstools-{name}':
+
+- project:
+    name: hibernate
+    jobs:
+      - 'jbosstools-{name}':
+
+- project:
+    name: jst
+    jobs:
+      - 'jbosstools-{name}':
+
+- project:
+    name: arquillian
+    jobs:
+      - 'jbosstools-{name}':
+
+- project:
+    name: portlet
+    jobs:
+      - 'jbosstools-{name}':
+
+- project:
+    name: freemarker
+    jobs:
+      - 'jbosstools-{name}':
+

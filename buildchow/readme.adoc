@@ -1,0 +1,31 @@
+BuildChow
+=========
+
+BuildChow is the nickname for templates of JBoss Tools and Developer
+Studio jenkins jobs.
+
+By using templates we do not have to rely on jenkins UI to manually update jobs
+or bulk-update in large set of config.xml files.
+
+BuildChow uses http://ci.openstack.org/jenkins-job-builder[Jenkins Job
+Builder](jjb) from Openstack.org
+
+== How to use
+
+First need to install jjb:
+
+```
+$ pip install jenkins-job-builder
+```
+
+Once installed you can run the following to generate jobs into a folder named `generated`:
+
+```
+$ jenkins-jobs test config/ -o generated
+```
+
+Update jenkins-jobs on jenkins server
+
+```
+$ jenkins-jobs --conf etc/jboss-jenkins.ini update config/ 
+```
