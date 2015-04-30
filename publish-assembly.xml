@@ -8,21 +8,21 @@
 	</formats>
 	<includeBaseDirectory>false</includeBaseDirectory>
 	<fileSets>
-		<fileSet>
-			<directory>${project.basedir}</directory>
-			<outputDirectory>/</outputDirectory>
-			<includes>
-				<include>publish/rsync.sh</include>
-				<include>publish/publish.sh</include>
-				<include>publish/promote.sh</include>
-				<include>util/checkLatestPublishedSHA.sh</include>
-				<include>util/installAndDisplayCompositeSiteContent.sh</include>
-				<include>util/installFromCentral.sh</include>
-				<include>util/installFromTarget.sh</include>
-				<include>util/verifyTarget.sh</include>
-				<include>util/cleanup/jbosstools-cleanup.sh</include>
-			</includes>
-			<fileMode>755</fileMode>
-		</fileSet>
+	  <fileSet>
+	    <directory>${project.basedir}</directory>
+	    <outputDirectory>/</outputDirectory>
+	    <includes>
+	      <include>publish/rsync.sh</include>
+	      <include>publish/publish.sh</include>
+	      <include>publish/promote.sh</include>
+	      <include>util/checkLatestPublishedSHA.sh</include>
+	      <include>util/installAndDisplayCompositeSiteContent.sh</include>
+	      <include>util/installFromCentral.sh</include>
+	      <include>util/installFromTarget.sh</include>
+	      <include>util/verifyTarget.sh</include>
+	      <include>util/cleanup/jbosstools-cleanup.sh</include>
+	    </includes>
+	    <fileMode>755</fileMode>
+	  </fileSet>
 	</fileSets>
 </assembly>
