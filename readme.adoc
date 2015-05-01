@@ -1,17 +1,13 @@
-=== Utility Scripts for JBoss Tools Build
+= Utility Scripts for JBoss Tools Build
+:toc: preamble
 
 This folder contains various utility scripts related to the continuous integration building of JBoss Tools. 
 
-* <<Publishing>>
-* <<Code Freezes & Auditing>>
-* <<Composite Sites & Install Tests>>
-* <<Cleanup & Maintenance>>
-* <<Metadata Generation & Project Initiation>>
-* <<Wrappers & Dirty Hacks>>
+toc::[]
 
 ---
 
-==== Publishing
+== Publishing
 
 [cols="1a,4,4"]
 |===
@@ -31,7 +27,7 @@ This folder contains various utility scripts related to the continuous integrati
 
 |===
 
-==== Code Freezes & Auditing
+== Code Freezes & Auditing
 
 [cols="1a,4,4"]
 |===
@@ -63,7 +59,7 @@ This folder contains various utility scripts related to the continuous integrati
 
 |===
 
-==== Composite Sites & Install Tests
+== Composite Sites & Install Tests
 
 [cols="1a,4,4"]
 |===
@@ -91,7 +87,7 @@ This folder contains various utility scripts related to the continuous integrati
 
 |===
 
-==== Cleanup & Maintenance
+== Cleanup & Maintenance
 
 [cols="1a,4,4"]
 |===
@@ -115,7 +111,7 @@ This folder contains various utility scripts related to the continuous integrati
 
 |===
 
-==== Metadata Generation & Project Initiation
+== Metadata Generation & Project Initiation
 
 [cols="1a,4,4"]
 |===
@@ -135,7 +131,7 @@ This folder contains various utility scripts related to the continuous integrati
 
 |===
 
-==== Wrappers & Dirty Hacks
+== Wrappers & Dirty Hacks
 
 [cols="1a,4,4"]
 |===
