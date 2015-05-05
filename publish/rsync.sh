@@ -9,6 +9,9 @@ mkdir -p $tmpdir
 DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /qa/services/http/binaries/RHDS
 URL=http://download.jboss.org/jbosstools # or https://devstudio.redhat.com or http://www.qa.jboss.com/binaries/RHDS
 
+INCLUDES=""
+EXCLUDES=""
+
 # can be used to publish a build (including installers, site zips, MD5s, build log) or just an update site folder
 usage ()
 {
@@ -40,6 +43,8 @@ while [[ "$#" -gt 0 ]]; do
     '-URL') URL="$2"; shift 1;; # override for JBDS publishing, eg., http://www.qa.jboss.com/binaries/RHDS
     '-s') SOURCE_PATH="$2"; shift 1;; # ${WORKSPACE}/sources/site/target/repository/
     '-t') TARGET_PATH="$2"; shift 1;; # mars/snapshots/builds/<job-name>/<build-number>/, mars/snapshots/updates/core/{4.3.0.Alpha1, master}/
+    '-i') INCLUDES="--include=\"$2\""; shift 1;;
+    '-e') EXCLUDES="--exclude=\"$2\""; shift 1;;
   esac
   shift 1
 done
@@ -56,7 +61,7 @@ else
 fi
 
 # copy the source into the target
-rsync -arzq --protocol=28 ${SOURCE_PATH}/* $DESTINATION/${TARGET_PATH}/
+rsync -arzq --protocol=28 ${INCLUDES} ${EXCLUDES} ${SOURCE_PATH}/* $DESTINATION/${TARGET_PATH}/
 
 # given TARGET_PATH=/downloads_htdocs/tools/mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master/2015-03-06_17-58-07-B13/all/repo/
 # return mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master
