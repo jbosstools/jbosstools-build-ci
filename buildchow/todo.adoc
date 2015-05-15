@@ -1,0 +1,84 @@
+= Advantages noticed within a week:
+
+* fixing JRE across all jobs
+* relasing target platform without breaking builds
+* using 9.0 instead of 4.3.mars for stream
+
+= Local Jenkins Configuration
+
+Add label to have it be recognized as a runnable node. (i.e. RHEL7)
+
+Add jdk jdk1.7 and jdk1.6 to have a server to look up.
+
+Add maven installers
+
+enable safe html under security
+
+Add native_tools / sep (todo)
+
+Install the plugins!
+ 
+= Todos
+
+support downstream-ext https://wiki.jenkins-ci.org/display/JENKINS/Downstream-Ext+Plugin
+
+
+be able to turn builder on/off
+
+handle JAVA17 property so its not a variable.
+
+do tests timeout
+
+check if pattern are correct.
+
+enable batch mode on unpack tag. just use maven flags ?
+
+buildpublish to jboss.org does not require name but publisher jenkins does.
+
+CRITICAL: missing AbortOperation for timeout (Seems abort is the default so not needed ?)
+
+CRITICAL: missing xvnc (done)
+
+= Questions
+
+
+why no email notificiaton on version watch ? 
+why no triggers on version watch ? 
+
+why does versionwatch job define the include/excludes and not in our git repo so versioned/tracable togheter with rest of config ?
+
+why does product ln in the cache location ? (wont work reliably across filesystems on docker)
+
+why does product ignore failures and errors in mvn build step ?
+
+what does "targetPlatformGroup=jbdevstudio" mean ?
+
+why does product not build its updatesites in mvn instead of separate shell ?
+
+wy does product not use sources as it root ?
+
+why is Release not a checkbox instead of a Yes/No choice ?
+
+why are artifacts pattern different between normal and nested ?
+"results/*/all/*Update*.zip,sources/*/target/jacoco.exec,sources/*/*tests/*/target/work/configuration/*.log,sources/*/*tests/*/target/work/data/.metadata/*.log, sources/target/coverage-report/**"
+
+why did we choose all-tests and not justs tests for the root test folder so the jobs would be the same ? 
+
+MAVEN_FLAGS talks about passing in install and other goals..that would mess up the task.  - old stuff, can be updated.
+should it not *only* be flags, not goals ? What does the '*' mean for the flags ?
+
+
+what happend to sidebar ?  
+
+not the same maven version used for steps!? grep mavenName
+
+why using ${WORKSPACE}/ instead of just relative paths ? (personal preference)
+
+why is the unpack content put into sources potentially overwriting stuff in there ? 
+Should it not be unpacked separately ?
+
+
+where does BUILD_DESCRIPTION= come from ? (comes from publish.sh)
+
+Could we just use H H/8 * * * to get random hash ? http://htmlpreview.github.io/?https://github.com/jenkinsci/jenkins/blob/master/core/src/main/resources/hudson/triggers/TimerTrigger/help-spec.html 
+

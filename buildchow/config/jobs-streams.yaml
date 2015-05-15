@@ -1,0 +1,612 @@
+- defaults:
+    name: global
+    jvm-memory: "-Xms512m -Xmx1024m -XX:PermSize=128m -XX:MaxPermSize=256m"
+    tests-folder: tests # for some it is all-tests
+    component-responsible: ""
+    scm-schedule: H H/8 * * * # every 8 hours starting a random hour. Removes need for each job to configure it (http://htmlpreview.github.io/?https://github.com/jenkinsci/jenkins/blob/master/core/src/main/resources/hudson/triggers/TimerTrigger/help-spec.html)
+    download-cache:  "$JENKINS_HOME/static_build_env/jbds/download-cache"
+    maven-settings: "$JENKINS_HOME/../.m2/local-settings.xml" # need more reliable location
+    # flags to use for reliable, tracable builds.
+    # -V show version, -fae fail at end and -B run in batch mode to reduce noise and use defaults for any prompts
+    # -U ensure it will check for updates (to get latest snapshots or previously missing releases)
+    # -C check consistency of files and fail if failure to download instead of continuing.
+    ci-maven-flags: "-V -fae -B -U -C"
+    maven-flags-description: |
+      Pass in lifecycle phase and extra flags to Maven, such as:
+              <dl>
+                <dt>clean</dt><dd>clean before building *</dd>
+                <dt>integration-test</dt><dd>build and test *</dd>
+                <dt>install</dt><dd>build, test, and install into m2 repo *</dd>
+                <dt>osgi-test:test</dt><dd>just (re-)run test(s)</dd>
+                <dt>-P hudson</dt><dd>enable hudson build ID in feature/plugin qualifiers</dd>
+                <dt>-Dmaven.test.skip</dt><dd>skip compiling and running tests</dd>
+                <dt>-Dmaven.repo.local=${{WORKSPACE}}/m2-repository</dt><dd>path to local m2 repo</dd>
+                <dt>-fae</dt><dd>fail at end</dd>
+                <dt>-o</dt><dd>offline</dd>
+                <dt>-B</dt><dd>batch (non-interactive) mode</dd>
+                <dt>-U</dt><dd>check for updates</dd>
+                <dt>-e</dt><dd>if error occurs, dump stack into console</dd>
+                <dt>-q</dt><dd>quieter output</dd>
+              </dl>
+    nodes: &nodes
+      "(RHEL6||RHEL7||beaker||jboss-prod)&&!ia64&&!rhts"
+    components: &components # an alias for components
+      - aerogear:
+          tests-folder: all-tests
+      - arquillian
+      - base: 
+          tests-folder: all-tests
+      - birt
+      - browsersim
+      - central:
+          tests-folder: all-tests
+      - forge
+      - freemarker
+      # - gwt
+      - hibernate:
+          component-responsible: "koen.aears@redhat.com"
+      - javaee:
+          tests-folder: all-tests
+      - jst
+      - livereload:
+          component-responsible: "xcoulon@redhat.com"
+      - openshift
+      - portlet
+      - server:
+          test-folder: all-tests
+      - vpe
+      - webservices
+    
+- project:
+    name: jbosstools-master  # 'project' for a certain stream
+    stream:
+      master
+    devstudio-stream:
+      master
+    target-platform-version: 4.50.0.Alpha1-SNAPSHOT
+    target-platform-maximum: 4.50.0.Alpha2-SNAPSHOT
+    
+    branch:
+      - master
+    component: 
+      *components
+    jobs:
+      - 'jbosstools-{component}_{stream}'
+      - 'devstudio.product_{devstudio-stream}'
+      - 'devstudio.versionwatch_{devstudio-stream}'
+      - 'jbosstools-build-sites.aggregate.site_{stream}'
+
+- project:
+    name: jbosstools-mars 
+    stream:
+      4.3.mars
+    devstudio-stream:
+      9.0.mars
+    target-platform-version: 4.50.0.Alpha1
+    target-platform-maximum: 4.50.0.Alpha2
+    branch:
+      - jbosstools-4.3.0.Alpha1x
+    component: 
+      *components  # reusing same component list but could use different one per stream if needed
+    jobs:
+      - 'jbosstools-{component}_{stream}'
+      - 'devstudio.product_{devstudio-stream}'
+      - 'jbosstools-build-sites.aggregate.site_{stream}'
+    
+
+- job-template:
+    name: 'jbosstools-buildflow_{stream}'
+    description: 'Build Flow that replaces the need for job cascading and interlinkage. Runs weekly. See <a href="https://issues.jboss.org/browse/JBIDE-13307">JBIDE-13307</a>'
+    logrotate:
+      daysToKeep: -1
+      numToKeep: 10
+      artifactDaysToKeep: -1
+      artifactNumToKeep: -1
+    jdk: jdk1.7
+    project-type: flow
+    dsl: |
+      parallel (
+      {{ ignore(FAILURE) {{ build("jbosstools-aerogear_{stream}") }} }},
+      {{ ignore(FAILURE) {{ build("jbosstools-base_{stream}") }} }}
+      )
+      parallel (
+      {{ 
+      parallel (
+      // {{ ignore(FAILURE) {{ build("jbosstools-gwt_{stream}") }} }},
+      {{ ignore(FAILURE) {{ build("jbosstools-forge_{stream}") }} }},
+      // {{ ignore(FAILURE) {{ build("jbosstools-freemarker_{stream}") }} }}, // unchanged for master branch so far
+      {{ 
+      ignore(FAILURE)  {{ build("jbosstools-server_{stream}") }}
+      parallel (
+      {{ ignore(FAILURE) {{ build("jbosstools-livereload_{stream}") }} }},
+      {{ ignore(FAILURE) {{ build("jbosstools-openshift_{stream}") }} }},
+      {{ ignore(FAILURE) {{ build("jbosstools-webservices_{stream}") }} }}
+        )
+        }}
+        ) 
+        }},
+        {{ 
+        parallel (
+        {{ 
+        ignore(FAILURE) {{ build("jbosstools-hibernate_{stream}") }}
+        // ignore(FAILURE) {{ build("jbosstools-birt_{stream}") }}
+      }},
+      {{
+      // Xulrunner is disabled - no need to build it
+      // build("xulrunner-1.9.2")
+      ignore(FAILURE) {{ build("jbosstools-vpe_{stream}") }}
+      ignore(FAILURE) {{ build("jbosstools-jst_{stream}") }}
+      ignore(FAILURE) {{ build("jbosstools-browsersim_{stream}") }}
+      }}
+      ) 
+      }}
+      )
+      ignore(FAILURE) {{ build("jbosstools-javaee_{stream}") }}
+      // ignore(FAILURE) {{ build("jbosstools-portlet_{stream}") }} 
+      ignore(FAILURE) {{ build("jbosstools-central_{stream}") }}
+      ignore(FAILURE) {{ build("jbosstools-arquillian_{stream}") }}
+      ignore(FAILURE) {{ build("jbosstools-composite-install_{stream}", skipDiffCheck: "true") }}
+      // jbosstools-composite-install will kick off the following builds in order, with skipDiffCheck: "true" -->; skipRevisionCheckWhenPublishing: "true" (publish forced, where applicable)
+      // --&gt; jbosstools-build-sites.aggregate.webtools-site
+      // --&gt; jbosstools-build-sites.aggregate.site
+      // --&gt; --&gt; jbosstools-build-sites.aggregate.coretests-site
+      // --&gt; --&gt; devstudio.product
+      // --&gt; --&gt; --&gt; jbosstools-discovery_41
+      // --&gt; --&gt; --&gt; --&gt; jbosstools-install-grinder.install-tests.matrix
+
+    triggers:
+      - timed: "H H(0-9) * * H(6-7)"
+
+- job-template:
+    name: 'jbosstools-{component}_{stream}'
+    description: |
+      Nightly build for '<a href="https://github.com/jbosstools/jbosstools-{component}">jbosstools-{component}</a>', checking every 8 hrs for changes.
+      <h2><a style="color:#FF9933" href="http://download.jboss.org/jbosstools/builds/cascade/">Build Job Cascade & Results</a></h2>
+      <h3>job runs in this order: build against minimum target platform, publish to <a href="http://download.jboss.org/jbosstools/builds/staging/">staging</a>, test against maximum target platform</h3>
+    node: *nodes
+    logrotate:
+      daysToKeep: -1
+      numToKeep: 5
+      artifactDaysToKeep: -1
+      artifactNumToKeep: -1
+    jdk: jdk1.7
+     
+    parameters:
+      - string:
+          # TODO: the docs for this flag should not suggest to mix lifecycle phases into the flags. If needed should be done separately.
+          name: MAVEN_FLAGS
+          default: "{ci-maven-flags} -Djbosstools-site-stream={stream} -P hudson,pack200,unified.target"
+          description: "{maven-flags-description}"
+      - string:
+          name: TARGET_PLATFORM_VERSION
+          default: "{target-platform-version}"
+          description: "Target platform used for building/compilation"
+      - string:
+          name: TARGET_PLATFORM_MAXIMUM
+          default: "{target-platform-maximum}"
+          description: "Target platform used for testing"
+      - bool:
+          name: skipRevisionCheckWhenPublishing
+          default: "false"
+          description: |
+            Check box to always publish new build to staging / nightly. <br/>
+            Unchecked, publish.sh will check previous build's revision to decide if this build needs <br/>
+            to overwrite the previous one, or if it's in fact the same source &amp; therefore same binaries.<br/>
+      - string:
+          name: JAVA17
+          default: jdk1.7.0_last
+          description: |
+              Variable used to define which version of JDK 7 to use in ${{NATIVE_TOOLS}}
+      - string:
+          name: JAVA18
+          default: jdk1.8.0_last
+          description: |
+              Variable used to define which version of JDK 8 to use in ${{NATIVE_TOOLS}}
+
+    properties:          
+      - github:
+          url: https://github.com/jbosstools/jbosstools-{component}
+      - delivery-pipeline:
+          stage: Dev
+          task: Build {component}
+          
+    scm:
+      - git:
+          url: https://github.com/jbosstools/jbosstools-{component}
+          wipe-workspace: false
+          basedir: "sources"
+          branches: 
+            - '{branch}'
+        
+    triggers:
+      - pollscm: "{scm-schedule}"
+
+    builders:
+      - shell: |
+               ls -l ${{NATIVE_TOOLS}}
+      - maven-target:
+          goals: "clean install ${{MAVEN_FLAGS}} -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION}}"
+          maven-version: maven-3.2.5
+          settings: "{maven-settings}"
+          private-repository: true
+          java-opts: 
+            - "{jvm-memory}"
+          properties: 
+            - maven.test.skip=true
+            - skipITests=true
+            - download.cache.directory={download-cache}
+            - JOB_NAME=${{JOB_NAME}}
+            - BUILD_ID=${{BUILD_ID}}
+            - BUILD_NUMBER=${{BUILD_NUMBER}}
+            - skipPrivateRequirements=false
+            - jbosstools.test.jre.5="${{NATIVE_TOOLS}}${{SEP}}${{JAVA15}}" 
+            - jbosstools.test.jre.6="${{NATIVE_TOOLS}}${{SEP}}${{JAVA16}}"
+            - jbosstools.test.jre.7="${{NATIVE_TOOLS}}${{SEP}}${{JAVA17}}"
+            - jbosstools.test.jre.8="${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}"
+          pom: ${{WORKSPACE}}/sources/pom.xml
+      - maven-target:
+          goals: "{ci-maven-flags} org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack" #TODO: should it have all MAVEN_FLAGS ?
+          maven-version: maven-3.2.5
+          private-repository: true
+          properties:
+            - artifact=org.jboss.tools.releng:jbosstools-releng-publish:4.3.0.Alpha1-SNAPSHOT:zip
+            - outputDirectory=${{WORKSPACE}}/sources
+            - trimVersion=true
+            - mdep.stripClassifier=true
+            - mdep.stripVersion=true
+      # Commented out since this is not portable nor possible to run in an isolated way
+      #- shell: |
+      #          cd ${{WORKSPACE}}/sources/
+      #          export skipRevisionCheckWhenPublishing=${{skipRevisionCheckWhenPublishing}}
+      #          . publish/publish.sh
+      #- maven-target:
+      #    goals: deploy ${{MAVEN_FLAGS}}
+      #    maven-version: maven-3.2.5
+      #    pom: ${{WORKSPACE}}/sources/site/pom.xml
+      #    private-repository: true
+      #    properties:
+      #      - download.cache.directory={download-cache}
+      #      - JOB_NAME=${{JOB_NAME}}
+      #      - BUILD_ID=${{BUILD_ID}}
+      #      - BUILD_NUMBER=${{BUILD_NUMBER}}
+      #      - skipPrivateRequirements=false
+      #      - jbosstools.test.jre.5="${{NATIVE_TOOLS}}${{SEP}}${{JAVA15}}" 
+      #      - jbosstools.test.jre.6="${{NATIVE_TOOLS}}${{SEP}}${{JAVA16}}"
+      #     - jbosstools.test.jre.7="${{NATIVE_TOOLS}}${{SEP}}${{JAVA17}}"
+      #      - jbosstools.test.jre.8="${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}"
+      - maven-target:
+          goals: verify ${{MAVEN_FLAGS}} -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}}
+          maven-version: maven-3.2.5
+          java-opts: 
+            - "{jvm-memory}"
+          pom: ${{WORKSPACE}}/sources/{tests-folder}/pom.xml
+          private-repository: true
+          properties:
+            - maven.test.failure.ignore=true
+            - download.cache.directory={download-cache}
+            - JOB_NAME=${{JOB_NAME}}
+            - BUILD_ID=${{BUILD_ID}}
+            - BUILD_NUMBER=${{BUILD_NUMBER}}
+            - skipPrivateRequirements=false
+            - jbosstools.test.jre.5="${{NATIVE_TOOLS}}${{SEP}}${{JAVA15}}" 
+            - jbosstools.test.jre.6="${{NATIVE_TOOLS}}${{SEP}}${{JAVA16}}"
+            - jbosstools.test.jre.7="${{NATIVE_TOOLS}}${{SEP}}${{JAVA17}}"
+            - jbosstools.test.jre.8="${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}"
+    publishers:
+      - archive:
+          artifacts: >
+            results/*/all/*Update*.zip,sources/*/target/jacoco.exec,
+            sources/*/*tests/*/target/work/configuration/*.log,
+            sources/*/*tests/*/target/work/data/.metadata/*.log, 
+            sources/target/coverage-report/** 
+          latest-only: true
+      - junit:
+          results: "sources/*/*tests/*/target/surefire-reports/TEST-*.xml"
+          keep-long-stdio: false
+      - description-setter: 
+          regexp: "BUILD_DESCRIPTION='(.+)'"
+          description: "\\1"
+      - email:
+          recipients: "{component-responsible} jbosstools-builds@lists.jboss.org"
+          send-to-individuals: true
+      - build-publisher:
+          name: ""
+          publish-unstable-builds: true
+          publish-failed-builds: false
+          
+    wrappers:
+      - timeout:
+          timeout: 120
+ 
+
+- job-template:
+    name: 'devstudio.product_{devstudio-stream}'
+    description: |
+      Tycho-based build of JBDS update site, monitoring Github for changes.
+
+      <p><i>Build should take ~ 40min.</i>
+      <h2><a style="color:#FF9933" href="http://download.jboss.org/jbosstools/builds/cascade/">Build Job Cascade & Results</a></h2>
+
+      <p>See also:
+        <ul><li><a href=/hudson/view/EAP-CI/view/EAP6-CI/>EAP 6 jobs</a>
+        <li><a href=http://download.devel.redhat.com/released/JBEAP-6/>EAP 6.x releases</a>
+        <li><a href="http://www.jboss.org/jbossas/downloads">EAP 6.1 releases</a>
+      </ul>
+    logrotate:
+      daysToKeep: 5
+      numToKeep: 5
+      artifactDaysToKeep: -1
+      artifactNumToKeep: -1
+    properties:          
+      - github:
+          url: https://github.com/jbdevstudio/jbdevstudio-product
+    parameters:
+      - string:
+          name: MAVEN_FLAGS
+          default: "{ci-maven-flags} -Djbosstools-site-stream={stream} -P hudson,eap,unified.target"
+          description: "{maven-flags-description}"
+      - choice:
+          name: "RELEASE"
+          description: 'If a release, name zip w/ timestamp and build ID; otherwise call it "SNAPSHOT"'
+          choices:
+            - "No"
+            - "Yes"
+      - choice:
+          name: update.site.description
+          choices:
+            - Nightly Build
+            - Development Milestone
+            - Stable Release
+      - string:
+          name: TARGET_PLATFORM_VERSION
+          default: "{target-platform-version}"
+          description: "Target platform used for building/compilation"
+      - string:
+          name: TARGET_PLATFORM_MAXIMUM
+          default: "{target-platform-maximum}"
+          description: "Target platform used for testing"
+      - string:
+          name: JBOSS_CENTRAL_ZIP
+          description: "This should be overwritten by the value passed in from upstream job jbosstools-centraltarget_4.3.mars"
+          default: http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.50.0.Alpha1-SNAPSHOT/jbtcentraltarget-4.50.0.Alpha1-SNAPSHOT.zip
+      - bool:
+          name: skipRevisionCheckWhenPublishing
+          default: false
+          description: |
+            Check box to always publish new build to staging / nightly. <br/>
+            Unchecked, publish.sh will check previous build's revision to decide if this build needs <br/>
+            to overwrite the previous one, or if it's in fact the same source &amp; therefore same binaries.<br/>
+      
+    scm:
+      - git:
+          url: git@github.com:jbdevstudio/jbdevstudio-product.git
+          branches: 
+            - '{branch}'
+          browser: githubweb
+          browser-url: https://github.com/jbdevstudio/jbdevstudio-product/
+          basedir: "sources"
+    nodes: *nodes
+    jdk: jdk1.7
+
+    triggers:
+      - pollscm: "{scm-schedule}"    
+
+    builders:
+      - shell: |
+               if  [[ ! -d jbds-build-env ]]; then
+               ln -s /home/hudson/static_build_env/jbds jbds-build-env
+               fi
+               
+               #rm -rf ${{WORKSPACE}}/m2-repository
+               
+               # 2014/03/18: remove `-gs /home/hudson/.m2/settings.xml` from maven invocation below
+      - maven-target:
+          goals: "clean install ${{MAVEN_FLAGS}} -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_MAXIMUM}} -Ppack200"
+          maven-version: maven-3.2.5
+          private-repository: true
+          java-opts: 
+            - "{jvm-memory}"
+          properties: 
+            - JOB_NAME=${{JOB_NAME}}
+            - BUILD_ID=${{BUILD_ID}}
+            - BUILD_NUMBER=${{BUILD_NUMBER}}
+            - maven.test.failure.ignore=true
+            - maven.test.error.ignore=true
+            - download.cache.directory={download-cache}
+            - targetPlatformGroup=jbdevstudio
+            - jbosstools-site=http://download.jboss.org/jbosstools/updates/nightly/core/${{jbosstools-site-stream}}/
+          pom: ${{WORKSPACE}}/product/site/pom.xml
+      - shell: |
+               # move the update site target folder temporarily
+               rm -fr ${{WORKSPACE}}/tmp-target
+               mv ${{WORKSPACE}}/sources/product/site/target ${{WORKSPACE}}/tmp-target
+               
+               # now rebuild the update site, without pack200
+      - maven-target:
+          goals: "clean install ${{MAVEN_FLAGS}} -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_MAXIMUM}}"
+          maven-version: maven-3.1.1
+          private-repository: true
+          java-opts: 
+            - "{jvm-memory}"
+          properties: 
+            - JOB_NAME=${{JOB_NAME}}
+            - BUILD_ID=${{BUILD_ID}}
+            - BUILD_NUMBER=${{BUILD_NUMBER}}
+            - maven.test.failure.ignore=true
+            - maven.test.error.ignore=true
+            - download.cache.directory={download-cache}
+            - targetPlatformGroup=jbdevstudio
+            - jbosstools-site=http://download.jboss.org/jbosstools/updates/nightly/core/${{jbosstools-site-stream}}/
+          pom: ${{WORKSPACE}}/sources/product/site/pom.xml          
+      - maven-target:
+          goals: "org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack"
+          maven-version: maven-3.x
+          private-repository: false
+          properties:
+            - artifact=org.jboss.tools.releng:jbosstools-releng-publish:4.3.0.Alpha1-SNAPSHOT:zip
+            - outputDirectory=${{WORKSPACE}}/sources
+            - trimVersion=true
+            - mdep.stripClassifier=true
+            - mdep.stripVersion=true
+      - shell: |
+               # move the non-pack200 site zip into the temporary folder
+               mv ${{WORKSPACE}}/sources/product/site/target/site_assembly.zip* ${{WORKSPACE}}/tmp-target/
+               # purge the target folder built w/o pack200
+               rm -fr ${{WORKSPACE}}/sources/product/site/target
+               # move the temporary folder back to where it should be
+               mv ${{WORKSPACE}}/tmp-target ${{WORKSPACE}}/sources/product/site/target
+               
+               # replace the update-core zip + MD5 with the new one
+               cp -f ${{WORKSPACE}}/sources/product/site/target/site_assembly.zip ${{WORKSPACE}}/sources/product/results/target/jboss-devstudio-*updatesite-core.zip
+               z=`find ${{WORKSPACE}}/sources/product/results/target/ -name "jboss-devstudio-*updatesite-core.zip"`
+               for m in $(md5sum ${{z}}); do if [[ $m != ${{z}} ]]; then echo $m &gt; ${{z}}.MD5; fi; done
+               
+               cd ${{WORKSPACE}}/sources/
+               export skipRevisionCheckWhenPublishing=${{skipRevisionCheckWhenPublishing}}
+               DESTINATION=/qa/services/http/binaries/RHDS . publish/publish.sh
+    publishers:
+        - description-setter: 
+            regexp: "BUILD_DESCRIPTION='(.+)'"
+            description: "\\1"
+            ## TODO: downstreamtrigger
+        - email:
+            recipients: "jboss-devstudio-builds-list@redhat.com nboldt@redhat.com mistria@redhat.com"
+            send-to-individuals: true
+            notify-every-unstable-build: true
+        - build-publisher:
+            name: ""
+            publish-unstable-builds: true
+            publish-failed-builds: false
+
+    wrappers: 
+        - timeout:
+            timeout: 120
+
+
+- job-template:
+    name: 'devstudio.versionwatch_{devstudio-stream}'
+    description: |
+                 Bundle version control for JBDS<br/>
+                 Maintainers: jpeterka, nboldt<br/>
+                 Latest reports: <a href=ws/sources/vwatch/>ws/sources/vwatch/</a>*.html<br/>
+ 
+    logrotate:
+      daysToKeep: -1
+      numToKeep: 10
+      artifactDaysToKeep: -1
+      artifactNumToKeep: -1
+    properties:          
+      - github:
+          url: https://github.com/jbdevstudio/jbdevstudio-qa/
+    parameters:
+      - string:
+          name: EXCLUDE_IUS
+          default: "org.eclipse.wst.server_ui.feature"
+          description: "regex match of IUs to exclude, such as org.eclipse.wst.server_ui.feature"
+      - string:
+          name: INCLUDE_IUS
+          default: ">.*(jboss|hibernate).*"
+          description: "regex match of IUs to include, such as jboss & hibernate"
+      
+    scm:
+      - git:
+          url: git@github.com:jbdevstudio/jbdevstudio-qa.git
+          branches: 
+            - '{branch}'
+          browser: githubweb
+          browser-url: https://github.com/jbdevstudio/jbdevstudio-qa/
+          basedir: "sources"
+    nodes: *nodes
+    jdk: jdk1.7
+
+    builders:
+      - shell: |
+               # run a new build
+               . ${{WORKSPACE}}/sources/vwatch/run.jenkins.job.sh -INCLUDE_VERSIONS "(8|9)\.\d+\.\d+" -INCLUDE_IUS "${{INCLUDE_IUS}}" -EXCLUDE_IUS "${{EXCLUDE_IUS}}"
+    publishers:
+      - archive:
+          artifacts: "**/output*.html, **/product*.html, **/*report*.html, **/target/*.css, **/target/*.png"
+          latest-only: false
+      - description-setter: 
+          regexp: "BUILD_DESCRIPTION='(.+)'"
+          description: "\\1"
+      - text-finder:
+          regexp: ".*(^ERROR |FAILURE IN OUTPUT: )."
+          also-check-console-output: true
+
+ 
+- job-template:
+    name: 'jbosstools-build-sites.aggregate.site_{stream}'
+    description: |
+                 Tycho-based build, monitoring GitHub for changes.
+                 
+                 <p><i>Build should take ~60min.</i>
+                 
+                 <h2><a style="color:#FF9933" href="http://download.jboss.org/jbosstools/builds/cascade/">Build Job Cascade &amp;amp; Results</a></h2>
+
+    node: *nodes
+    logrotate:
+      daysToKeep: 5
+      numToKeep: 5
+      artifactDaysToKeep: -1
+      artifactNumToKeep: -1
+    jdk: jdk1.7
+     
+    parameters:
+      - string:
+          # TODO: the docs for this flag should not suggest to mix lifecycle phases into the flags. If needed should be done separately.
+          name: MAVEN_FLAGS
+          default: "{ci-maven-flags} -Djbosstools-site-stream={stream} -P hudson,unified.target,pack200"
+          description: "{maven-flags-description}"
+      - choice:
+          name: RELEASE
+          description: 'If a release, name zip w/ timestamp and build ID; otherwise call it "SNAPSHOT"'
+          choices:
+            - "No"
+            - "Yes"
+      - choice:
+          name: update.site.description
+          choices:
+            - Nightly Build
+            - Development Milestone
+            - Stable Release
+      - string:
+          name: TARGET_PLATFORM_VERSION
+          default: "{target-platform-version}"
+          description: "Target platform used for building/compilation"
+      - string:
+          name: TARGET_PLATFORM_MAXIMUM
+          default: "{target-platform-maximum}"
+          description: "Target platform used for testing"
+      - bool:
+          name: skipRevisionCheckWhenPublishing
+          default: "false"
+          description: |
+            Check box to always publish new build to staging / nightly. <br/>
+            Unchecked, publish.sh will check previous build's revision to decide if this build needs <br/>
+            to overwrite the previous one, or if it's in fact the same source &amp; therefore same binaries.<br/>
+ 
+    properties:          
+      - github:
+          url: https://github.com/jbosstools/jbosstools-build-sites
+      - delivery-pipeline:
+          stage: Dev
+          task: Build 
+          
+    scm:
+      - git:
+          url: https://github.com/jbosstools/jbosstools-build-sites
+          wipe-workspace: false
+          branches: 
+            - '{branch}'
+          included-regions:
+            - "aggregate/site/*"
+            - "aggregate/*"
+          excluded-regions:
+            - "aggregate/coretests-site/*"
+            - "aggregate/local-site/*"
+            - "aggregate/soa-site/*"
+            - "aggregate/soatests-site/*"
+            - "aggregate/web/*"
+            - "aggregate/webtools-site/*"
+  
