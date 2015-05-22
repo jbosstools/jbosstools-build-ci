@@ -61,9 +61,11 @@ else
 fi
 
 # copy the source into the target
-if [[ ${EXCLUDES} ]]; then 
+if [[ ${EXCLUDES} ]]; then
+  echo "rsync -arzq --protocol=28 --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
   rsync -arzq --protocol=28 --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
 else
+  echo "rsync -arzq --protocol=28 ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
   rsync -arzq --protocol=28 ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
 fi
 
