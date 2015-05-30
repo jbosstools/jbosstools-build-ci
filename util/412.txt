@@ -1,0 +1,15 @@
+jbosstools/jbosstools-aerogear,4586f4e2ccab589cc8d3f9c0a27b07cb0b60054f, jbosstools-4.1.2.Final
+jbosstools/jbosstools-arquillian,512a4eb9c86e536609548f89e488e6de59a05997, jbosstools-4.1.2.Final
+jbosstools/jbosstools-base,a2fc76fa5077ead6c157018c7007be78889b278b, jbosstools-4.1.2.Final
+jbosstools/jbosstools-central,a67351bc616681776c4f3e98bc9dae37dbf61cbd, jbosstools-4.1.2.Final
+jbosstools/jbosstools-forge,ec277568d25799042c1b45bfc9a6717ecacc3c18, jbosstools-4.1.2.Final
+jbosstools/jbosstools-hibernate,9b968a7902f2f3a9e3d7e8c4253683f7268e542a, jbosstools-4.1.2.Final
+jbosstools/jbosstools-javaee,592119339d9621a0ee8c3ce1e48dd6b1a4c4cd31, jbosstools-4.1.2.Final
+jbosstools/jbosstools-jst,7e2bde795ba9156ce3d1a6ea96aa29ef85e1b003, jbosstools-4.1.2.Final
+jbosstools/jbosstools-livereload,715cd60d1be30e8c8bf21e27328733bbf2c7d3ed, jbosstools-4.1.2.Final
+jbosstools/jbosstools-openshift,a5693dad2e041a3eaf22745b7f09c58b46538b8e, jbosstools-4.1.2.Final
+jbosstools/jbosstools-portlet,b78ad47e21de05d7e8fe770a0b3335de006d43bb, jbosstools-4.1.2.Final
+jbosstools/jbosstools-server,1a43a10c94dc70af396589f46680de33333bfa6c, jbosstools-4.1.2.Final
+jbosstools/jbosstools-vpe,86607d3ca6614b9ebe5a17205f0244676596fd8f, jbosstools-4.1.2.Final
+jbosstools/jbosstools-webservices,fa9850e334f250eb1ea32951b743bf32d951e391, jbosstools-4.1.2.Final
+
