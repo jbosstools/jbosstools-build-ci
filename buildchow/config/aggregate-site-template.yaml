@@ -1,0 +1,75 @@
+- job-template:
+    name: 'jbosstools-build-sites.aggregate.site_{stream}'
+    disabled: '{obj:disabled}'
+    description: |
+                 Tycho-based build, monitoring GitHub for changes.
+                 
+                 <p><i>Build should take ~60min.</i>
+                 
+                 <h2><a style="color:#FF9933" href="http://download.jboss.org/jbosstools/builds/cascade/">Build Job Cascade &amp;amp; Results</a></h2>
+
+    node: "{nodes}"
+    logrotate:
+      daysToKeep: 5
+      numToKeep: 5
+      artifactDaysToKeep: -1
+      artifactNumToKeep: -1
+    jdk: jdk1.7
+     
+    parameters:
+      - string:
+          # TODO: the docs for this flag should not suggest to mix lifecycle phases into the flags. If needed should be done separately.
+          name: MAVEN_FLAGS
+          default: "{ci-maven-flags} -Djbosstools-site-stream={stream} -P hudson,unified.target,pack200"
+          description: "{maven-flags-description}"
+      - choice:
+          name: RELEASE
+          description: 'If a release, name zip w/ timestamp and build ID; otherwise call it "SNAPSHOT"'
+          choices:
+            - "No"
+            - "Yes"
+      - choice:
+          name: update.site.description
+          choices:
+            - Nightly Build
+            - Development Milestone
+            - Stable Release
+      - string:
+          name: TARGET_PLATFORM_VERSION
+          default: "{target-platform-version}"
+          description: "Target platform used for building/compilation"
+      - string:
+          name: TARGET_PLATFORM_VERSION_MAXIMUM
+          default: "{target-platform-version-maximum}"
+          description: "Target platform used for testing"
+      - bool:
+          name: skipRevisionCheckWhenPublishing
+          default: "false"
+          description: |
+            Check box to always publish new build to staging / nightly. <br/>
+            Unchecked, publish.sh will check previous build's revision to decide if this build needs <br/>
+            to overwrite the previous one, or if it's in fact the same source &amp; therefore same binaries.<br/>
+ 
+    properties:          
+      - github:
+          url: https://github.com/jbosstools/jbosstools-build-sites
+      - delivery-pipeline:
+          stage: Dev
+          task: Build 
+          
+    scm:
+      - git:
+          url: https://github.com/jbosstools/jbosstools-build-sites
+          wipe-workspace: false
+          branches: 
+            - '{branch}'
+          included-regions:
+            - "aggregate/site/*"
+            - "aggregate/*"
+          excluded-regions:
+            - "aggregate/coretests-site/*"
+            - "aggregate/local-site/*"
+            - "aggregate/soa-site/*"
+            - "aggregate/soatests-site/*"
+            - "aggregate/web/*"
+            - "aggregate/webtools-site/*"

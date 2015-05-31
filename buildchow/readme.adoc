@@ -1,0 +1,41 @@
+BuildChow
+=========
+
+BuildChow is the nickname for templates of JBoss Tools and Developer
+Studio jenkins jobs.
+
+By using templates we do not have to rely on jenkins UI to manually update jobs
+or bulk-update in large set of config.xml files.
+
+BuildChow uses http://ci.openstack.org/jenkins-job-builder[Jenkins Job
+Builder](jjb) from Openstack.org
+
+== Requirements
+
+. Python 2.7+
+. Python PIP
+. Git
+
+On Fedora you get this by runing: `yum install -y python-pip git`
+
+== How to use
+
+First need to install jjb.
+
+For now we use a custom fork since not all patches applied yet.
+
+```
+$ pip install git+https://github.com/maxandersen/jenkins-job-builder@jbosstools
+```
+
+Once installed you can run the following to generate jobs into a folder named `generated`:
+
+```
+$ jenkins-jobs test config/ -o generated
+```
+
+Update jenkins-jobs on jenkins server
+
+```
+$ jenkins-jobs --conf etc/jboss-jenkins.ini update config/ 
+```
