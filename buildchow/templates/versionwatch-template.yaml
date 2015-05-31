@@ -1,0 +1,51 @@
+- job-template:
+    name: 'devstudio.versionwatch_{devstudio-stream}'
+    disabled: '{obj:disabled}'
+    description: |
+                 Bundle version control for JBDS<br/>
+                 Maintainers: jpeterka, nboldt<br/>
+                 Latest reports: <a href=ws/sources/vwatch/>ws/sources/vwatch/</a>*.html<br/>
+ 
+    logrotate:
+      daysToKeep: -1
+      numToKeep: 10
+      artifactDaysToKeep: -1
+      artifactNumToKeep: -1
+    properties:          
+      - github:
+          url: https://github.com/jbdevstudio/jbdevstudio-qa/
+    parameters:
+      - string:
+          name: EXCLUDE_IUS
+          default: "org.eclipse.wst.server_ui.feature"
+          description: "regex match of IUs to exclude, such as org.eclipse.wst.server_ui.feature"
+      - string:
+          name: INCLUDE_IUS
+          default: ">.*(jboss|hibernate).*"
+          description: "regex match of IUs to include, such as jboss & hibernate"
+      
+    scm:
+      - git:
+          url: git@github.com:jbdevstudio/jbdevstudio-qa.git
+          branches: 
+            - '{branch}'
+          browser: githubweb
+          browser-url: https://github.com/jbdevstudio/jbdevstudio-qa/
+          basedir: "sources"
+    nodes: "{nodes}"
+    jdk: jdk1.7
+
+    builders:
+      - shell: |
+               # run a new build
+               . ${{WORKSPACE}}/sources/vwatch/run.jenkins.job.sh -INCLUDE_VERSIONS "(8|9)\.\d+\.\d+" -INCLUDE_IUS "${{INCLUDE_IUS}}" -EXCLUDE_IUS "${{EXCLUDE_IUS}}"
+    publishers:
+      - archive:
+          artifacts: "**/output*.html, **/product*.html, **/*report*.html, **/target/*.css, **/target/*.png"
+          latest-only: false
+      - description-setter: 
+          regexp: "BUILD_DESCRIPTION='(.+)'"
+          description: "\\1"
+      - text-finder:
+          regexp: ".*(^ERROR |FAILURE IN OUTPUT: )."
+          also-check-console-output: true
