@@ -1,0 +1,75 @@
+BuildChow
+=========
+
+BuildChow is the nickname for templates of JBoss Tools and Developer
+Studio jenkins jobs.
+
+By using templates we do not have to rely on jenkins UI to manually update jobs
+or bulk-update in large set of config.xml files.
+
+BuildChow uses http://ci.openstack.org/jenkins-job-builder[Jenkins Job
+Builder](jjb) from Openstack.org.
+
+== Requirements
+
+. Python 2.7+
+. Python PIP
+. Git
+
+On Fedora you get this by runing: `yum install -y python-pip git`
+
+== How to use
+
+First need to install jjb.
+
+For now we use a custom fork since not all patches applied yet.
+
+```
+$ pip install git+https://github.com/maxandersen/jenkins-job-builder@jbosstools
+```
+
+Once installed you can run the following to generate jobs into a folder named `generated`.
+
+INFO: Please note that for supporting jenkins host specific overrides you *must* change the directory
+to where the .ini file is and mention the .ini file to run it correctly.
+
+```
+$ cd inis/defaults
+$ jenkins-jobs --conf jenkins-jobs.ini test ../../templates/ -o generated
+```
+
+This will generate 40+ jobs into the `generated` folder.
+
+To upload directly to jenkins you need to manually update `jobs_jenkins.ini` with username/password (do *not* commit it)
+and run the following:
+
+```
+$ cd inis/defaults
+$ jenkins-jobs --conf jenkins-jobs.ini update ../../templates/ config/ 
+```
+
+== Layout
+
+|===
+|Name | Description
+
+| link:templates[]
+| The templates for jobs written in `.yaml`. If you want to add or change a job then you tend to edit this.
+
+| link:inis[]
+| Directory with a directory per specific jenkins host.
+
+| link:inis/defaults[]
+| Has the default jenkins setup (currently using internal jboss jenkins). Has `.inc` files to define defaults
+  for machine specific settings. Intent is that other inis can use this as a fallback.
+
+| link:inis/dockerhost[]
+| Example for custom ini file using dockerhost + override of machine specific includes.
+
+| link:etc/todirformat.sh[]
+| Script to convert the flat names used by `jjb` to the "view" format used by old jenkins config.xml backups
+
+| link:todo.adoc[]
+| Todo items/remaining questions regarding the templates. One day it should be empty and then removed.
+
+
