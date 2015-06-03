@@ -28,7 +28,7 @@
       - git:
           url: git@github.com:jbdevstudio/jbdevstudio-qa.git
           branches: 
-            - '{branch}'
+            - '{default-remote}/{branch}'
           browser: githubweb
           browser-url: https://github.com/jbdevstudio/jbdevstudio-qa/
           basedir: "sources"

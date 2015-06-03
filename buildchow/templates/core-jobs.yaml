@@ -52,7 +52,7 @@
       9.0.mars
     target-platform-version: 4.50.0.Alpha2
     target-platform-version-maximum: 4.50.0.Alpha2
-    branch: jbosstools-4.3.0.Alpha2x
+    branch: jbosstools-4.3.0.Beta1x
     component: 
       *components  # reusing same component list but could use different one per stream if needed
     jobs:
