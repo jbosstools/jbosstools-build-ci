@@ -7,7 +7,7 @@
       master
     target-platform-version: 4.50.0.Alpha1-SNAPSHOT
     target-platform-version-maximum: 4.50.0.Alpha2-SNAPSHOT
-    disabled: false
+    disabled: true
     branch: master
     component: &components # defined here since aliases cannot be shared across files https://storyboard.openstack.org/#!/story/2000173
       - aerogear:
@@ -45,7 +45,7 @@
  
 - project:
     name: jbosstools-mars
-    disabled: true
+    disabled: false
     stream:
       4.3.mars
     devstudio-stream:
