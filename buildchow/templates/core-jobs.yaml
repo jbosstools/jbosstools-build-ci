@@ -5,8 +5,8 @@
       master
     devstudio-stream:
       master
-    target-platform-version: 4.50.0.Alpha1-SNAPSHOT
-    target-platform-version-maximum: 4.50.0.Alpha2-SNAPSHOT
+    target-platform-version: 4.50.0.Beta1-SNAPSHOT
+    target-platform-version-maximum: 4.50.0.Beta1-SNAPSHOT
     disabled: true
     branch: master
     component: &components # defined here since aliases cannot be shared across files https://storyboard.openstack.org/#!/story/2000173
@@ -50,8 +50,8 @@
       4.3.mars
     devstudio-stream:
       9.0.mars
-    target-platform-version: 4.50.0.Alpha2
-    target-platform-version-maximum: 4.50.0.Alpha2
+    target-platform-version: 4.50.0.Beta1
+    target-platform-version-maximum: 4.50.0.Beta1
     branch: jbosstools-4.3.0.Beta1x
     component: 
       *components  # reusing same component list but could use different one per stream if needed
