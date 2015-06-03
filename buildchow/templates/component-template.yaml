@@ -65,10 +65,10 @@
             - BUILD_ID=${{BUILD_ID}}
             - BUILD_NUMBER=${{BUILD_NUMBER}}
             - skipPrivateRequirements=false
-            - jbosstools.test.jre.5="${{NATIVE_TOOLS}}${{SEP}}${{JAVA15}}" 
-            - jbosstools.test.jre.6="${{NATIVE_TOOLS}}${{SEP}}${{JAVA16}}"
-            - jbosstools.test.jre.7="${{NATIVE_TOOLS}}${{SEP}}${{JAVA17}}"
-            - jbosstools.test.jre.8="${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}"
+            - jbosstools.test.jre.5=${{NATIVE_TOOLS}}${{SEP}}${{JAVA15}} 
+            - jbosstools.test.jre.6=${{NATIVE_TOOLS}}${{SEP}}${{JAVA16}}
+            - jbosstools.test.jre.7=${{NATIVE_TOOLS}}${{SEP}}${{JAVA17}}
+            - jbosstools.test.jre.8=${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}
           settings: "{maven-settings}"
           private-repository: true
           java-opts: 
