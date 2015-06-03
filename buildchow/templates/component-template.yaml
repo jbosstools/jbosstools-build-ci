@@ -87,7 +87,7 @@
       - shell: |
                if [[ ${{skipRevisionCheckWhenPublishing}} == "true" ]] || [[ $(. ${{WORKSPACE}}/sources/util/checkLatestPublishedSHA.sh -s ${{WORKSPACE}}/sources/site/target/repository -t http://download.jboss.org/jbosstools/mars/snapshots/builds/${{JOB_NAME}}/latest/all/repo/) == "true" ]]; then
                  cd ${{WORKSPACE}}/sources/site
-                 M2_HOME=/qa/tools/opt/apache-maven-3.2.5/
+                 M2_HOME=/qa/tools/opt/apache-{default-maven-version}/
                  $M2_HOME/bin/mvn deploy -Pdeploy-to-jboss.org -Dmaven.repo.local=$WORKSPACE/.repository ${{MAVEN_FLAGS}}
                else
                  echo "Publish cancelled (nothing to do). Skip this check with skipRevisionCheckWhenPublishing=true"
