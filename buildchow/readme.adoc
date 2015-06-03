@@ -34,7 +34,7 @@ INFO: Please note that for supporting jenkins host specific overrides you *must*
 to where the .ini file is and mention the .ini file to run it correctly.
 
 ```
-$ cd inis/defaults
+$ cd configs/default
 $ jenkins-jobs --conf jenkins-jobs.ini test ../../templates/ -o generated
 ```
 
@@ -44,7 +44,7 @@ To upload directly to jenkins you need to manually update `jobs_jenkins.ini` wit
 and run the following:
 
 ```
-$ cd inis/defaults
+$ cd configs/default
 $ jenkins-jobs --conf jenkins-jobs.ini update ../../templates/ config/ 
 ```
 
@@ -56,14 +56,14 @@ $ jenkins-jobs --conf jenkins-jobs.ini update ../../templates/ config/
 | link:templates[]
 | The templates for jobs written in `.yaml`. If you want to add or change a job then you tend to edit this.
 
-| link:inis[]
+| link:configs[]
 | Directory with a directory per specific jenkins host.
 
-| link:inis/defaults[]
+| link:configs/default[]
 | Has the default jenkins setup (currently using internal jboss jenkins). Has `.inc` files to define defaults
-  for machine specific settings. Intent is that other inis can use this as a fallback.
+  for machine specific settings. Intent is that other configs can use this as a fallback.
 
-| link:inis/dockerhost[]
+| link:configs/dockerhost[]
 | Example for custom ini file using dockerhost + override of machine specific includes.
 
 | link:etc/todirformat.sh[]

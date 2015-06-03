@@ -1,7 +1,7 @@
 = Advantages noticed within a week:
 
 * fixing JRE across all jobs
-* relasing target platform without breaking builds
+* releasing target platform without breaking builds
 * using 9.0 instead of 4.3.mars for stream
 
 = Local Jenkins Configuration
