@@ -31,7 +31,7 @@
           name: skipRevisionCheckWhenPublishing
           default: "false"
           description: |
-            Check box to always publish new build to staging / nightly. <br/>
+            Check box to always publish new build to snapshots. <br/>
             Unchecked, publish.sh will check previous build's revision to decide if this build needs <br/>
             to overwrite the previous one, or if it's in fact the same source &amp; therefore same binaries.<br/>
 
@@ -112,7 +112,7 @@
     publishers:
       - archive:
           artifacts: >
-            results/*/all/*Update*.zip,sources/*/target/jacoco.exec,
+            results/*/all/*.zip,sources/*/target/jacoco.exec,
             sources/*/*tests/*/target/work/configuration/*.log,
             sources/*/*tests/*/target/work/data/.metadata/*.log, 
             sources/target/coverage-report/** 
