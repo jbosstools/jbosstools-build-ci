@@ -62,7 +62,7 @@
           url: https://github.com/jbosstools/jbosstools-build-sites
           wipe-workspace: false
           branches: 
-            - '{branch}'
+            - '{default-remote}/{branch}'
           included-regions:
             - "aggregate/site/*"
             - "aggregate/*"

@@ -3,6 +3,7 @@
     disabled: false
     default-jdk: jdk1.8
     default-maven-version: maven-3.2.5
+    default-remote: origin
     jvm-memory: "-Xms512m -Xmx1024m -XX:PermSize=128m -XX:MaxPermSize=256m"
     tests-folder: tests # for some it is all-tests
     component-responsible: ""
