@@ -48,7 +48,7 @@
       - string:
           name: JBOSS_CENTRAL_ZIP
           description: "This should be overwritten by the value passed in from upstream job jbosstools-centraltarget_4.3.mars"
-          default: http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.50.0.Alpha1-SNAPSHOT/jbtcentraltarget-4.50.0.Alpha1-SNAPSHOT.zip
+          default: http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.50.0.Beta1-SNAPSHOT/jbtcentraltarget-4.50.0.Beta1-SNAPSHOT.zip
       - bool:
           name: skipRevisionCheckWhenPublishing
           default: false
@@ -61,7 +61,7 @@
       - git:
           url: git@github.com:jbdevstudio/jbdevstudio-product.git
           branches: 
-            - '{branch}'
+            - '{default-remote}/{branch}'
           browser: githubweb
           browser-url: https://github.com/jbdevstudio/jbdevstudio-product/
           basedir: "sources"

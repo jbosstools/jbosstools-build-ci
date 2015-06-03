@@ -22,7 +22,7 @@
       - string:
           name: TARGET_PLATFORM_VERSION
           default: "{target-platform-version}"
-          description: "Target platform used for building/compilation"
+          description: "Target platform used for compilation/packaging"
       - string:
           name: TARGET_PLATFORM_VERSION_MAXIMUM
           default: "{target-platform-version-maximum}"
@@ -48,7 +48,7 @@
           wipe-workspace: false
           basedir: "sources"
           branches: 
-            - '{branch}'
+            - '{default-remote}/{branch}'
         
     triggers:
       - pollscm: "{scm-schedule}"
