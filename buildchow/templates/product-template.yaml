@@ -65,6 +65,7 @@
           browser: githubweb
           browser-url: https://github.com/jbdevstudio/jbdevstudio-product/
           basedir: "sources"
+          wipe-workspace: false
     nodes: "{nodes}"
     jdk: jdk1.7
 
