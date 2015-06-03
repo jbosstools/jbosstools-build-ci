@@ -59,6 +59,7 @@
           maven-version: "{default-maven-version}"
           properties: &component-maven-properties
             - maven.test.failure.ignore=true
+            - maven.test.error.ignore=true
             - download.cache.directory={download-cache}
             - JOB_NAME=${{JOB_NAME}}
             - BUILD_ID=${{BUILD_ID}}
