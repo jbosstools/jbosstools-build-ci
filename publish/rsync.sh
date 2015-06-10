@@ -12,6 +12,11 @@ URL=http://download.jboss.org/jbosstools # or https://devstudio.redhat.com or ht
 INCLUDES="*"
 EXCLUDES=""
 
+# use this to pass in rsync flags
+# eg., use --del -n to PREVIEW what obsolete files might be deleted from target folder while pushing new ones
+# eg., use --del to delete from target folder while pushing new ones: USE WITH CAUTION!
+OPTIONS="" 
+
 # can be used to publish a build (including installers, site zips, MD5s, build log) or just an update site folder
 usage ()
 {
@@ -24,12 +29,12 @@ usage ()
 
   echo "To push JBT build + update site folders:"
   echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite          -t mars/snapshots/builds/\${JOB_NAME}/\${BUILD_ID}-B\${BUILD_NUMBER}"
-  echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite/all/repo -t mars/snapshots/updates/core/\${stream}"
+  echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite/all/repo -t mars/snapshots/updates/core/\${stream} --del"
   echo ""
 
   echo "To push JBDS build + update site folders:"
   echo "   $0 -DESTINATION /qa/services/http/binaries/RHDS -URL http://www.qa.jboss.com/binaries/RHDS           -s \${WORKSPACE}/sources/results                   -t 9.0/snapshots/builds/devstudio.product_master/"
-  echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio -URL https://devstudio.redhat.com -s \${WORKSPACE}/sources/site/target/fullSite/repo -t 9.0/snapshots/updates/core/master/"
+  echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio -URL https://devstudio.redhat.com -s \${WORKSPACE}/sources/site/target/fullSite/repo -t 9.0/snapshots/updates/core/\${stream}/ --del"
   echo ""
   exit 1
 }
@@ -45,13 +50,10 @@ while [[ "$#" -gt 0 ]]; do
     '-t') TARGET_PATH="$2"; shift 1;; # mars/snapshots/builds/<job-name>/<build-number>/, mars/snapshots/updates/core/{4.3.0.Alpha1, master}/
     '-i') INCLUDES="$2"; shift 1;;
     '-e') EXCLUDES="$2"; shift 1;;
+       *) OPTIONS="${OPTIONS} $1"; shift 0;;
   esac
   shift 1
 done
-
-# TODO: make sure we have source zips for all aggregates and JBDS
-
-# TODO: make sure we have MD5 sums for all zip/jar artifacts
 
 # build the target_path with sftp to ensure intermediate folders exist
 if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
@@ -63,10 +65,10 @@ fi
 # copy the source into the target
 if [[ ${EXCLUDES} ]]; then
   echo "rsync -arzq --protocol=28 --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
-  rsync -arzq --protocol=28 --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
+  rsync -arzq --protocol=28 ${OPTIONS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
 else
   echo "rsync -arzq --protocol=28 ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
-  rsync -arzq --protocol=28 ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
+  rsync -arzq --protocol=28 ${OPTIONS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
 fi
 
 # given TARGET_PATH=/downloads_htdocs/tools/mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master/2015-03-06_17-58-07-B13/all/repo/
@@ -110,11 +112,6 @@ if [[ ${JOB_NAME} ]]; then
   getRemoteFile "http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText"; if [[ -w ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${bl}; fi
   touch ${bl}; chmod 664 ${bl}; rsync -arzq --protocol=28 ${bl} $DESTINATION/${TARGET_PATH/\/all\/repo/}/logs/
 fi
-
-# TODO: create BUILD_DESCRIPTION variable (HTML string) in Jenkins log containing:
-# link to log, target platforms used, update site/installers folder, coverage report & jacoco file, buildinfo.json
-LAST_SEGMENT=$(echo $TARGET_PATH | sed -e "s#/\?downloads_htdocs/tools/##" -e "s#/\?all/repo/\?##" -e "s#/\$##" -e "s#^/##" -e "s#\(.\+\)/\([^/]\+\)#\2#")
-BUILD_DESCRIPTION='<li><a href='${URL}'/'${PARENT_PATH}'/'${LAST_SEGMENT}'>'${LAST_SEGMENT}'</a></li>'
 
 # purge temp folder
 rm -fr ${tmpdir} 
