@@ -15,11 +15,11 @@ usage ()
     echo "             -iu issues.jboss.org_USER -ip issues.jboss.org_PWD -jbtm 4.2.0.MILESTONE -jbdsm 8.0.0.MILESTONE -respin a|b|c..."
     echo ""
     # for the milestone, find the related JIRAs and get the associated projects
-    echo "Example 1: $0 -branch jbosstools-4.3.0.Alpha2x -jbtstream 4.3.mars -jbdsstream 9.0.mars -ju nboldt -jp j_pwd \\"
-    echo "             -gu nickboldt@gmail.com -gp g_pwd -iu nickboldt -ip i_pwd -jbtm 4.3.0.Alpha2 -jbdsm 9.0.0.Alpha2 -respin a"
+    echo "Example 1: $0 -branch jbosstools-4.3.0.Beta1x -jbtstream 4.3.mars -jbdsstream 9.0.mars -ju nboldt -jp j_pwd \\"
+    echo "             -gu nickboldt@gmail.com -gp g_pwd -iu nickboldt -ip i_pwd -jbtm 4.3.0.Beta1 -jbdsm 9.0.0.Beta1 -respin a"
     echo ""
     # for a list of projects, find any unbuilt commits
-    echo "Example 2: $0 -branch jbosstools-4.3.0.Alpha2x -jbtstream 4.3.mars -jbdsstream 9.0.mars -ju nboldt -jp j_pwd \\"
+    echo "Example 2: $0 -branch jbosstools-4.3.0.Beta1x -jbtstream 4.3.mars -jbdsstream 9.0.mars -ju nboldt -jp j_pwd \\"
     echo "            -gu nickboldt@gmail.com -gp g_pwd -jbds product -jbt aerogear,arquillian,base,birt,browsersim,central,discovery,\\"
     echo "forge,freemarker,hibernate,javaee,jst,livereload,openshift,portlet,server,vpe,webservices"
     exit 1;
@@ -37,9 +37,9 @@ JBTPROJECT=""
 JBDSPROJECT=""
 jbtstream=4.3.mars # or master
 jbdsstream=9.0.mars # or master 
-branch=jbosstools-4.3.0.Alpha2x # or master
+branch=jbosstools-4.3.0.Beta1x # or master
 jbtpath=mars/snapshots/builds # or builds/staging, from JBDS 8 and before
-jbdspath=build/staging # JBDS-3208 TODO change this to 9.0/snapshots/builds
+jbdspath=9.0/snapshots/builds
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -125,7 +125,7 @@ if [[ ${jbtm} ]]; then
     # define mapping between JIRA components and jenkins project names
     # if not listed then mapping between component and project are 1:1,eg., for forge, server, livereload, openshift, webservices, hibernate, birt, freemarker, browsersim, discovery
     declare -A projectMap=( 
-      ["qa"]="jbdevstudio-qa"
+      ["qa"]="versionwatch"
       ["aerogear-hybrid"]="aerogear"
       ["cordovasim"]="aerogear"
       ["arquillian"]="arquillian" 
@@ -142,6 +142,8 @@ if [[ ${jbtm} ]]; then
       ["portal-gatein"]="portlet"
       ["visual-page-editor-core"]="vpe"
       ["build"]="build.parent"
+      ["easymport"]="playground"
+      ["integration-tests"]="integration-tests.aggregate"
     )
 
     # load list of projects from component::project mapping, adding only if unique
@@ -241,7 +243,7 @@ checkProjects () {
       echo "== ${g_project} =="
     fi
 
-    # githash=`firefox https://github.com/jbdevstudio/jbdevstudio-product/commits/jbosstools-4.3.0.Alpha2x` 
+    # githash=`firefox https://github.com/jbdevstudio/jbdevstudio-product/commits/jbosstools-4.3.0.Beta1x` 
     # echo https://api.github.com/repos/jbdevstudio/jbdevstudio-${j}/commits/${branch}
     tmp=`mktemp`
     githash=`curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -u "${g_user}:${g_password}" -s -S > ${tmp} && cat ${tmp} | head -2 | grep sha | \
@@ -253,6 +255,14 @@ checkProjects () {
     # new for JBDS 9 (used to pull logs/GIT_REVISION.txt) - use buildinfo.json
     jenkinshash=`wget -q --no-check-certificate ${staging_url}${jobname_prefix}${j}_${stream}/latest/all/repo/buildinfo.json -O - | \
       grep HEAD | grep -v currentBranch | head -1 | sed -e "s/.\+\"HEAD\" : \"\(.\+\)\",/\1/"`
+    if [[ ! ${jenkinshash} ]]; then # try alternate URL
+      jenkinshash=`wget -q --no-check-certificate ${staging_url}${jobname_prefix}${j}.aggregate_${stream}/latest/all/repo/buildinfo.json -O - | \
+        grep HEAD | grep -v currentBranch | head -1 | sed -e "s/.\+\"HEAD\" : \"\(.\+\)\",/\1/"`
+    fi
+    if [[ ! ${jenkinshash} ]]; then # try alternate URL
+      jenkinshash=`wget -q --no-check-certificate ${staging_url}${jobname_prefix}${j}.central_${stream}/latest/all/repo/buildinfo.json -O - | \
+        grep HEAD | grep -v currentBranch | head -1 | sed -e "s/.\+\"HEAD\" : \"\(.\+\)\",/\1/"`
+    fi
     if [[ ! ${jenkinshash} ]]; then # try Jenkins XML API instead
       jenkinshash=`wget -q --no-check-certificate --user=${j_user} --password="${j_password}" ${jenkins_prefix}${jobname_prefix}${j}_${stream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1 -O - | \
         sed "s#<SHA1>\(.\+\)</SHA1>#\1#"`
@@ -280,14 +290,14 @@ checkProjects () {
       # because the SHAs don't match, prompt user to enable the job so it can run
       # echo "      ... enable job ${jobname_prefix}${j}_${stream} ..."
       if [[ ${branch} == "master" ]]; then view=DevStudio_Master; else view=DevStudio_${jbdsstream}; fi
-      python ${toggleJenkinsJobs} --task enable --view ${view} --include ${jobname_prefix}${j}_${stream} -u ${j_user} -p ${j_password}
+      echo "python ${toggleJenkinsJobs} --task enable --view ${view} --include ${jobname_prefix}${j}_${stream} -u ${j_user} -p [PASSWORD]"
+      python ${toggleJenkinsJobs} --task enable --view ${view} --include ${jobname_prefix}${j}_${stream} -u ${j_user} -p "${j_password}"
       jobsToCheck="${jobsToCheck} ${jenkins_prefix}${jobname_prefix}${j}_${stream}/build"
     fi
     echo ""
   done
 }
 
-# TODO: JBDS-3208 switch this to use new mars-based path conventions
 checkProjects "${JBTPROJECTS}"  jbosstools/jbosstools-   http://download.jboss.org/jbosstools/${jbtpath}/ jbosstools- "${jbtstream}"
 checkProjects "${JBDSPROJECTS}" jbdevstudio/jbdevstudio- http://www.qa.jboss.com/binaries/RHDS/${jbdspath}/ devstudio. "${jbdsstream}"
 
