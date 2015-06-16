@@ -37,9 +37,9 @@ if [[ $# -lt 1 ]]; then
 	echo "Usage: $0 [-k num-builds-to-keep] [-a num-days-at-which-to-delete] [-d dirs-to-scan] [-i subdir-include-pattern] [--regen-metadata-only] [--childFolderSuffix /all/repo/]"
 	echo "Example (Jenkins):    $0 --keep 1 --age-to-delete 2 --childFolderSuffix /all/repo/"
 	echo "Example (publish.sh): $0 -k 5 -a 5 -S /all/repo/"
-	echo "Example (promote.sh): $0 --dirs-to-scan 'updates/integration/indigo/soa-tooling/' --regen-metadata-only" 
-	echo "Example (promote.sh): $0 --dirs-to-scan 'updates/integration//locus' --regen-metadata-only --no-subdirs" 
-	echo "Example (rsync.sh):   $0 -k 2 -a 2 -S /all/repo/ -d mars/snapshots/builds --include jbosstools-build-sites.aggregate" 
+	echo "Example (promote.sh): $0 --dirs-to-scan 'updates/integration/indigo/soa-tooling/' --regen-metadata-only"
+	echo "Example (promote.sh): $0 --dirs-to-scan 'updates/integration//locus' --regen-metadata-only --no-subdirs"
+	echo "Example (rsync.sh):   $0 -k 2 -a 2 -S /all/repo/ -d mars/snapshots/builds --include jbosstools-build-sites.aggregate"
 	exit 1;
 fi
 
@@ -71,7 +71,7 @@ getSubDirs ()
 	if [[ $dir ]]; then 
 		if [[ $2 ]] && [[ $2 -gt 0 ]]; then
 			lev=$2
-			while [[ $lev -gt 0 ]]; do  
+			while [[ $lev -gt 0 ]]; do
 				tab=$tab"> ";
 				(( lev-- ));
 			done
@@ -184,16 +184,34 @@ clean ()
 			subdirCount=0;
 			for ssd in $subsubdirs; do
 				if [[ ${ssd##$sd/201*} == "" ]] || [[ $checkTimeStamps -eq 0 ]]; then # a build dir
-					buildid=${ssd##*/};  
-					let subdirCount=subdirCount+1;				
-					# echo "[${subdirCount}] Found $buildid"
-					echo $buildid >> $tmp
+					# make sure all dirs contain content; if not, remove them
+					thisDirsContents="something"
+					thisDirsContents=$(echo "ls" | sftp $DEST_SERV:$sd/${ssd} 2>&1 | egrep -v "sftp|Connected to|Changing to") # will be "" if nothing found
+					if [[ $thisDirsContents == "" ]]; then
+						echo -n "- $sd/$ssd (empty dir)... " | tee -a $log
+						# remove the empty dir from the list we'll composite together, delete it from the server, and don't count it in the subdirCount
+						rm -fr $tmp/$ssd
+						echo -e "rmdir $ssd" | sftp $DEST_SERV:$sd/
+					else
+						# check that $DEST_SERV:$sd/${ssd}/${childFolderSuffix} exists, or else 'File "..." not found'
+						thisDirsContents=$(echo "ls" | sftp $DEST_SERV:$sd/${ssd}/${childFolderSuffix} 2>&1 | egrep -v "sftp|Connected to|Changing to") # will be "" if nothing found
+						if [[ ${thisDirsContents/File \"*\" not found./NO} == "NO" ]]; then 
+							echo $thisDirsContents
+							# remove the empty dir from the list we'll composite together, and don't count it in the subdirCount
+							rm -fr $tmp/$ssd
+						else
+							buildid=${ssd##*/};
+							let subdirCount=subdirCount+1;
+							# echo "[${subdirCount}] Found $buildid"
+							echo $buildid >> $tmp
+						fi
+					fi
 				fi
 			done
 			regenProcess ${subdirCount} ${sd}
 		done
 	fi
-	echo "" | tee -a $log	
+	echo "" | tee -a $log
 }
 
 regenProcess ()
@@ -211,7 +229,7 @@ regenProcess ()
 		rsync --rsh=ssh --protocol=28 -q ${tmpdir}/cleanup-fresh-metadata/composite*.xml ${DEST_SERV}:$sd/
 		rm -fr ${tmpdir}/cleanup-fresh-metadata/
 	else
-		echo "No subdirs found in $sd/" | tee -a $log	
+		echo "No subdirs found in $sd/" | tee -a $log
 		# TODO delete composite*.xml from $sd/ folder if there are no subdirs present
 	fi
 }
@@ -244,4 +262,4 @@ for path in $dirsToScan; do
 done
 
 # purge temp folder
-rm -fr ${tmpdir} 
+rm -fr ${tmpdir}
