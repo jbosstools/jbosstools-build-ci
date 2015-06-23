@@ -15,7 +15,7 @@ EXCLUDES=""
 # use this to pass in rsync flags
 # eg., use --del -n to PREVIEW what obsolete files might be deleted from target folder while pushing new ones
 # eg., use --del to delete from target folder while pushing new ones: USE WITH CAUTION!
-OPTIONS="" 
+RSYNCFLAGS="" 
 
 # can be used to publish a build (including installers, site zips, MD5s, build log) or just an update site folder
 usage ()
@@ -54,8 +54,8 @@ while [[ "$#" -gt 0 ]]; do
     '-DBUILD_NUMBER','BUILD_NUMBER') BUILD_NUMBER="$2"; shift 1;;
     '-DJOB_NAME','-JOB_NAME')        JOB_NAME="$2"; shift 1;;
     '-DWORKSPACE','-WORKSPACE')      WORKSPACE="$2"; shift 1;;
-    ',-d','--del') OPTIONS="${OPTIONS} --del"; shift 0;;
-    *) OPTIONS="${OPTIONS} $1"; shift 0;;
+    '-d','--del') RSYNCFLAGS="${RSYNCFLAGS} --del"; shift 0;;
+    *) RSYNCFLAGS="${RSYNCFLAGS} $1"; shift 0;;
   esac
   shift 1
 done
@@ -69,11 +69,11 @@ fi
 
 # copy the source into the target
 if [[ ${EXCLUDES} ]]; then
-  echo "rsync -arzq --protocol=28 ${OPTIONS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
-        rsync -arzq --protocol=28 ${OPTIONS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
+  echo "rsync -arzq --protocol=28 ${RSYNCFLAGS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
+        rsync -arzq --protocol=28 ${RSYNCFLAGS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
 else
-  echo "rsync -arzq --protocol=28 ${OPTIONS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
-        rsync -arzq --protocol=28 ${OPTIONS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
+  echo "rsync -arzq --protocol=28 ${RSYNCFLAGS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
+        rsync -arzq --protocol=28 ${RSYNCFLAGS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
 fi
 
 # given TARGET_PATH=/downloads_htdocs/tools/mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master/2015-03-06_17-58-07-B13/all/repo/
