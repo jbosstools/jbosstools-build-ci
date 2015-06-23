@@ -64,11 +64,11 @@ fi
 
 # copy the source into the target
 if [[ ${EXCLUDES} ]]; then
-  echo "rsync -arzq --protocol=28 --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
-  rsync -arzq --protocol=28 ${OPTIONS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
+  echo "rsync -arzq --protocol=28 ${OPTIONS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
+        rsync -arzq --protocol=28 ${OPTIONS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
 else
-  echo "rsync -arzq --protocol=28 ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
-  rsync -arzq --protocol=28 ${OPTIONS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
+  echo "rsync -arzq --protocol=28 ${OPTIONS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
+        rsync -arzq --protocol=28 ${OPTIONS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
 fi
 
 # given TARGET_PATH=/downloads_htdocs/tools/mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master/2015-03-06_17-58-07-B13/all/repo/
