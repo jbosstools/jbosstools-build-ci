@@ -54,6 +54,7 @@ while [[ "$#" -gt 0 ]]; do
     '-DBUILD_NUMBER','BUILD_NUMBER') BUILD_NUMBER="$2"; shift 1;;
     '-DJOB_NAME','-JOB_NAME')        JOB_NAME="$2"; shift 1;;
     '-DWORKSPACE','-WORKSPACE')      WORKSPACE="$2"; shift 1;;
+    ',-d','--del') OPTIONS="${OPTIONS} --del"; shift 0;;
     *) OPTIONS="${OPTIONS} $1"; shift 0;;
   esac
   shift 1
