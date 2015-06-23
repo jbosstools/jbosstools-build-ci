@@ -50,7 +50,11 @@ while [[ "$#" -gt 0 ]]; do
     '-t') TARGET_PATH="$2"; shift 1;; # mars/snapshots/builds/<job-name>/<build-number>/, mars/snapshots/updates/core/{4.3.0.Alpha1, master}/
     '-i') INCLUDES="$2"; shift 1;;
     '-e') EXCLUDES="$2"; shift 1;;
-       *) OPTIONS="${OPTIONS} $1"; shift 0;;
+    '-DBUILD_ID','-BUILD_ID')        BUILD_ID="$2"; shift 1;;
+    '-DBUILD_NUMBER','BUILD_NUMBER') BUILD_NUMBER="$2"; shift 1;;
+    '-DJOB_NAME','-JOB_NAME')        JOB_NAME="$2"; shift 1;;
+    '-DWORKSPACE','-WORKSPACE')      WORKSPACE="$2"; shift 1;;
+    *) OPTIONS="${OPTIONS} $1"; shift 0;;
   esac
   shift 1
 done
@@ -77,13 +81,13 @@ PARENT_PATH=$(echo $TARGET_PATH | sed -e "s#/\?downloads_htdocs/tools/##" -e "s#
 
 # if TARGET_PATH contains a BUILD_ID-B# folder,
 # create symlink: jbosstools-build-sites.aggregate.earlyaccess-site_master/latest -> jbosstools-build-sites.aggregate.earlyaccess-site_master/${BUILD_ID}-B${BUILD_NUMBER}
-if [[ ${TARGET_PATH/${BUILD_ID}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
+if [[ ${BUILD_ID} ]] && [[ ${BUILD_NUMBER} ]] && [[ ${TARGET_PATH/${BUILD_ID}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
   pushd $tmpdir >/dev/null; ln -s ${BUILD_ID}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
 fi
 
 # for published builds on download.jboss.org ONLY!
 # regenerate http://download.jboss.org/jbosstools/builds/${TARGET_PATH}/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
-if [[ ${TARGET_PATH/builds/} != ${TARGET_PATH} ]] && [[ -f ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh ]]; then
+if [[ ${WORKSPACE} ]] && [[ ${TARGET_PATH/builds/} != ${TARGET_PATH} ]] && [[ -f ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh ]]; then
     # given mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master return mars/snapshots/builds
     PARENT_PARENT_PATH=$(echo $PARENT_PATH | sed -e "s#\(.\+\)/[^/]\+#\1#")
     chmod +x ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh
