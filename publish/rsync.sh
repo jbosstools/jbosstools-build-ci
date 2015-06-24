@@ -59,6 +59,7 @@ while [[ "$#" -gt 0 ]]; do
   esac
   shift 1
 done
+echo "[DEBUG] RSYNCFLAGS = $RSYNCFLAGS"
 
 # build the target_path with sftp to ensure intermediate folders exist
 if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
@@ -69,10 +70,10 @@ fi
 
 # copy the source into the target
 if [[ ${EXCLUDES} ]]; then
-  echo "rsync -arzq --protocol=28 ${RSYNCFLAGS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
+  echo "[INFO] rsync -arzq --protocol=28 ${RSYNCFLAGS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
         rsync -arzq --protocol=28 ${RSYNCFLAGS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
 else
-  echo "rsync -arzq --protocol=28 ${RSYNCFLAGS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
+  echo "[INFO] rsync -arzq --protocol=28 ${RSYNCFLAGS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
         rsync -arzq --protocol=28 ${RSYNCFLAGS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
 fi
 
