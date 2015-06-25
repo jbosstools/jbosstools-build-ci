@@ -200,7 +200,7 @@ pprint.pprint(jbt_to_devstudio)
 
 org = g.get_organization("jbosstools")
 
-#githubcheck(org, jbt_versions, nondevrepos, since)
+githubcheck(org, jbt_versions, nondevrepos, since)
 
-org = g.get_organization("jbdevstudio")
-githubcheck(org, devstudio_versions, nondevrepos, since)
+#org = g.get_organization("jbdevstudio")
+#githubcheck(org, devstudio_versions, nondevrepos, since)
