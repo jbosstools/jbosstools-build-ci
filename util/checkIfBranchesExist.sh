@@ -5,9 +5,9 @@ debug=0
 usage ()
 {
 	echo "Usage: $0 -b newbranchname [project1] [project2] [project3] ..."
-	echo "Example: $0 -b jbosstools-4.3.0.Alpha1x aerogear arquillian base birt browsersim central forge \\"
-	echo " freemarker hibernate javaee jst livereload openshift portlet server vpe webservices discovery \\"
-	echo " build build-ci build-sites download.jboss.org"
+	echo "Example: $0 -b jbosstools-4.3.0.Beta2x aerogear arquillian base birt browsersim build build-ci build-sites \\"
+	echo " central devdoc discovery download.jboss.org forge freemarker hibernate integration-tests javaee jst \\"
+	echo " livereload maven-plugins openshift playground server versionwatch vpe webservices" # portlet
 	echo "Use -s to report similar branches (eg., for 4.3.0.Beta2x, search for *Beta2x)"
 	exit 1;
 }
@@ -17,7 +17,7 @@ if [[ $# -lt 1 ]]; then
 fi
 
 # projects to check if branched
-#projects="base birt build build-ci build-sites central download.jboss.org forge freemarker hibernate intergration-tests javaee jst maven-plugins openshift playground portlet server target-platforms vpe webservices"
+# projects="aerogear arquillian base birt browsersim build build-ci build-sites central devdoc discovery download.jboss.org forge freemarker hibernate integration-tests javaee jst livereload maven-plugins openshift playground server versionwatch vpe webservices"
 
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
