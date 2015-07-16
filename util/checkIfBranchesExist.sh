@@ -19,11 +19,15 @@ fi
 # projects to check if branched
 # projects="aerogear arquillian base birt browsersim build build-ci build-sites central devdoc discovery download.jboss.org forge freemarker hibernate integration-tests javaee jst livereload maven-plugins openshift playground server versionwatch vpe webservices"
 
+quiet=0
+checkAlternatives=0
+
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
 	case $1 in
 		'-b') branch="$2"; shift 1;;
-		'-s') checkAlternatives=1; shift;;
+		'-q') quiet=1; shift 0;;
+		'-s') checkAlternatives=1; shift 0;;
 		*) projects="$projects $1";;
 	esac
 	shift 1
@@ -52,11 +56,12 @@ cnt=0
 OK=0
 for d in $projects; do 
   (( cnt++ ))
-	echo -n -e "[${cnt}] ${norm}$d"
+	if [[ $quiet == 0 ]]; then echo -n -e "[${cnt}] ${norm}$d"; fi
 	if [[ `wget https://github.com/jbosstools/jbosstools-${d}/tree/${branch} 2>&1 | egrep "ERROR 404"` ]]; then
 		#echo " * Not found  checking https://api.github.com/repos/jbosstools/jbosstools-${d}/branches for branches ending in ${branchAlt} ..."
-		if [[ $checkAlternatives ]]; then
-			echo " ... "
+		if [[ $quiet == 1 ]]; then echo -n -e "[${cnt}] ${norm}$d"; fi
+		echo -e " ... ${red}NO${norm}"
+		if [[ $checkAlternatives == 1 ]]; then
 			altBranches=`wget https://api.github.com/repos/jbosstools/jbosstools-${d}/branches 2>/dev/null -O - | egrep "\"name\":" | egrep "${branchAlt}"`
 			if [[ $altBranches ]]; then
 				echo "* Found possible alternate branches:" 
@@ -65,14 +70,12 @@ for d in $projects; do
 				debug "* Branch $branch not found; no alternates found at https://api.github.com/repos/jbosstools/jbosstools-${d}/branches:"
 				debug "$altBranches"
 			fi
-		else
-			echo -e "... ${red}NO${norm}"
+			if [[ $quiet == 0 ]]; then echo ""; fi 
 		fi
 	else
-		echo -e " ... ${green}OK${norm}"
+		if [[ $quiet == 0 ]]; then echo -e " ... ${green}OK${norm}"; fi
 		(( OK++ ))
 	fi
 	rm -f ${branch} branches
-	echo ""
 done
 echo -e "${norm}OK: ${green}$OK${norm} of $cnt"
