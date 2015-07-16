@@ -7,7 +7,6 @@ tmpdir=`mktemp -d`
 mkdir -p $tmpdir
 
 DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /qa/services/http/binaries/RHDS
-URL=http://download.jboss.org/jbosstools # or https://devstudio.redhat.com or http://www.qa.jboss.com/binaries/RHDS
 
 INCLUDES="*"
 EXCLUDES=""
@@ -20,7 +19,7 @@ RSYNCFLAGS=""
 # can be used to publish a build (including installers, site zips, MD5s, build log) or just an update site folder
 usage ()
 {
-  echo "Usage  : $0 [-DESTINATION destination] [-URL URL] -s source_path -t target_path"
+  echo "Usage  : $0 [-DESTINATION destination] -s source_path -t target_path"
   echo ""
 
   echo "To push a project build folder from Jenkins to staging:"
@@ -33,8 +32,9 @@ usage ()
   echo ""
 
   echo "To push JBDS build + update site folders:"
-  echo "   $0 -DESTINATION /qa/services/http/binaries/RHDS -URL http://www.qa.jboss.com/binaries/RHDS           -s \${WORKSPACE}/sources/results                   -t 9.0/snapshots/builds/devstudio.product_master/"
-  echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio -URL https://devstudio.redhat.com -s \${WORKSPACE}/sources/site/target/fullSite/repo -t 9.0/snapshots/updates/core/\${stream}/ --del"
+  echo "   $0 -DESTINATION hudson@dev01.mw.lab.eng.bos.redhat.com:/qa/services/http/binaries/RHDS  -s \${WORKSPACE}/sources/results/target      -t 9.0/snapshots/builds/\${JOB_NAME}/all"
+  echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio -e \*eap.jar         -s \${WORKSPACE}/sources/results/target      -t 9.0/snapshots/builds/\${JOB_NAME}/all"
+  echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio                      -s \${WORKSPACE}/sources/results/target/repo -t 9.0/snapshots/updates/core/\${stream} --del"
   echo ""
   exit 1
 }
@@ -45,7 +45,6 @@ if [[ $# -lt 1 ]]; then usage; fi
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     '-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., /qa/services/http/binaries/RHDS
-    '-URL') URL="$2"; shift 1;; # override for JBDS publishing, eg., http://www.qa.jboss.com/binaries/RHDS
     '-s') SOURCE_PATH="$2"; shift 1;; # ${WORKSPACE}/sources/site/target/repository/
     '-t') TARGET_PATH="$2"; shift 1;; # mars/snapshots/builds/<job-name>/<build-number>/, mars/snapshots/updates/core/{4.3.0.Alpha1, master}/
     '-i') INCLUDES="$2"; shift 1;;
