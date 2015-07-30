@@ -135,6 +135,7 @@ if [[ ${jbtm} ]]; then
       ["maven"]="central"
       ["project-examples"]="central"
       ["common/jst/core"]="jst"
+      ["jsp/jsf/xml/html-source-editing"]="jst"
       ["jsf"]="javaee"
       ["seam2"]="javaee"
       ["cdi"]="javaee"
@@ -290,8 +291,8 @@ checkProjects () {
       # because the SHAs don't match, prompt user to enable the job so it can run
       # echo "      ... enable job ${jobname_prefix}${j}_${stream} ..."
       if [[ ${branch} == "master" ]]; then view=DevStudio_Master; else view=DevStudio_${jbdsstream}; fi
-      echo "python ${toggleJenkinsJobs} --task enable --view ${view} --include ${jobname_prefix}${j}_${stream} -u ${j_user} -p [PASSWORD]"
-      python ${toggleJenkinsJobs} --task enable --view ${view} --include ${jobname_prefix}${j}_${stream} -u ${j_user} -p "${j_password}"
+      #echo "python ${toggleJenkinsJobs} --task enable --view ${view} --include ${jobname_prefix}${j}_${stream} -u ${j_user} -p [PASSWORD]"
+      #python ${toggleJenkinsJobs} --task enable --view ${view} --include ${jobname_prefix}${j}_${stream} -u ${j_user} -p "${j_password}"
       jobsToCheck="${jobsToCheck} ${jenkins_prefix}${jobname_prefix}${j}_${stream}/build"
     fi
     echo ""
