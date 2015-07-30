@@ -50,9 +50,9 @@ This will generate 40+ jobs into the `generated` folder.
 
 If you would like to see these config files as JOB_NAME/config.xml files instead, you can run this:
 
-````
+```
 ./etc/todirformat.sh configs/default/generated master
-````
+```
 
 This will generate 40+ config.xml into the `generated-old` folder.
 
