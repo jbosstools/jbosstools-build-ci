@@ -2,9 +2,9 @@ BuildChow
 =========
 
 BuildChow is the nickname for templates of JBoss Tools and Developer
-Studio jenkins jobs.
+Studio Jenkins jobs.
 
-By using templates we do not have to rely on jenkins UI to manually update jobs
+By using templates we do not have to rely on Jenkins UI to manually update jobs
 or bulk-update in large set of config.xml files.
 
 BuildChow uses http://ci.openstack.org/jenkins-job-builder[Jenkins Job
@@ -20,9 +20,13 @@ On Fedora you get this by runing: `yum install -y python-pip git`
 
 == How to use
 
+=== Installation
+
 First need to install jjb.
 
 For now we use a custom fork since not all patches applied yet.
+
+As root, run this:
 
 ```
 $ pip install git+https://github.com/maxandersen/jenkins-job-builder@jbosstools
@@ -30,22 +34,37 @@ $ pip install git+https://github.com/maxandersen/jenkins-job-builder@jbosstools
 
 Once installed you can run the following to generate jobs into a folder named `generated`.
 
-INFO: Please note that for supporting jenkins host specific overrides you *must* change the directory
+=== Running jjb
+
+INFO: Please note that for supporting Jenkins host specific overrides you *must* change the directory
 to where the .ini file is and mention the .ini file to run it correctly.
 
 ```
 $ cd configs/default
-$ jenkins-jobs --conf jenkins-jobs.ini test ../../templates/ -o generated
+$ jenkins-jobs --conf jenkins_jobs.ini test ../../templates/ -o generated
 ```
 
 This will generate 40+ jobs into the `generated` folder.
 
-To upload directly to jenkins you need to manually update `jobs_jenkins.ini` with username/password (do *not* commit it)
-and run the following:
+=== Producing config.xml files
+
+If you would like to see these config files as JOB_NAME/config.xml files instead, you can run this:
+
+````
+./etc/todirformat.sh configs/default/generated master
+````
+
+This will generate 40+ config.xml into the `generated-old` folder.
+
+=== Uploading config changes to Jenkins
+
+To upload directly to Jenkins you need to create a copy of `jobs_jenkins.ini` with your own username/password. Make sure you do *not* commit it!
+
+Then run the following:
 
 ```
 $ cd configs/default
-$ jenkins-jobs --conf jenkins-jobs.ini update ../../templates/ config/ 
+$ jenkins-jobs --conf jenkins_jobs_mypassword.ini update ../../templates/ 
 ```
 
 == Layout
@@ -57,17 +76,17 @@ $ jenkins-jobs --conf jenkins-jobs.ini update ../../templates/ config/
 | The templates for jobs written in `.yaml`. If you want to add or change a job then you tend to edit this.
 
 | link:configs[]
-| Directory with a directory per specific jenkins host.
+| Directory with a directory per specific Jenkins host.
 
 | link:configs/default[]
-| Has the default jenkins setup (currently using internal jboss jenkins). Has `.inc` files to define defaults
+| Has the default Jenkins setup (currently using internal JBoss Jenkins). Has `.inc` files to define defaults
   for machine specific settings. Intent is that other configs can use this as a fallback.
 
 | link:configs/dockerhost[]
 | Example for custom ini file using dockerhost + override of machine specific includes.
 
 | link:etc/todirformat.sh[]
-| Script to convert the flat names used by `jjb` to the "view" format used by old jenkins config.xml backups
+| Script to convert the flat names used by `jjb` to the "view" format used by old Jenkins config.xml backups
 
 | link:todo.adoc[]
 | Todo items/remaining questions regarding the templates. One day it should be empty and then removed.
