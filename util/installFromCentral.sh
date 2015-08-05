@@ -8,7 +8,7 @@
 # echo "Unpack $eclipse ..."; pushd ${target}; tar xzf ${eclipse}; popd
 # ./installFromCentral.sh -ECLIPSE ${target}/eclipse/ -WORKSPACE ${workspace} \
 # -INSTALL_PLAN http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/,http://www.qa.jboss.com/binaries/RHDS/discovery/nightly/core/master/devstudio-directory.xml \
-# | tee /tmp/log.txt; cat /tmp/log.txt | egrep -i "could not be found|FAILED|Missing|Only one of the following|being installed|Cannot satisfy dependency|cannot be installed"
+# | tee /tmp/installFromCentral_log.txt; cat /tmp/installFromCentral_log.txt | egrep -i "could not be found|FAILED|Missing|Only one of the following|being installed|Cannot satisfy dependency|cannot be installed"
 #
 # See also https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-install-p2director.install-tests.matrix_master/
 
@@ -47,7 +47,7 @@ done
 
 if [[ ! $INSTALL_PLAN ]]; then usage; fi
 
-if [[ ! ${WORKSPACE} ]]; then WORKSPACE=`pwd`; fi
+if [[ ! ${WORKSPACE} ]]; then WORKSPACE=`mktemp -d`; fi
 mkdir -p ${WORKSPACE}; cd ${WORKSPACE}
 
 # default path to Eclipse install for Jenkins 
@@ -58,7 +58,7 @@ chmod +x ${ECLIPSE}/eclipse
 if [[ -f ${DIRECTORXML} ]]; then
   cp -f ${DIRECTORXML} ${WORKSPACE}/director.xml
 else
-  wget ${DIRECTORXML} -q --no-check-certificate -N -O ${WORKSPACE}/director.xml
+  curl -s -k ${DIRECTORXML} > ${WORKSPACE}/director.xml
 fi
 
 # wipe existing Eclipse workspace
@@ -69,11 +69,26 @@ SITES=${INSTALL_PLAN%/*directory.xml}/
 # trim double // at end of URL 
 SITES=${SITES%//}/
 
+checkLogForErrors ()
+{
+  errors="$(cat $1 | egrep -B1 -A2 "BUILD FAILED|Cannot complete the install|Only one of the following|exec returned: 13")"
+  if [[ $errors ]]; then
+    echo "--------------------------------"
+    echo "INSTALL FAILED"
+    echo ""
+    echo "$errors"
+    echo "--------------------------------"
+    exit 2
+  fi
+}
+
 # get a list of IUs to install from the JBT or JBDS update site (using p2.director -list)
 BASE_URL=${SITES%,*}
 # include source features too?
 ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
-list.feature.groups -Doutput=${WORKSPACE}/feature.groups.properties -DsourceSites=${BASE_URL}
+list.feature.groups -Doutput=${WORKSPACE}/feature.groups.properties -DsourceSites=${BASE_URL} | tee ${WORKSPACE}/installFromCentral_log.1.txt
+checkLogForErrors ${WORKSPACE}/installFromCentral_log.1.txt
+
 BASE_IUs=""
 if [[ -f ${WORKSPACE}/feature.groups.properties ]]; then 
   FEATURES=`cat ${WORKSPACE}/feature.groups.properties | grep ".feature.group=" | sed "s#\(.\+.feature.group\)=.\+#\1#" | sort | uniq`
@@ -84,7 +99,8 @@ date; du -sh ${ECLIPSE}
 
 # run scripted installation via p2.director
 ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
--DsourceSites=${SITES} -Dinstall=${BASE_IUs}
+-DsourceSites=${SITES} -Dinstall=${BASE_IUs} | tee ${WORKSPACE}/installFromCentral_log.2.txt
+checkLogForErrors ${WORKSPACE}/installFromCentral_log.2.txt
 
 date; du -sh ${ECLIPSE}
 
@@ -93,16 +109,16 @@ echo "BASE FEATURES INSTALLED"
 echo "--------------------------------"
 
 # get a list of IUs to install from the Central site (based on the discovery.xml -> plugin.jar -> plugin.xml)
-CENTRAL_URL=${INSTALL_PLAN#*,} # includes discovery.xml # echo CENTRAL_URL = $CENTRAL_URL
-
+CENTRAL_URL=${INSTALL_PLAN#*,}; # here, we include discovery.xml
+# echo CENTRAL_URL = $CENTRAL_URL
 if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then 
-  # echo $CENTRAL_URL
-  wget ${CENTRAL_URL} -q --no-check-certificate -N -O directory.xml
+  curl -k ${CENTRAL_URL} > ${WORKSPACE}/directory.xml 
   PLUGINJAR=`cat ${WORKSPACE}/directory.xml | egrep "org.jboss.tools.central.discovery_|com.jboss.jbds.central.discovery_" | sed "s#.\+url=\"\(.\+\).jar\".\+#\1.jar#"`
-  # echo "Got $PLUGINJAR"
-  CENTRAL_URL=${SITES#*,} # excludes discovery.xml #  echo CENTRAL_URL = $CENTRAL_URL
-  wget ${CENTRAL_URL}/${PLUGINJAR} -q --no-check-certificate -N -O plugin.jar
-  unzip -oq plugin.jar plugin.xml
+  echo "Discovery plugin jar: $PLUGINJAR"
+  CENTRAL_URL=${SITES#*,}; # this time it excludes discovery.xml
+  # echo CENTRAL_URL = $CENTRAL_URL
+  curl -k ${CENTRAL_URL}/${PLUGINJAR} > ${WORKSPACE}/plugin.jar
+  unzip -oq ${WORKSPACE}/plugin.jar plugin.xml
 
   # extract the <iu id=""> and <connectorDescriptor siteUrl=""> properties, excluding commented out stuff
   # DO NOT INDENT the next lines after cat
@@ -131,7 +147,8 @@ if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then
 XSLT
 
   ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} \
-  transform -Dxslt=${WORKSPACE}/get-ius-and-siteUrls.xsl -Dinput=${WORKSPACE}/plugin.xml -Doutput=${WORKSPACE}/plugin.transformed.xml -q
+  transform -Dxslt=${WORKSPACE}/get-ius-and-siteUrls.xsl -Dinput=${WORKSPACE}/plugin.xml -Doutput=${WORKSPACE}/plugin.transformed.xml -q | tee ${WORKSPACE}/installFromCentral_log.3.txt
+  checkLogForErrors ${WORKSPACE}/installFromCentral_log.3.txt
 
   # parse the list of features from plugin.transformed.xml
   FEATURES=`cat ${WORKSPACE}/plugin.transformed.xml | grep "iu id" | sed "s#.\+id=\"\(.\+\)\"\ */>#\1#" | sort | uniq`
@@ -148,7 +165,8 @@ XSLT
 
   # run scripted installation via p2.director
   ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
-  -DsourceSites=${SITES},${EXTRA_SITES} -Dinstall=${CENTRAL_IUs}
+  -DsourceSites=${SITES},${EXTRA_SITES} -Dinstall=${CENTRAL_IUs} | tee ${WORKSPACE}/installFromCentral_log.4.txt
+  checkLogForErrors ${WORKSPACE}/installFromCentral_log.4.txt
 
   date; du -sh ${ECLIPSE}
 
@@ -164,7 +182,5 @@ fi
 
 # cleanup
 if [[ $CLEAN ]]; then
-  rm -f ${WORKSPACE}/director.xml
-  rm -f ${WORKSPACE}/feature.groups.properties 
-  rm -f ${WORKSPACE}/directory.xml ${WORKSPACE}/plugin.jar ${WORKSPACE}/plugin.xml ${WORKSPACE}/get-ius-and-siteUrls.xsl ${WORKSPACE}/plugin.transformed.xml 
+  rm -f ${WORKSPACE}/installFromCentral_log*.txt ${WORKSPACE}/director.xml ${WORKSPACE}/feature.groups.properties ${WORKSPACE}/directory.xml ${WORKSPACE}/plugin.jar ${WORKSPACE}/plugin.xml ${WORKSPACE}/get-ius-and-siteUrls.xsl ${WORKSPACE}/plugin.transformed.xml 
 fi
