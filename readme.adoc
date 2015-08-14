@@ -57,6 +57,14 @@ toc::[]
 |Verifies a target platform is valid, including generation of p2diff
 |Used to verify a target platform changes before submitting a PR
 
+|link:util/tagrepos.sh[tagrepos.py]
+|Tag repos via github API based on a comma separated input list of repos, sha1's and tagname
+|Used to tag all repositories in one batch. Requires push access to all related repositories.
+
+|link:util/buildinfo2tags.py[buildinfo2tags.py]
+|Convert `buildinfo.json` to CSV format understood by link:util/tagrepos.sh[tagrepos.py].
+|Used when builds done and preparing for repositories to be tagged.
+
 |===
 
 == Composite Sites & Install Tests
