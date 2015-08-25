@@ -22,6 +22,7 @@ echo "" | tee -a $log
 
 #defauls
 numbuildstokeep=1000 # keep X builds per branch
+numbuildstolink=1000 # link X builds total
 threshholdwhendelete=365 # purge builds more than X days old
 dirsToScan="mars/snapshots/builds builds/staging/CI builds/nightly/core builds/nightly/coretests builds/nightly/soa-tooling builds/nightly/soatests builds/nightly/webtools builds/nightly/hibernatetools builds/nightly/integrationtests"
 excludes="sftp>|((\.properties|\.jar|\.zip|\.MD5|\.md5)$)|(^(*.*ml|\.blobstore|web|plugins|features|binary|empty_composite_site)$)" # when dir matching, exclude *.*ml, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
@@ -39,7 +40,7 @@ if [[ $# -lt 1 ]]; then
 	echo "Example (publish.sh): $0 -k 5 -a 5 -S /all/repo/"
 	echo "Example (promote.sh): $0 --dirs-to-scan 'updates/integration/indigo/soa-tooling/' --regen-metadata-only"
 	echo "Example (promote.sh): $0 --dirs-to-scan 'updates/integration//locus' --regen-metadata-only --no-subdirs"
-	echo "Example (rsync.sh):   $0 -k 2 -a 2 -S /all/repo/ -d mars/snapshots/builds --include jbosstools-build-sites.aggregate"
+	echo "Example (rsync.sh):   $0 -k 2 -a 2 -l 5 -S /all/repo/ -d mars/snapshots/builds --include jbosstools-build-sites.aggregate"
 	exit 1;
 fi
 
@@ -47,6 +48,7 @@ fi
 while [[ "$#" -gt 0 ]]; do
 	case $1 in
 		'-k'|'--keep') numbuildstokeep="$2"; shift 1;;
+		'-l'|'--link') numbuildstolink="$2"; shift 1;;
 		'-a'|'--age-to-delete') threshholdwhendelete="$2"; shift 1;;
 		'-d'|'--dirs-to-scan') dirsToScan="$2"; shift 1;;
 		'-i'|'--include') includes="$2"; shift 1;;
@@ -104,15 +106,16 @@ getSubDirs ()
 	fi
 }
 
-# Check for $somepath builds more than $threshhold days old; keep minimum $numkeep builds per branch
+# Check for $somepath builds more than $threshholdwhendelete days old; keep minimum $numbuildstokeep builds per branch
 clean () 
 {
 	somepath=$1 # builds/nightly or updates/development/juno/soa-tooling, etc.
-	numkeep=$2 # number of builds to keep per branch
-	threshhold=$3 # purge builds more than $threshhold days old
+	numbuildstokeep=$2 # number of builds to keep per branch
+	threshholdwhendelete=$3 # purge builds more than $threshholdwhendelete days old
+	numbuildstolink=$4 # number of TOTAL builds to keep
 	somepath=${somepath//\/\//\/}; # remove duplicate slashes in paths - replace all // with / 
 	somepath=${somepath//\/\//\/}; # repeat to replace /// with /
-	echo "Check for $somepath builds more than $threshhold days old; keep minimum $numkeep builds per branch" | tee -a $log 
+	echo "Check for $somepath builds more than ${threshholdwhendelete} days old; keep minimum ${numbuildstokeep} builds per branch (link: ${numbuildstolink}" | tee -a $log 
 
 	getSubDirs ${DEST_PATH}/$somepath/ 0 $includes
 	subdirs=$getSubDirsReturn
@@ -141,7 +144,7 @@ clean ()
 				fi
 			done
 			if [[ $checkTimeStamps -eq 1 ]]; then
-				newest=$(cat $tmp | sort -r | head -$numkeep) # keep these
+				newest=$(cat $tmp | sort -r | head -$numbuildstokeep) # keep these
 				all=$(cat $tmp | sort -r) # check these
 				rm -f $tmp
 				for dd in $all; do
@@ -152,7 +155,7 @@ clean ()
 					(( day = now - sec )) 
 					(( day = day / 3600 / 24 ))
 					for n in $newest; do
-						if [[ $dd == $n ]] || [[ $day -le $threshhold ]]; then
+						if [[ $dd == $n ]] || [[ $day -le $threshholdwhendelete ]]; then
 							keep=1
 						fi
 					done
@@ -208,7 +211,7 @@ clean ()
 					fi
 				fi
 			done
-			regenProcess ${subdirCount} ${sd}
+			regenProcess ${subdirCount} ${sd} ${numbuildstolink}
 		done
 	fi
 	echo "" | tee -a $log
@@ -218,7 +221,8 @@ regenProcess ()
 {
 	subdirCount=$1
 	sd=$2
-	all=$(cat $tmp | sort -r) # check these
+	numbuildstolink=$3
+	all=$(cat $tmp | sort -r | head -$numbuildstolink) # link only the latest $numbuildstolink builds
 	rm -f $tmp
 	if [[ $subdirCount -gt 0 ]]; then
 		siteName=${sd##*${DEST_PATH}/}
@@ -258,7 +262,7 @@ regenCompositeMetadata ()
 
 # now that we have all the methods and vars defined, let's do some cleaning!
 for path in $dirsToScan; do
-	clean $path $numbuildstokeep $threshholdwhendelete
+	clean $path $numbuildstokeep $threshholdwhendelete $numbuildstolink
 done
 
 # purge temp folder
