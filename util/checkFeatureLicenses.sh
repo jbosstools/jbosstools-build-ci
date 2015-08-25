@@ -1,6 +1,6 @@
 #!/bin/bash
 
-excludepattern="\.git|/target|target/|foundation.license.feature|org.jboss.tools.xulrunner.feature"
+excludepattern="\.git|/target|target/|foundation.license.feature|org.jboss.tools.xulrunner.feature|requirements/swt"
 
 # count features
 numfeatures=$(find . -name feature.xml | egrep -v "${excludepattern}" | wc -l)
@@ -33,6 +33,7 @@ check "providerName|featureProvider" "feature.*" $numfiles
 check "licenseURL" "feature.*" $numfiles
 check "license-feature" "feature.xml" $numfeatures
 check "license=" "feature.properties" 0
-check "updateSite" "feature.*" 0 $BLU
+check "pdateSite" "feature.*" 0 $BLU
+check "Legal Affairs" "*" 0 $BLU
 
 if [[ $listFiles ]]; then find.sh . "feature.*" "=" "" "" -q; fi
