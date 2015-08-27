@@ -10,11 +10,11 @@
 
     node: "{nodes}"
     logrotate:
-      daysToKeep: 5
-      numToKeep: 5
-      artifactDaysToKeep: -1
-      artifactNumToKeep: -1
-    jdk: jdk1.7
+      daysToKeep: 10
+      numToKeep: 10
+      artifactDaysToKeep: 10
+      artifactNumToKeep: 10
+    jdk: '{default-jdk}'
      
     parameters:
       - string:
