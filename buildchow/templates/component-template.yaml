@@ -78,7 +78,7 @@
           goals: "{ci-maven-flags} org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack" #TODO: should it have all MAVEN_FLAGS ?
           maven-version: "{default-maven-version}"
           properties:
-            - artifact=org.jboss.tools.releng:jbosstools-releng-publish:4.3.0.CR1-SNAPSHOT:zip
+            - artifact={releng-publish-zip}
             - outputDirectory=${{WORKSPACE}}/sources
             - trimVersion=true
             - mdep.stripClassifier=true
@@ -88,7 +88,7 @@
       - shell: |
                if [[ ${{skipRevisionCheckWhenPublishing}} == "true" ]] || [[ $(. ${{WORKSPACE}}/sources/util/checkLatestPublishedSHA.sh -s ${{WORKSPACE}}/sources/site/target/repository -t http://download.jboss.org/jbosstools/mars/snapshots/builds/${{JOB_NAME}}/latest/all/repo/) == "true" ]]; then
                  cd ${{WORKSPACE}}/sources/site
-                 M2_HOME=/qa/tools/opt/apache-{default-maven-version}/
+                 M2_HOME=/qa/tools/opt/apache-{default-maven-version}
                  $M2_HOME/bin/mvn deploy -Pdeploy-to-jboss.org -Dmaven.repo.local=$WORKSPACE/.repository ${{MAVEN_FLAGS}}
                else
                  echo "Publish cancelled (nothing to do). Skip this check with skipRevisionCheckWhenPublishing=true"

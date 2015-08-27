@@ -75,7 +75,7 @@
                fi
       - maven-target:
           goals: "clean install ${{MAVEN_FLAGS}} -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}} -Ppack200"
-          maven-version: maven-3.2.5
+          maven-version: "{default-maven-version}"
           private-repository: true
           java-opts: 
             - "{jvm-memory}"
@@ -97,7 +97,7 @@
                # now rebuild the update site, without pack200
       - maven-target:
           goals: "clean install ${{MAVEN_FLAGS}} -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}}"
-          maven-version: maven-3.2.5
+          maven-version: "{default-maven-version}"
           private-repository: true
           java-opts: 
             - "{jvm-memory}"
@@ -113,10 +113,10 @@
           pom: ${{WORKSPACE}}/sources/product/site/pom.xml          
       - maven-target:
           goals: "-U org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack"
-          maven-version: maven-3.2.5
+          maven-version: "{default-maven-version}"
           private-repository: false
           properties:
-            - artifact=org.jboss.tools.releng:jbosstools-releng-publish:4.3.0.CR1-SNAPSHOT:zip
+            - artifact={releng-publish-zip}
             - outputDirectory=${{WORKSPACE}}/sources
             - trimVersion=true
             - mdep.stripClassifier=true
@@ -133,7 +133,7 @@
 
                if [[ ${{skipRevisionCheckWhenPublishing}} == "true" ]] || [[ $(. ${{WORKSPACE}}/sources/util/checkLatestPublishedSHA.sh -s ${{WORKSPACE}}/sources/product/site/target/repository -t http://www.qa.jboss.com/binaries/RHDS/9.0/snapshots/builds/${{JOB_NAME}}/latest/all/repo/) == "true" ]]; then
                  cd ${{WORKSPACE}}/sources/product/results
-                 M2_HOME=/qa/tools/opt/apache-maven-3.2.5/
+                 M2_HOME=/qa/tools/opt/apache-{default-maven-version}
                  $M2_HOME/bin/mvn deploy -U -e -Pdeploy-to-jboss.org -Dmaven.repo.local=$WORKSPACE/.repository -Djbosstools_site_stream=${{jbosstools_site_stream}} ${{MAVEN_FLAGS}}
                else
                  echo "Publish cancelled (nothing to do). Skip this check with skipRevisionCheckWhenPublishing=true"
@@ -144,9 +144,12 @@
         - description-setter: 
             regexp: "BUILD_DESCRIPTION='(.+)'"
             description: "\\1"
-        - raw:
-            xml: |
-              <hudson.plugins.downstream__ext.DownstreamTrigger><childProjects>jbosstools-discovery_{stream}, devstudio.versionwatch_{devstudio-stream}</childProjects><threshold><name>UNSTABLE</name><ordinal>1</ordinal><color>YELLOW</color><completeBuild>true</completeBuild></threshold><thresholdStrategy>AND_HIGHER</thresholdStrategy><onlyIfSCMChanges>false</onlyIfSCMChanges><onlyIfLocalSCMChanges>false</onlyIfLocalSCMChanges></hudson.plugins.downstream__ext.DownstreamTrigger>
+        - downstream-ext:
+            projects:
+              - jbosstools-discovery_{stream}
+              - devstudio.versionwatch_{devstudio-stream}
+            criteria: unstable
+            condition: equal-or-over
         - email:
             recipients: "jboss-devstudio-builds-list@redhat.com nboldt@redhat.com mistria@redhat.com"
             send-to-individuals: true
@@ -157,6 +160,12 @@
             publish-failed-builds: false
 
     wrappers: 
-        - raw:
-            xml: |
-               <hudson.plugins.build__timeout.BuildTimeoutWrapper><strategy class="hudson.plugins.build_timeout.impl.AbsoluteTimeOutStrategy"><timeoutMinutes>180</timeoutMinutes></strategy><operationList><hudson.plugins.build__timeout.operations.AbortOperation/></operationList></hudson.plugins.build__timeout.BuildTimeoutWrapper>
+        - timeout:
+            timeout: 180
+            timeout-var: 'build_timeout'
+            type: absolute
+            abort: true
+            write-description: "Build timed out & aborted after ${{build_timeout}} minutes."
+        #- raw:
+        #    xml: |
+        #       <hudson.plugins.build__timeout.BuildTimeoutWrapper><strategy class="hudson.plugins.build_timeout.impl.AbsoluteTimeOutStrategy"><timeoutMinutes>180</timeoutMinutes></strategy><operationList><hudson.plugins.build__timeout.operations.AbortOperation/></operationList></hudson.plugins.build__timeout.BuildTimeoutWrapper>

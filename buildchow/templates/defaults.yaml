@@ -9,9 +9,11 @@
     tests-folder: tests # for some it is all-tests
     component-responsible: ""
     scm-schedule: H H/8 * * * # every 8 hours starting a random hour. Removes need for each job to configure it (http://htmlpreview.github.io/?https://github.com/jenkinsci/jenkins/blob/master/core/src/main/resources/hudson/triggers/TimerTrigger/help-spec.html)
-    JENKINS_HOME: "/home/hudson"
-    download-cache:  "{JENKINS_HOME}/static_build_env/jbds/download-cache"
-    maven-settings: "{JENKINS_HOME}/../.m2/local-settings.xml" # need more reliable location
+    # these paths only exist on NFS-mounted slaves in the JBoss Jenkins cluster in mw.lab.eng.bos.redhat.com, which have a hudson user on them
+    # some slaves are configured with JENKINS_HOME = /qa/hudson_master/hudson_home/hudson_workspace, which is NOT the path we want here 
+    HUDSON_USER_HOME: "/home/hudson"
+    download-cache:  "{HUDSON_USER_HOME}/static_build_env/jbds/download-cache"
+    maven-settings: "{HUDSON_USER_HOME}/../.m2/local-settings.xml" # need more reliable location
     builds-email: !include-raw builds-email.inc
     # flags to use for reliable, tracable builds.
     # -V show version, -fae fail at end and -B run in batch mode to reduce noise and use defaults for any prompts
@@ -22,3 +24,4 @@
     maven-flags-description: |
       Pass in lifecycle phase and extra flags to Maven
     nodes: "(RHEL6||RHEL7||beaker||jboss-prod)&&!ia64&&!ppc64&&!rhts"
+    releng-publish-zip: "org.jboss.tools.releng:jbosstools-releng-publish:4.3.0.CR1-SNAPSHOT:zip"
