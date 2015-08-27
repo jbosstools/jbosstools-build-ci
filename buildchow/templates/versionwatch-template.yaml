@@ -7,10 +7,10 @@
                  Latest reports: <a href=ws/sources/vwatch/>ws/sources/vwatch/</a>*.html<br/>
  
     logrotate:
-      daysToKeep: -1
+      daysToKeep: 10
       numToKeep: 10
-      artifactDaysToKeep: -1
-      artifactNumToKeep: -1
+      artifactDaysToKeep: 10
+      artifactNumToKeep: 10
     properties:          
       - github:
           url: https://github.com/jbdevstudio/jbdevstudio-qa/
@@ -33,7 +33,7 @@
           browser-url: https://github.com/jbdevstudio/jbdevstudio-qa/
           basedir: "sources"
     nodes: "{nodes}"
-    jdk: jdk1.7
+    jdk: '{default-jdk}'
 
     builders:
       - shell: |
