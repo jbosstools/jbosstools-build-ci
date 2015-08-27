@@ -4,10 +4,10 @@
     description: 'Build Flow that replaces the need for job cascading and interlinkage. Runs weekly. See <a href="https://issues.jboss.org/browse/JBIDE-13307">JBIDE-13307</a>'
     jdk: '{default-jdk}'
     logrotate:
-      daysToKeep: {default-daysToKeep}
-      numToKeep: {default-numToKeep}
-      artifactDaysToKeep: {default-artifactDaysToKeep}
-      artifactNumToKeep: {default-artifactNumToKeep}
+      daysToKeep: "{default-daysToKeep}"
+      numToKeep: "{default-numToKeep}"
+      artifactDaysToKeep: "{default-artifactDaysToKeep}"
+      artifactNumToKeep: "{default-artifactNumToKeep}"
     project-type: flow
     dsl: |
       parallel (

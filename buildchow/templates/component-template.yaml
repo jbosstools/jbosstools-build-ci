@@ -7,10 +7,10 @@
       <h3>job runs in this order: build against minimum target platform, publish to <a href="http://download.jboss.org/jbosstools/builds/staging/">staging</a>, test against maximum target platform</h3>
     node: "{default-nodes}"
     logrotate:
-      daysToKeep: {default-daysToKeep}
-      numToKeep: {default-numToKeep}
-      artifactDaysToKeep: {default-artifactDaysToKeep}
-      artifactNumToKeep: {default-artifactNumToKeep}
+      daysToKeep: "{default-daysToKeep}"
+      numToKeep: "{default-numToKeep}"
+      artifactDaysToKeep: "{default-artifactDaysToKeep}"
+      artifactNumToKeep: "{default-artifactNumToKeep}"
     jdk: '{default-jdk}'
      
     parameters:

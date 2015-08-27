@@ -10,10 +10,10 @@
 
     node: "{default-nodes}"
     logrotate:
-      daysToKeep: {default-daysToKeep}
-      numToKeep: {default-numToKeep}
-      artifactDaysToKeep: {default-artifactDaysToKeep}
-      artifactNumToKeep: {default-artifactNumToKeep}
+      daysToKeep: "{default-daysToKeep}"
+      numToKeep: "{default-numToKeep}"
+      artifactDaysToKeep: "{default-artifactDaysToKeep}"
+      artifactNumToKeep: "{default-artifactNumToKeep}"
     jdk: '{default-jdk}'
      
     parameters:

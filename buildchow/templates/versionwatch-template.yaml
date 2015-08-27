@@ -4,48 +4,65 @@
     description: |
                  Bundle version control for JBDS<br/>
                  Maintainers: jpeterka, nboldt<br/>
-                 Latest reports: <a href=ws/sources/vwatch/>ws/sources/vwatch/</a>*.html<br/>
- 
+                 Latest reports: <a href=ws/sources>ws/sources</a>*.html<br/>
     logrotate:
-      daysToKeep: {default-daysToKeep}
-      numToKeep: {default-numToKeep}
-      artifactDaysToKeep: {default-artifactDaysToKeep}
-      artifactNumToKeep: {default-artifactNumToKeep}
+      daysToKeep: "{default-daysToKeep}"
+      numToKeep: "{default-numToKeep}"
+      artifactDaysToKeep: "{default-artifactDaysToKeep}"
+      artifactNumToKeep: "{default-artifactNumToKeep}"
     properties:          
+      - inject:
+          enabled: true
       - github:
-          url: https://github.com/jbdevstudio/jbdevstudio-qa/
+          url: https://github.com/jbosstools/jbosstools-versionwatch/
     parameters:
       - string:
           name: EXCLUDE_IUS
-          default: "org.eclipse.wst.server_ui.feature"
+          default: ""
           description: "regex match of IUs to exclude, such as org.eclipse.wst.server_ui.feature"
       - string:
           name: INCLUDE_IUS
-          default: ">.*(jboss|hibernate).*"
+          default: ".*(jboss|hibernate).*"
           description: "regex match of IUs to include, such as jboss & hibernate"
       
     scm:
       - git:
-          url: git@github.com:jbdevstudio/jbdevstudio-qa.git
+          url: git@github.com:jbosstools/jbosstools-versionwatch.git
           branches: 
             - '{default-remote}/{branch}'
           browser: githubweb
-          browser-url: https://github.com/jbdevstudio/jbdevstudio-qa/
+          browser-url: https://github.com/jbosstools/jbosstools-versionwatch/
           basedir: "sources"
-    nodes: "{default-nodes}"
+    node: "{default-nodes}"
     jdk: '{default-jdk}'
 
     builders:
       - shell: |
-               # run a new build
-               . ${{WORKSPACE}}/sources/vwatch/run.jenkins.job.sh -INCLUDE_VERSIONS "(8|9)\.\d+\.\d+" -INCLUDE_IUS "${{INCLUDE_IUS}}" -EXCLUDE_IUS "${{EXCLUDE_IUS}}"
+               . ${{WORKSPACE}}/sources/run.jenkins.job.sh -INCLUDE_VERSIONS "(8|9)\.\d+\.\d+" -INCLUDE_IUS "${{INCLUDE_IUS}}" -EXCLUDE_IUS "${{EXCLUDE_IUS}}" -JAVA_HOME "${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}" -DTRACE=true
     publishers:
       - archive:
-          artifacts: "**/output*.html, **/product*.html, **/*report*.html, **/target/*.css, **/target/*.png"
+          artifacts: "**/target/*.zip, **/target/**/*.zip, **/*.log, **/coverage-report/**, **/jacoco.exec, **/sources/*.html"
+          excludes: ".repository, .repository/*, .repository/**"
           latest-only: false
+          allow-empty: true
+          only-if-successful: false
       - description-setter: 
           regexp: "BUILD_DESCRIPTION='(.+)'"
+          regexp-for-failed: ".*(no installation folders found|Incorrect version format).*"
           description: "\\1"
+          description-for-failed: "\\1"
       - text-finder:
-          regexp: ".*(^ERROR |FAILURE IN OUTPUT: )."
+          regexp: ".*(^ERROR |FAILURE IN OUTPUT: ).*"
           also-check-console-output: true
+          unstable-if-found: true
+    wrappers:
+        - timestamps:
+        - xvnc:
+            screenshot: false
+            xauthority: true
+        - timeout:
+            timeout: 20
+            timeout-var: 'build_timeout'
+            type: absolute
+            abort: true
+            write-description: "Build timed out & aborted after ${{build_timeout}} minutes."
