@@ -9,34 +9,32 @@
 
       <p>See also:
         <ul><li><a href=/hudson/view/EAP-CI/view/EAP6-CI/>EAP 6 jobs</a>
-        <li><a href=http://download.devel.redhat.com/released/JBEAP-6/>EAP 6.x releases</a>
-        <li><a href="http://www.jboss.org/jbossas/downloads">EAP 6.1 releases</a>
+        <li><a href=http://download.devel.redhat.com/released/JBEAP-6/>EAP 6.x releases</a> (internal)
+        <li><a href=http://www.jboss.org/jbossas/downloads>EAP 6.x releases</a> (public)
       </ul>
+    node: "{nodes}"
     logrotate:
-      daysToKeep: 5
-      numToKeep: 5
-      artifactDaysToKeep: -1
-      artifactNumToKeep: -1
+      daysToKeep: 10
+      numToKeep: 10
+      artifactDaysToKeep: 10
+      artifactNumToKeep: 10
     properties:          
       - github:
           url: https://github.com/jbdevstudio/jbdevstudio-product
     parameters:
       - string:
           name: MAVEN_FLAGS
-          default: "{ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,eap,unified.target"
+          default: "{ci-maven-flags} -P hudson,eap,unified.target"
           description: "{maven-flags-description}"
-      - choice:
-          name: "RELEASE"
-          description: 'If a release, name zip w/ timestamp and build ID; otherwise call it "SNAPSHOT"'
-          choices:
-            - "No"
-            - "Yes"
       - choice:
           name: update.site.description
           choices:
             - Nightly Build
             - Development Milestone
             - Stable Release
+      - string:
+          name: jbosstools_site_stream
+          default: master
       - string:
           name: TARGET_PLATFORM_VERSION
           default: "{target-platform-version}"
@@ -47,16 +45,15 @@
           description: "Target platform used for testing"
       - string:
           name: JBOSS_CENTRAL_ZIP
-          description: "This should be overwritten by the value passed in from upstream job jbosstools-centraltarget_4.3.mars"
-          default: http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.50.0.Beta1-SNAPSHOT/jbtcentraltarget-4.50.0.Beta1-SNAPSHOT.zip
+          description: "This should be overwritten by the value passed in from upstream job jbosstools-centraltarget_*"
+          default: https://devstudio.redhat.com/9.0/snapshots/builds/jbosstools-build-sites.aggregate.central-site_${{jbosstools_site_stream}}/latest/all/repository.zip
       - bool:
           name: skipRevisionCheckWhenPublishing
           default: false
           description: |
             Check box to always publish new build to staging / nightly. <br/>
             Unchecked, this job will check previous build's revision to decide if this build needs <br/>
-            to overwrite the previous one, or if it's in fact the same source &amp; therefore same binaries.<br/>
-      
+            to overwrite the previous one, or if it's in fact the same source & therefore same binaries.
     scm:
       - git:
           url: git@github.com:jbdevstudio/jbdevstudio-product.git
@@ -64,10 +61,9 @@
             - '{default-remote}/{branch}'
           browser: githubweb
           browser-url: https://github.com/jbdevstudio/jbdevstudio-product/
-          basedir: "sources"
+          basedir: "sources/product"
           wipe-workspace: false
-    nodes: "{nodes}"
-    jdk: jdk1.7
+    jdk: '{default-jdk}'
 
     triggers:
       - pollscm: "{scm-schedule}"    
@@ -77,10 +73,6 @@
                if  [[ ! -d jbds-build-env ]]; then
                ln -s /home/hudson/static_build_env/jbds jbds-build-env
                fi
-               
-               #rm -rf ${{WORKSPACE}}/m2-repository
-               
-               # 2014/03/18: remove `-gs /home/hudson/.m2/settings.xml` from maven invocation below
       - maven-target:
           goals: "clean install ${{MAVEN_FLAGS}} -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}} -Ppack200"
           maven-version: maven-3.2.5
@@ -95,8 +87,8 @@
             - maven.test.error.ignore=true
             - download.cache.directory={download-cache}
             - targetPlatformGroup=jbdevstudio
-            - jbosstools-site=http://download.jboss.org/jbosstools/updates/nightly/core/${{jbosstools_site_stream}}/
-          pom: ${{WORKSPACE}}/product/site/pom.xml
+            - jbosstools-site=http://download.jboss.org/jbosstools/mars/snapshots/builds/jbosstools-build-sites.aggregate.site_${{jbosstools_site_stream}}/latest/all/repo/
+          pom: ${{WORKSPACE}}/sources/product/pom.xml
       - shell: |
                # move the update site target folder temporarily
                rm -fr ${{WORKSPACE}}/tmp-target
@@ -105,7 +97,7 @@
                # now rebuild the update site, without pack200
       - maven-target:
           goals: "clean install ${{MAVEN_FLAGS}} -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}}"
-          maven-version: maven-3.1.1
+          maven-version: maven-3.2.5
           private-repository: true
           java-opts: 
             - "{jvm-memory}"
@@ -117,39 +109,44 @@
             - maven.test.error.ignore=true
             - download.cache.directory={download-cache}
             - targetPlatformGroup=jbdevstudio
-            - jbosstools-site=http://download.jboss.org/jbosstools/updates/nightly/core/${{jbosstools_site_stream}}/
+            - jbosstools-site=http://download.jboss.org/jbosstools/mars/snapshots/builds/jbosstools-build-sites.aggregate.site_${{jbosstools_site_stream}}/latest/all/repo/
           pom: ${{WORKSPACE}}/sources/product/site/pom.xml          
       - maven-target:
-          goals: "org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack"
-          maven-version: maven-3.x
+          goals: "-U org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack"
+          maven-version: maven-3.2.5
           private-repository: false
           properties:
-            - artifact=org.jboss.tools.releng:jbosstools-releng-publish:4.3.0.Alpha1-SNAPSHOT:zip
+            - artifact=org.jboss.tools.releng:jbosstools-releng-publish:4.3.0.CR1-SNAPSHOT:zip
             - outputDirectory=${{WORKSPACE}}/sources
             - trimVersion=true
             - mdep.stripClassifier=true
             - mdep.stripVersion=true
       - shell: |
-               # move the non-pack200 site zip into the temporary folder
-               mv ${{WORKSPACE}}/sources/product/site/target/site_assembly.zip* ${{WORKSPACE}}/tmp-target/
+               # replace the update-core zip + sha256 with the non-pack200 versions
+               mv -f ${{WORKSPACE}}/sources/product/site/target/com.jboss.devstudio.core.site-*.zip* ${{WORKSPACE}}/tmp-target/
                # purge the target folder built w/o pack200
                rm -fr ${{WORKSPACE}}/sources/product/site/target
                # move the temporary folder back to where it should be
                mv ${{WORKSPACE}}/tmp-target ${{WORKSPACE}}/sources/product/site/target
-               
-               # replace the update-core zip + MD5 with the new one
-               cp -f ${{WORKSPACE}}/sources/product/site/target/site_assembly.zip ${{WORKSPACE}}/sources/product/results/target/jboss-devstudio-*updatesite-core.zip
-               z=`find ${{WORKSPACE}}/sources/product/results/target/ -name "jboss-devstudio-*updatesite-core.zip"`
-               for m in $(md5sum ${{z}}); do if [[ $m != ${{z}} ]]; then echo $m &gt; ${{z}}.MD5; fi; done
-               
-               cd ${{WORKSPACE}}/sources/
-               export skipRevisionCheckWhenPublishing=${{skipRevisionCheckWhenPublishing}}
-               DESTINATION=/qa/services/http/binaries/RHDS . publish/publish.sh
+
+               ###############################################
+
+               if [[ ${{skipRevisionCheckWhenPublishing}} == "true" ]] || [[ $(. ${{WORKSPACE}}/sources/util/checkLatestPublishedSHA.sh -s ${{WORKSPACE}}/sources/product/site/target/repository -t http://www.qa.jboss.com/binaries/RHDS/9.0/snapshots/builds/${{JOB_NAME}}/latest/all/repo/) == "true" ]]; then
+                 cd ${{WORKSPACE}}/sources/product/results
+                 M2_HOME=/qa/tools/opt/apache-maven-3.2.5/
+                 $M2_HOME/bin/mvn deploy -U -e -Pdeploy-to-jboss.org -Dmaven.repo.local=$WORKSPACE/.repository -Djbosstools_site_stream=${{jbosstools_site_stream}} ${{MAVEN_FLAGS}}
+               else
+                 echo "Publish cancelled (nothing to do). Skip this check with skipRevisionCheckWhenPublishing=true"
+                 BUILD_DESCRIPTION="NOT PUBLISHED: UNCHANGED"
+               fi
+
     publishers:
         - description-setter: 
             regexp: "BUILD_DESCRIPTION='(.+)'"
             description: "\\1"
-            ## TODO: downstreamtrigger
+        - raw:
+            xml: |
+              <hudson.plugins.downstream__ext.DownstreamTrigger><childProjects>jbosstools-discovery_{stream}, devstudio.versionwatch_{devstudio-stream}</childProjects><threshold><name>UNSTABLE</name><ordinal>1</ordinal><color>YELLOW</color><completeBuild>true</completeBuild></threshold><thresholdStrategy>AND_HIGHER</thresholdStrategy><onlyIfSCMChanges>false</onlyIfSCMChanges><onlyIfLocalSCMChanges>false</onlyIfLocalSCMChanges></hudson.plugins.downstream__ext.DownstreamTrigger>
         - email:
             recipients: "jboss-devstudio-builds-list@redhat.com nboldt@redhat.com mistria@redhat.com"
             send-to-individuals: true
@@ -160,5 +157,6 @@
             publish-failed-builds: false
 
     wrappers: 
-        - timeout:
-            timeout: 120
+        - raw:
+            xml: |
+               <hudson.plugins.build__timeout.BuildTimeoutWrapper><strategy class="hudson.plugins.build_timeout.impl.AbsoluteTimeOutStrategy"><timeoutMinutes>180</timeoutMinutes></strategy><operationList><hudson.plugins.build__timeout.operations.AbortOperation/></operationList></hudson.plugins.build__timeout.BuildTimeoutWrapper>
