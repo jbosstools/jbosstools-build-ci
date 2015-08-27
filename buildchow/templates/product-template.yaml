@@ -12,12 +12,12 @@
         <li><a href=http://download.devel.redhat.com/released/JBEAP-6/>EAP 6.x releases</a> (internal)
         <li><a href=http://www.jboss.org/jbossas/downloads>EAP 6.x releases</a> (public)
       </ul>
-    node: "{nodes}"
+    node: "{default-nodes}"
     logrotate:
-      daysToKeep: 10
-      numToKeep: 10
-      artifactDaysToKeep: 10
-      artifactNumToKeep: 10
+      daysToKeep: {default-daysToKeep}
+      numToKeep: {default-numToKeep}
+      artifactDaysToKeep: {default-artifactDaysToKeep}
+      artifactNumToKeep: {default-artifactNumToKeep}
     properties:          
       - github:
           url: https://github.com/jbdevstudio/jbdevstudio-product
@@ -116,7 +116,7 @@
           maven-version: "{default-maven-version}"
           private-repository: false
           properties:
-            - artifact={releng-publish-zip}
+            - artifact={default-releng-publish-zip}
             - outputDirectory=${{WORKSPACE}}/sources
             - trimVersion=true
             - mdep.stripClassifier=true

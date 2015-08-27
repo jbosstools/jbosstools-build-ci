@@ -4,6 +4,12 @@
     default-jdk: jdk1.8
     default-maven-version: maven-3.2.5
     default-remote: origin
+    default-releng-publish-zip: "org.jboss.tools.releng:jbosstools-releng-publish:4.3.0.CR1-SNAPSHOT:zip"
+    default-daysToKeep: 10
+    default-numToKeep: 10
+    default-artifactDaysToKeep: 10
+    default-artifactNumToKeep: 10
+    default-nodes: "(RHEL6||RHEL7||beaker||jboss-prod)&&!ia64&&!ppc64&&!rhts"
     # since we use JDK 8 now, no need for these:  -XX:PermSize=128m -XX:MaxPermSize=256m"
     jvm-memory: "-Xms512m -Xmx1536m"
     tests-folder: tests # for some it is all-tests
@@ -23,5 +29,3 @@
     ci-maven-flags: "-V -fae -e -B -U -C"
     maven-flags-description: |
       Pass in lifecycle phase and extra flags to Maven
-    nodes: "(RHEL6||RHEL7||beaker||jboss-prod)&&!ia64&&!ppc64&&!rhts"
-    releng-publish-zip: "org.jboss.tools.releng:jbosstools-releng-publish:4.3.0.CR1-SNAPSHOT:zip"

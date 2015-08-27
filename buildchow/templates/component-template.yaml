@@ -5,12 +5,12 @@
       Nightly build for '<a href="https://github.com/jbosstools/jbosstools-{component}/">jbosstools-{component}</a>', checking every 8 hrs for changes.
       <h2><a style="color:#FF9933" href="http://download.jboss.org/jbosstools/builds/cascade/">Build Job Cascade & Results</a></h2>
       <h3>job runs in this order: build against minimum target platform, publish to <a href="http://download.jboss.org/jbosstools/builds/staging/">staging</a>, test against maximum target platform</h3>
-    node: "{nodes}"
+    node: "{default-nodes}"
     logrotate:
-      daysToKeep: 10
-      numToKeep: 10
-      artifactDaysToKeep: 10
-      artifactNumToKeep: 10
+      daysToKeep: {default-daysToKeep}
+      numToKeep: {default-numToKeep}
+      artifactDaysToKeep: {default-artifactDaysToKeep}
+      artifactNumToKeep: {default-artifactNumToKeep}
     jdk: '{default-jdk}'
      
     parameters:
@@ -78,7 +78,7 @@
           goals: "{ci-maven-flags} org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack" #TODO: should it have all MAVEN_FLAGS ?
           maven-version: "{default-maven-version}"
           properties:
-            - artifact={releng-publish-zip}
+            - artifact={default-releng-publish-zip}
             - outputDirectory=${{WORKSPACE}}/sources
             - trimVersion=true
             - mdep.stripClassifier=true

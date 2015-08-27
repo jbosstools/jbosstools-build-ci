@@ -8,12 +8,12 @@
                  
                  <h2><a style="color:#FF9933" href="http://download.jboss.org/jbosstools/builds/cascade/">Build Job Cascade &amp;amp; Results</a></h2>
 
-    node: "{nodes}"
+    node: "{default-nodes}"
     logrotate:
-      daysToKeep: 10
-      numToKeep: 10
-      artifactDaysToKeep: 10
-      artifactNumToKeep: 10
+      daysToKeep: {default-daysToKeep}
+      numToKeep: {default-numToKeep}
+      artifactDaysToKeep: {default-artifactDaysToKeep}
+      artifactNumToKeep: {default-artifactNumToKeep}
     jdk: '{default-jdk}'
      
     parameters:
