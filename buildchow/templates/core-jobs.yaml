@@ -1,13 +1,15 @@
-
-- project:
+# the next line starts with a space because yaml believes LEADING whitespace should be significant
+ - project:
     name: jbosstools-master  # 'project' for a certain stream
     stream:
       master
     devstudio-stream:
       master
-    target-platform-version: 4.50.0.Beta1-SNAPSHOT
-    target-platform-version-maximum: 4.50.0.Beta1-SNAPSHOT
-    disabled: true
+    target-platform-version: 4.50.0.CR1-SNAPSHOT
+    target-platform-version-maximum: 4.50.0.CR1-SNAPSHOT
+    blockBuildWhenDownstreamBuilding: false
+    blockBuildWhenUpstreamBuilding: false
+    disabled: false
     branch: master
     component: &components # defined here since aliases cannot be shared across files https://storyboard.openstack.org/#!/story/2000173
       - aerogear:
@@ -42,17 +44,18 @@
       - 'devstudio.versionwatch_{devstudio-stream}'
       - 'jbosstools-build-sites.aggregate.site_{stream}'
       - 'jbosstools-buildflow_{stream}'
- 
-- project:
+
+# the next line starts with a space because yaml believes LEADING whitespace should be significant
+ - project:
     name: jbosstools-mars
-    disabled: false
+    disabled: true
     stream:
       4.3.mars
     devstudio-stream:
       9.0.mars
-    target-platform-version: 4.50.0.Beta1
-    target-platform-version-maximum: 4.50.0.Beta1
-    branch: jbosstools-4.3.0.Beta1x
+    target-platform-version: 4.50.0.CR1
+    target-platform-version-maximum: 4.50.0.CR1
+    branch: jbosstools-4.3.x
     component: 
       *components  # reusing same component list but could use different one per stream if needed
     jobs:
