@@ -7,10 +7,10 @@
       <h3>job runs in this order: build against minimum target platform, publish to <a href="http://download.jboss.org/jbosstools/builds/staging/">staging</a>, test against maximum target platform</h3>
     node: "{nodes}"
     logrotate:
-      daysToKeep: 5
-      numToKeep: 5
-      artifactDaysToKeep: -1
-      artifactNumToKeep: -1
+      daysToKeep: 10
+      numToKeep: 10
+      artifactDaysToKeep: 10
+      artifactNumToKeep: 10
     jdk: '{default-jdk}'
      
     parameters:
@@ -78,7 +78,7 @@
           goals: "{ci-maven-flags} org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack" #TODO: should it have all MAVEN_FLAGS ?
           maven-version: "{default-maven-version}"
           properties:
-            - artifact=org.jboss.tools.releng:jbosstools-releng-publish:4.3.0.Beta1-SNAPSHOT:zip
+            - artifact=org.jboss.tools.releng:jbosstools-releng-publish:4.3.0.CR1-SNAPSHOT:zip
             - outputDirectory=${{WORKSPACE}}/sources
             - trimVersion=true
             - mdep.stripClassifier=true
