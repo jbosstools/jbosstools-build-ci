@@ -26,20 +26,21 @@
       # - gwt
       - hibernate:
           component-responsible: "koen.aears@redhat.com"
-      - javaee:
-          tests-folder: all-tests
       - jst
+      #- javaee
+      #    tests-folder: all-tests
       - livereload:
           component-responsible: "xcoulon@redhat.com"
       - openshift
       - portlet
       - server:
-          test-folder: all-tests
+          tests-folder: all-tests
       - vpe
       - webservices
       - playground
     jobs:
       - 'jbosstools-{component}_{stream}'
+      - 'jbosstools-javaee-no-tests_{stream}'
       - 'devstudio.product_{devstudio-stream}'
       - 'devstudio.versionwatch_{devstudio-stream}'
       - 'jbosstools-build-sites.aggregate.site_{stream}'
@@ -60,6 +61,7 @@
       *components  # reusing same component list but could use different one per stream if needed
     jobs:
       - 'jbosstools-{component}_{stream}'
+      - 'jbosstools-javaee-no-tests_{stream}'
       - 'devstudio.product_{devstudio-stream}'
       - 'jbosstools-build-sites.aggregate.site_{stream}'
       - 'jbosstools-buildflow_{stream}'
