@@ -1,0 +1,125 @@
+- job-template:
+    name: 'jbosstools-javaee-no-tests_{stream}'
+    disabled: '{obj:disabled}'
+    description: |
+      CI build for '<a href="https://github.com/jbosstools/jbosstools-javaee/">jbosstools-javaee</a>', checking every 8 hrs for changes.
+      <h2><a style="color:#FF9933" href="https://github.com/jbosstools/jbosstools-devdoc/blob/master/list_of_projects.adoc">Project Listing</a></h2>
+      <h3>Job runs these steps: build using min target platform, 
+      publish <a href="http://download.jboss.org/jbosstools/mars/snapshots/builds/">snapshot</a>, 
+      run tests using max target platform</h3>
+    node: "{default-nodes}"
+    logrotate:
+      daysToKeep: "{default-daysToKeep}"
+      numToKeep: "{default-numToKeep}"
+      artifactDaysToKeep: "{default-artifactDaysToKeep}"
+      artifactNumToKeep: "{default-artifactNumToKeep}"
+    jdk: '{default-jdk}'
+     
+    parameters:
+      - string:
+          name: TARGET_PLATFORM_VERSION
+          default: "{target-platform-version}"
+          description: "Target platform used for compilation/packaging"
+      - string:
+          name: TARGET_PLATFORM_VERSION_MAXIMUM
+          default: "{target-platform-version-maximum}"
+          description: "Target platform used for testing"
+      - bool:
+          name: skipRevisionCheckWhenPublishing
+          default: "false"
+          description: |
+            Check box to always publish new build to snapshots. <br/>
+            Unchecked, publish.sh will check previous build's revision to decide if this build needs <br/>
+            to overwrite the previous one, or if it's in fact the same source &amp; therefore same binaries.<br/>
+
+    properties:          
+      - github:
+          url: https://github.com/jbosstools/jbosstools-javaee/
+      #- delivery-pipeline:
+      #    stage: Dev
+      #    task: Build javaee
+          
+    scm:
+      - git:
+          url: git://github.com/jbosstools/jbosstools-javaee/
+          wipe-workspace: false
+          basedir: "sources"
+          branches: 
+            - '{default-remote}/{branch}'
+        
+    triggers:
+      - pollscm: "{scm-schedule}"
+
+    builders:
+      - maven-target:
+          goals: "clean install {ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION}}"
+          maven-version: "{default-maven-version}"
+          properties:
+            - maven.test.skip=true
+            - maven.test.failure.ignore=true
+            - maven.test.error.ignore=true
+            - download.cache.directory={download-cache}
+            - JOB_NAME=${{JOB_NAME}}
+            - BUILD_ID=${{BUILD_ID}}
+            - BUILD_NUMBER=${{BUILD_NUMBER}}
+            - skipBaselineComparison=false
+            - skipITests=true
+            - skipPrivateRequirements=false
+            - jbosstools.test.jre.5=${{NATIVE_TOOLS}}${{SEP}}${{JAVA15}} 
+            - jbosstools.test.jre.6=${{NATIVE_TOOLS}}${{SEP}}${{JAVA16}}
+            - jbosstools.test.jre.7=${{NATIVE_TOOLS}}${{SEP}}${{JAVA17}}
+            - jbosstools.test.jre.8=${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}
+          # TODO: is this really needed? 
+          # settings: "{maven-settings}"
+          private-repository: true
+          java-opts: 
+            - "{jvm-memory}"
+          pom: ${{WORKSPACE}}/sources/pom.xml
+      - maven-target:
+          goals: "{ci-maven-flags} org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack"
+          maven-version: "{default-maven-version}"
+          properties:
+            - artifact={default-releng-publish-zip}
+            - outputDirectory=${{WORKSPACE}}/sources
+            - trimVersion=true
+            - mdep.stripClassifier=true
+            - mdep.stripVersion=true
+            - overWrite=true
+          private-repository: true
+       # TODO: rewrite this bash script as mojo so check can be done via maven directly?
+      - shell: |
+               if [[ ${{skipRevisionCheckWhenPublishing}} == "true" ]] || [[ $(. ${{WORKSPACE}}/sources/util/checkLatestPublishedSHA.sh -s ${{WORKSPACE}}/sources/site/target/repository -t http://download.jboss.org/jbosstools/mars/snapshots/builds/${{JOB_NAME}}/latest/all/repo/) == "true" ]]; then
+                 cd ${{WORKSPACE}}/sources/site
+                 M2_HOME=/qa/tools/opt/apache-{default-maven-version}
+                 $M2_HOME/bin/mvn deploy -Pdeploy-to-jboss.org -Djbosstools_site_stream=${{jbosstools_site_stream}} -Dmaven.repo.local=$WORKSPACE/.repository {ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target
+               else
+                 echo "Publish cancelled (nothing to do). Skip this check with skipRevisionCheckWhenPublishing=true"
+                 BUILD_DESCRIPTION="NOT PUBLISHED: UNCHANGED"
+               fi
+    publishers:
+      - archive:
+          artifacts: >
+            results/*/all/*.zip,sources/*/target/jacoco.exec,
+            sources/*/*tests/*/target/work/configuration/*.log,
+            sources/*/*tests/*/target/work/data/.metadata/*.log, 
+            sources/target/coverage-report/** 
+          latest-only: true
+      - junit:
+          results: "sources/*/*tests/*/target/surefire-reports/TEST-*.xml"
+          keep-long-stdio: false
+      - description-setter: 
+          regexp: "BUILD_DESCRIPTION='(.+)'"
+          description: "\\1"
+      - email:
+          recipients: "{component-responsible} {builds-email}"
+          send-to-individuals: true
+      - build-publisher:
+          name: ""
+          publish-unstable-builds: true
+          publish-failed-builds: false
+    wrappers:
+      - timeout:
+          timeout: 120
+      - xvnc:
+          screenshot: false
+          xauthority: true
