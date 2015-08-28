@@ -2,9 +2,11 @@
     name: 'jbosstools-{component}_{stream}'
     disabled: '{obj:disabled}'
     description: |
-      Nightly build for '<a href="https://github.com/jbosstools/jbosstools-{component}/">jbosstools-{component}</a>', checking every 8 hrs for changes.
-      <h2><a style="color:#FF9933" href="http://download.jboss.org/jbosstools/builds/cascade/">Build Job Cascade & Results</a></h2>
-      <h3>job runs in this order: build against minimum target platform, publish to <a href="http://download.jboss.org/jbosstools/builds/staging/">staging</a>, test against maximum target platform</h3>
+      CI build for '<a href="https://github.com/jbosstools/jbosstools-{component}/">jbosstools-{component}</a>', checking every 8 hrs for changes.
+      <h2><a style="color:#FF9933" href="https://github.com/jbosstools/jbosstools-devdoc/blob/master/list_of_projects.adoc">Project Listing</a></h2>
+      <h3>Job runs these steps: build using min target platform, 
+      publish <a href="http://download.jboss.org/jbosstools/mars/snapshots/builds/">snapshot</a>, 
+      run tests using max target platform</h3>
     node: "{default-nodes}"
     logrotate:
       daysToKeep: "{default-daysToKeep}"
@@ -14,11 +16,6 @@
     jdk: '{default-jdk}'
      
     parameters:
-      - string:
-          # TODO: the docs for this flag should not suggest to mix lifecycle phases into the flags. If needed should be done separately.
-          name: MAVEN_FLAGS
-          default: "{ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target"
-          description: "{maven-flags-description}"
       - string:
           name: TARGET_PLATFORM_VERSION
           default: "{target-platform-version}"
@@ -55,27 +52,31 @@
 
     builders:
       - maven-target:
-          goals: "clean install ${{MAVEN_FLAGS}} -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION}}"
+          goals: "clean install {ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION}}"
           maven-version: "{default-maven-version}"
-          properties: &component-maven-properties
+          properties:
+            - maven.test.skip=true
             - maven.test.failure.ignore=true
             - maven.test.error.ignore=true
             - download.cache.directory={download-cache}
             - JOB_NAME=${{JOB_NAME}}
             - BUILD_ID=${{BUILD_ID}}
             - BUILD_NUMBER=${{BUILD_NUMBER}}
+            - skipBaselineComparison=false
+            - skipITests=true
             - skipPrivateRequirements=false
             - jbosstools.test.jre.5=${{NATIVE_TOOLS}}${{SEP}}${{JAVA15}} 
             - jbosstools.test.jre.6=${{NATIVE_TOOLS}}${{SEP}}${{JAVA16}}
             - jbosstools.test.jre.7=${{NATIVE_TOOLS}}${{SEP}}${{JAVA17}}
             - jbosstools.test.jre.8=${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}
-          settings: "{maven-settings}"
+          # TODO: is this really needed? 
+          # settings: "{maven-settings}"
           private-repository: true
           java-opts: 
             - "{jvm-memory}"
           pom: ${{WORKSPACE}}/sources/pom.xml
       - maven-target:
-          goals: "{ci-maven-flags} org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack" #TODO: should it have all MAVEN_FLAGS ?
+          goals: "{ci-maven-flags} org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack"
           maven-version: "{default-maven-version}"
           properties:
             - artifact={default-releng-publish-zip}
@@ -83,13 +84,14 @@
             - trimVersion=true
             - mdep.stripClassifier=true
             - mdep.stripVersion=true
+            - overWrite=true
           private-repository: true
-           # TODO: this skiprevision check or at leat the mvn call should not be done in shell. Move to mvn ?
+       # TODO: rewrite this bash script as mojo so check can be done via maven directly?
       - shell: |
                if [[ ${{skipRevisionCheckWhenPublishing}} == "true" ]] || [[ $(. ${{WORKSPACE}}/sources/util/checkLatestPublishedSHA.sh -s ${{WORKSPACE}}/sources/site/target/repository -t http://download.jboss.org/jbosstools/mars/snapshots/builds/${{JOB_NAME}}/latest/all/repo/) == "true" ]]; then
                  cd ${{WORKSPACE}}/sources/site
                  M2_HOME=/qa/tools/opt/apache-{default-maven-version}
-                 $M2_HOME/bin/mvn deploy -Pdeploy-to-jboss.org -Dmaven.repo.local=$WORKSPACE/.repository ${{MAVEN_FLAGS}}
+                 $M2_HOME/bin/mvn deploy -Pdeploy-to-jboss.org -Djbosstools_site_stream=${{jbosstools_site_stream}} -Dmaven.repo.local=$WORKSPACE/.repository {ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target
                else
                  echo "Publish cancelled (nothing to do). Skip this check with skipRevisionCheckWhenPublishing=true"
                  BUILD_DESCRIPTION="NOT PUBLISHED: UNCHANGED"
@@ -101,14 +103,26 @@
                echo "jbosstools.test.jre.7=${{NATIVE_TOOLS}}${{SEP}}${{JAVA17}}"
                echo "jbosstools.test.jre.8=${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}"
       - maven-target:
-          goals: verify ${{MAVEN_FLAGS}} -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}}
+          goals: verify {ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}}
           maven-version: "{default-maven-version}"
           java-opts: 
             - "{jvm-memory}"
           pom: "${{WORKSPACE}}/sources/{tests-folder}/pom.xml"
           private-repository: true
           properties:
-            *component-maven-properties
+            - maven.test.skip=false
+            - maven.test.failure.ignore=true
+            - maven.test.error.ignore=true
+            - download.cache.directory={download-cache}
+            - JOB_NAME=${{JOB_NAME}}
+            - BUILD_ID=${{BUILD_ID}}
+            - BUILD_NUMBER=${{BUILD_NUMBER}}
+            - skipBaselineComparison=true
+            - skipITests=false
+            - jbosstools.test.jre.5=${{NATIVE_TOOLS}}${{SEP}}${{JAVA15}} 
+            - jbosstools.test.jre.6=${{NATIVE_TOOLS}}${{SEP}}${{JAVA16}}
+            - jbosstools.test.jre.7=${{NATIVE_TOOLS}}${{SEP}}${{JAVA17}}
+            - jbosstools.test.jre.8=${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}
     publishers:
       - archive:
           artifacts: >
