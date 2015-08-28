@@ -5,8 +5,7 @@
       Tycho-based build of JBDS update site, monitoring Github for changes.
 
       <p><i>Build should take ~ 40min.</i>
-      <h2><a style="color:#FF9933" href="http://download.jboss.org/jbosstools/builds/cascade/">Build Job Cascade & Results</a></h2>
-
+      <h2><a style="color:#FF9933" href="https://github.com/jbosstools/jbosstools-devdoc/blob/master/list_of_projects.adoc">Project Listing</a></h2>
       <p>See also:
         <ul><li><a href=/hudson/view/EAP-CI/view/EAP6-CI/>EAP 6 jobs</a>
         <li><a href=http://download.devel.redhat.com/released/JBEAP-6/>EAP 6.x releases</a> (internal)
@@ -117,6 +116,7 @@
             - trimVersion=true
             - mdep.stripClassifier=true
             - mdep.stripVersion=true
+            - overWrite=true
       - shell: |
                # replace the update-core zip + sha256 with the non-pack200 versions
                mv -f ${{WORKSPACE}}/sources/product/site/target/com.jboss.devstudio.core.site-*.zip* ${{WORKSPACE}}/tmp-target/
