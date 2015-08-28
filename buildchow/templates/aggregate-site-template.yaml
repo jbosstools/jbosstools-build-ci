@@ -17,17 +17,6 @@
     jdk: '{default-jdk}'
      
     parameters:
-      - string:
-          # TODO: the docs for this flag should not suggest to mix lifecycle phases into the flags. If needed should be done separately.
-          name: MAVEN_FLAGS
-          default: "{ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,unified.target,pack200"
-          description: "{maven-flags-description}"
-      - choice:
-          name: RELEASE
-          description: 'If a release, name zip w/ timestamp and build ID; otherwise call it "SNAPSHOT"'
-          choices:
-            - "No"
-            - "Yes"
       - choice:
           name: update.site.description
           choices:
@@ -47,8 +36,8 @@
           default: "false"
           description: |
             Check box to always publish new build to staging / nightly. <br/>
-            Unchecked, publish.sh will check previous build's revision to decide if this build needs <br/>
-            to overwrite the previous one, or if it's in fact the same source &amp; therefore same binaries.<br/>
+            Unchecked, this job will check previous build's revision to decide if this build needs <br/>
+            to overwrite the previous one, or if it's in fact the same source & therefore same binaries.<br/>
  
     properties:          
       - github:
@@ -63,13 +52,3 @@
           wipe-workspace: false
           branches: 
             - '{default-remote}/{branch}'
-          included-regions:
-            - "aggregate/site/*"
-            - "aggregate/*"
-          excluded-regions:
-            - "aggregate/coretests-site/*"
-            - "aggregate/local-site/*"
-            - "aggregate/soa-site/*"
-            - "aggregate/soatests-site/*"
-            - "aggregate/web/*"
-            - "aggregate/webtools-site/*"
