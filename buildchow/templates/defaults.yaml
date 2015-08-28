@@ -19,7 +19,8 @@
     # some slaves are configured with JENKINS_HOME = /qa/hudson_master/hudson_home/hudson_workspace, which is NOT the path we want here 
     HUDSON_USER_HOME: "/home/hudson"
     download-cache:  "{HUDSON_USER_HOME}/static_build_env/jbds/download-cache"
-    maven-settings: "{HUDSON_USER_HOME}/../.m2/local-settings.xml" # need more reliable location
+    # TODO: where is this file supposed to be? local-settings? settings? something else?
+    # maven-settings: "{HUDSON_USER_HOME}/.m2/settings.xml" # TODO: need more reliable location
     builds-email: !include-raw builds-email.inc
     # flags to use for reliable, tracable builds.
     # -V show version, -fae fail at end and -B run in batch mode to reduce noise and use defaults for any prompts
@@ -27,5 +28,3 @@
     # -C check consistency of files and fail if failure to download instead of continuing.
     # -e if error occurs, dump stacktrace
     ci-maven-flags: "-V -fae -e -B -U -C"
-    maven-flags-description: |
-      Pass in lifecycle phase and extra flags to Maven

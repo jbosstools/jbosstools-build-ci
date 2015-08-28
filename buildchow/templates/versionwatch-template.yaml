@@ -11,10 +11,13 @@
       artifactDaysToKeep: "{default-artifactDaysToKeep}"
       artifactNumToKeep: "{default-artifactNumToKeep}"
     properties:          
-      - inject:
-          enabled: true
       - github:
           url: https://github.com/jbosstools/jbosstools-versionwatch/
+      - raw: 
+          xml: |
+            <com.chikli.hudson.plugin.naginator.NaginatorOptOutProperty><optOut>false</optOut></com.chikli.hudson.plugin.naginator.NaginatorOptOutProperty>
+      - inject:
+          enabled: true
     parameters:
       - string:
           name: EXCLUDE_IUS
@@ -24,7 +27,6 @@
           name: INCLUDE_IUS
           default: ".*(jboss|hibernate).*"
           description: "regex match of IUs to include, such as jboss & hibernate"
-      
     scm:
       - git:
           url: git@github.com:jbosstools/jbosstools-versionwatch.git
@@ -45,7 +47,9 @@
           excludes: ".repository, .repository/*, .repository/**"
           latest-only: false
           allow-empty: true
-          only-if-successful: false
+          only-if-success: false
+          fingerprint: false
+          default-excludes: true
       - description-setter: 
           regexp: "BUILD_DESCRIPTION='(.+)'"
           regexp-for-failed: ".*(no installation folders found|Incorrect version format).*"
@@ -53,16 +57,16 @@
           description-for-failed: "\\1"
       - text-finder:
           regexp: ".*(^ERROR |FAILURE IN OUTPUT: ).*"
-          also-check-console-output: true
           unstable-if-found: true
+          also-check-console-output: true
     wrappers:
-        - timestamps:
-        - xvnc:
-            screenshot: false
-            xauthority: true
         - timeout:
             timeout: 20
             timeout-var: 'build_timeout'
             type: absolute
             abort: true
             write-description: "Build timed out & aborted after ${{build_timeout}} minutes."
+        - timestamps:
+        - xvnc:
+            screenshot: false
+            xauthority: true
