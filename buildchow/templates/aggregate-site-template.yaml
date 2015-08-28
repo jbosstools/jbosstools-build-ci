@@ -3,10 +3,8 @@
     disabled: '{obj:disabled}'
     description: |
                  Tycho-based build, monitoring GitHub for changes.
-                 
                  <p><i>Build should take ~60min.</i>
-                 
-                 <h2><a style="color:#FF9933" href="http://download.jboss.org/jbosstools/builds/cascade/">Build Job Cascade &amp;amp; Results</a></h2>
+                 <h2><a style="color:#FF9933" href="https://github.com/jbosstools/jbosstools-devdoc/blob/master/list_of_projects.adoc">Project Listing</a></h2>
 
     node: "{default-nodes}"
     logrotate:
@@ -52,3 +50,70 @@
           wipe-workspace: false
           branches: 
             - '{default-remote}/{branch}'
+
+    triggers:
+      - timed: "H H/6 * * *"
+      - pollscm: "{scm-schedule}"
+
+    builders:
+      - maven-target:
+          # TODO: add -gs /home/hudson/.m2/settings.xml ?
+          goals: "clean install {ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}}"
+          maven-version: "{default-maven-version}"
+          properties:
+            - JOB_NAME=${{JOB_NAME}}
+            - BUILD_ID=${{BUILD_ID}}
+            - BUILD_NUMBER=${{BUILD_NUMBER}}
+            - jbosstools-target-site=http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/${{TARGET_PLATFORM_VERSION_MAXIMUM}}
+            - maven.test.failure.ignore=true
+            - download.cache.directory=/home/hudson/static_build_env/jbds/download-cache
+          private-repository: true
+          java-opts: 
+            - "-Xms1536m -Xmx2048m"
+          pom: ${{WORKSPACE}}/sources/aggregate/site/pom.xml
+      - maven-target:
+          goals: "{ci-maven-flags} org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack"
+          maven-version: "{default-maven-version}"
+          properties:
+            - artifact={default-releng-publish-zip}
+            - outputDirectory=${{WORKSPACE}}/sources
+            - trimVersion=true
+            - mdep.stripClassifier=true
+            - mdep.stripVersion=true
+            - overWrite=true
+          private-repository: true
+       # TODO: rewrite this bash script as mojo so check can be done via maven directly?
+      - shell: |
+               if [[ ${{skipRevisionCheckWhenPublishing}} == "true" ]] || [[ $(. ${{WORKSPACE}}/sources/util/checkLatestPublishedSHA.sh -s ${{WORKSPACE}}/sources/aggregate/site/target/fullSite/all/repo -t http://download.jboss.org/jbosstools/mars/snapshots/builds/${{JOB_NAME}}/latest/all/repo/) == "true" ]]; then
+                 cd ${{WORKSPACE}}/sources/aggregate/site
+                 M2_HOME=/qa/tools/opt/apache-{default-maven-version}
+                 $M2_HOME/bin/mvn deploy -Pdeploy-to-jboss.org -Djbosstools_site_stream={stream} -Dmaven.repo.local=$WORKSPACE/.repository {ci-maven-flags} -P hudson,pack200,unified.target
+               else
+                 echo "Publish cancelled (nothing to do). Skip this check with skipRevisionCheckWhenPublishing=true"
+                 BUILD_DESCRIPTION="NOT PUBLISHED: UNCHANGED"
+               fi
+    publishers:
+      - archive:
+          artifacts: >
+            **/all/*.zip
+          latest-only: true
+      - description-setter:
+          regexp: "BUILD_DESCRIPTION='(.+)'"
+          description: "\\1"
+      - email:
+          recipients: "{component-responsible} {builds-email}"
+          send-to-individuals: true
+      - build-publisher:
+          name: ""
+          publish-unstable-builds: true
+          publish-failed-builds: false
+      - trigger-parameterized-builds:
+          - project: "devstudio.product_{devstudio-stream},jbosstools-build-sites.aggregate.child-sites_{stream}"
+            predefined-parameters: "skipRevisionCheckWhenPublishing=true"
+            condition: "UNSTABLE_OR_BETTER"
+    wrappers:
+      - timeout:
+          timeout: 180
+      - xvnc:
+          screenshot: false
+          xauthority: true
