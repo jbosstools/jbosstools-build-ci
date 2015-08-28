@@ -22,10 +22,6 @@
       - github:
           url: https://github.com/jbdevstudio/jbdevstudio-product
     parameters:
-      - string:
-          name: MAVEN_FLAGS
-          default: "{ci-maven-flags} -P hudson,eap,unified.target"
-          description: "{maven-flags-description}"
       - choice:
           name: update.site.description
           choices:
@@ -74,7 +70,7 @@
                ln -s /home/hudson/static_build_env/jbds jbds-build-env
                fi
       - maven-target:
-          goals: "clean install ${{MAVEN_FLAGS}} -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}} -Ppack200"
+          goals: "clean install {ci-maven-flags} -P hudson,eap,unified.target -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}} -Djbosstools_site_stream={stream} -Ppack200"
           maven-version: "{default-maven-version}"
           private-repository: true
           java-opts: 
@@ -96,7 +92,7 @@
                
                # now rebuild the update site, without pack200
       - maven-target:
-          goals: "clean install ${{MAVEN_FLAGS}} -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}}"
+          goals: "clean install {ci-maven-flags} -P hudson,eap,unified.target -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}} -Djbosstools_site_stream={stream}"
           maven-version: "{default-maven-version}"
           private-repository: true
           java-opts: 
@@ -112,7 +108,7 @@
             - jbosstools-site=http://download.jboss.org/jbosstools/mars/snapshots/builds/jbosstools-build-sites.aggregate.site_${{jbosstools_site_stream}}/latest/all/repo/
           pom: ${{WORKSPACE}}/sources/product/site/pom.xml          
       - maven-target:
-          goals: "-U org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack"
+          goals: "{ci-maven-flags} org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack"
           maven-version: "{default-maven-version}"
           private-repository: false
           properties:
@@ -134,7 +130,7 @@
                if [[ ${{skipRevisionCheckWhenPublishing}} == "true" ]] || [[ $(. ${{WORKSPACE}}/sources/util/checkLatestPublishedSHA.sh -s ${{WORKSPACE}}/sources/product/site/target/repository -t http://www.qa.jboss.com/binaries/RHDS/9.0/snapshots/builds/${{JOB_NAME}}/latest/all/repo/) == "true" ]]; then
                  cd ${{WORKSPACE}}/sources/product/results
                  M2_HOME=/qa/tools/opt/apache-{default-maven-version}
-                 $M2_HOME/bin/mvn deploy -U -e -Pdeploy-to-jboss.org -Dmaven.repo.local=$WORKSPACE/.repository -Djbosstools_site_stream=${{jbosstools_site_stream}} ${{MAVEN_FLAGS}}
+                 $M2_HOME/bin/mvn deploy -Pdeploy-to-jboss.org -Dmaven.repo.local=$WORKSPACE/.repository {ci-maven-flags} -P hudson,eap,unified.target -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}} -Djbosstools_site_stream={stream}
                else
                  echo "Publish cancelled (nothing to do). Skip this check with skipRevisionCheckWhenPublishing=true"
                  BUILD_DESCRIPTION="NOT PUBLISHED: UNCHANGED"
