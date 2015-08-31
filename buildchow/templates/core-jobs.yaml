@@ -7,8 +7,6 @@
       master
     target-platform-version: 4.50.0.CR1-SNAPSHOT
     target-platform-version-maximum: 4.50.0.CR1-SNAPSHOT
-    blockBuildWhenDownstreamBuilding: false
-    blockBuildWhenUpstreamBuilding: false
     disabled: false
     branch: master
     component: &components # defined here since aliases cannot be shared across files https://storyboard.openstack.org/#!/story/2000173
@@ -54,9 +52,9 @@
       4.3.mars
     devstudio-stream:
       9.0.mars
-    target-platform-version: 4.50.0.CR1
-    target-platform-version-maximum: 4.50.0.CR1
-    branch: jbosstools-4.3.x
+    target-platform-version: 4.50.0.Beta2
+    target-platform-version-maximum: 4.50.0.Beta2
+    branch: jbosstools-4.3.0.Beta2x
     component: 
       *components  # reusing same component list but could use different one per stream if needed
     jobs:
