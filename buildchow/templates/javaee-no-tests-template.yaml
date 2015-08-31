@@ -31,8 +31,8 @@
           default: "false"
           description: |
             Check box to always publish new build to snapshots. <br/>
-            Unchecked, publish.sh will check previous build's revision to decide if this build needs <br/>
-            to overwrite the previous one, or if it's in fact the same source &amp; therefore same binaries.<br/>
+            Unchecked, this job will check previous build's revision to decide if this build needs <br/>
+            to overwrite the previous one, or if it's in fact the same source & therefore same binaries.<br/>
 
     properties:          
       - github:
@@ -43,7 +43,7 @@
           
     scm:
       - git:
-          url: git://github.com/jbosstools/jbosstools-javaee/
+          url: git://github.com/jbosstools/jbosstools-javaee.git
           wipe-workspace: false
           basedir: "sources"
           branches: 
