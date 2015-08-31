@@ -52,7 +52,7 @@
 
     builders:
       - maven-target:
-          goals: "clean install {ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION}}"
+          goals: "{build-flags-min}"
           maven-version: "{default-maven-version}"
           properties:
             - maven.test.skip=true
@@ -69,14 +69,12 @@
             - jbosstools.test.jre.6=${{NATIVE_TOOLS}}${{SEP}}${{JAVA16}}
             - jbosstools.test.jre.7=${{NATIVE_TOOLS}}${{SEP}}${{JAVA17}}
             - jbosstools.test.jre.8=${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}
-          # TODO: is this really needed? 
-          # settings: "{maven-settings}"
           private-repository: true
           java-opts: 
             - "{jvm-memory}"
           pom: ${{WORKSPACE}}/sources/pom.xml
       - maven-target:
-          goals: "{ci-maven-flags} org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack"
+          goals: "{unpack-flags}"
           maven-version: "{default-maven-version}"
           properties:
             - artifact={default-releng-publish-zip}
@@ -91,7 +89,7 @@
                if [[ ${{skipRevisionCheckWhenPublishing}} == "true" ]] || [[ $(. ${{WORKSPACE}}/sources/util/checkLatestPublishedSHA.sh -s ${{WORKSPACE}}/sources/site/target/repository -t http://download.jboss.org/jbosstools/mars/snapshots/builds/${{JOB_NAME}}/latest/all/repo/) == "true" ]]; then
                  cd ${{WORKSPACE}}/sources/site
                  M2_HOME=/qa/tools/opt/apache-{default-maven-version}
-                 $M2_HOME/bin/mvn deploy -Pdeploy-to-jboss.org -Djbosstools_site_stream=${{jbosstools_site_stream}} -Dmaven.repo.local=$WORKSPACE/.repository {ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target
+                 $M2_HOME/bin/mvn {deploy-flags-min}
                else
                  echo "Publish cancelled (nothing to do). Skip this check with skipRevisionCheckWhenPublishing=true"
                  BUILD_DESCRIPTION="NOT PUBLISHED: UNCHANGED"
@@ -103,7 +101,7 @@
                echo "jbosstools.test.jre.7=${{NATIVE_TOOLS}}${{SEP}}${{JAVA17}}"
                echo "jbosstools.test.jre.8=${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}"
       - maven-target:
-          goals: verify {ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}}
+          goals: "{test-flags-max}"
           maven-version: "{default-maven-version}"
           java-opts: 
             - "{jvm-memory}"
@@ -125,11 +123,8 @@
             - jbosstools.test.jre.8=${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}
     publishers:
       - archive:
-          artifacts: >
-            results/*/all/*.zip,sources/*/target/jacoco.exec,
-            sources/*/*tests/*/target/work/configuration/*.log,
-            sources/*/*tests/*/target/work/data/.metadata/*.log, 
-            sources/target/coverage-report/** 
+          artifacts: "**/target/*.zip, **/target/**/*.zip, **/*.log, **/coverage-report/**, **/jacoco.exec" 
+          excludes: ".repository, .repository/*, .repository/**"
           latest-only: true
       - junit:
           results: "sources/*/*tests/*/target/surefire-reports/TEST-*.xml"

@@ -15,16 +15,31 @@
     tests-folder: tests # for some it is all-tests
     component-responsible: ""
     scm-schedule: H H/8 * * * # every 8 hours starting a random hour. Removes need for each job to configure it (http://htmlpreview.github.io/?https://github.com/jenkinsci/jenkins/blob/master/core/src/main/resources/hudson/triggers/TimerTrigger/help-spec.html)
+    
     # these paths only exist on NFS-mounted slaves in the JBoss Jenkins cluster in mw.lab.eng.bos.redhat.com, which have a hudson user on them
-    # some slaves are configured with JENKINS_HOME = /qa/hudson_master/hudson_home/hudson_workspace, which is NOT the path we want here 
-    HUDSON_USER_HOME: "/home/hudson"
-    download-cache:  "{HUDSON_USER_HOME}/static_build_env/jbds/download-cache"
-    # TODO: where is this file supposed to be? local-settings? settings? something else?
-    # maven-settings: "{HUDSON_USER_HOME}/.m2/settings.xml" # TODO: need more reliable location
+    # HOME could be /home/hudson, /qa/hudson_master/hudson_home/, /qa/services/hudson
+    static-build-env: "$HOME/static_build_env"
+    download-cache:  "{static-build-env}/jbds/download-cache"
+    # path to ~/.m2/settings.xml, used in `mvn clean install -gs /home/hudson/.m2/settings.xml`
+    maven-settings-file: "$HOME/.m2/settings.xml" 
     builds-email: !include-raw builds-email.inc
-    # flags to use for reliable, tracable builds.
+
+    # flags to use for reliable, traceable builds.
     # -V show version, -fae fail at end and -B run in batch mode to reduce noise and use defaults for any prompts
     # -U ensure it will check for updates (to get latest snapshots or previously missing releases)
     # -C check consistency of files and fail if failure to download instead of continuing.
     # -e if error occurs, dump stacktrace
     ci-maven-flags: "-V -fae -e -B -U -C"
+
+    # common goals
+    unpack-flags: "org.apache.maven.plugins:maven-dependency-plugin:2.9:unpack {ci-maven-flags}"
+
+    # JBT projects
+    build-flags-min:  "clean install {ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target -gs {maven-settings-file} -Dmaven.repo.local=$WORKSPACE/.repository -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION}}"
+    deploy-flags-min: "deploy        {ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target -gs {maven-settings-file} -Dmaven.repo.local=$WORKSPACE/.repository -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION}} -Pdeploy-to-jboss.org"
+    test-flags-max:   "verify        {ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target -gs {maven-settings-file} -Dmaven.repo.local=$WORKSPACE/.repository -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}}"
+
+    # JBT aggregates, JBDS, etc.
+    build-flags-max:  "clean install {ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target -gs {maven-settings-file} -Dmaven.repo.local=$WORKSPACE/.repository -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}}"
+    deploy-flags-max: "deploy        {ci-maven-flags} -Djbosstools_site_stream={stream} -P hudson,pack200,unified.target -gs {maven-settings-file} -Dmaven.repo.local=$WORKSPACE/.repository -DTARGET_PLATFORM_VERSION=${{TARGET_PLATFORM_VERSION_MAXIMUM}} -Pdeploy-to-jboss.org"
+    
