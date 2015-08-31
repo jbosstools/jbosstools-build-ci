@@ -1,12 +1,12 @@
 - job-template:
-    name: 'jbosstools-javaee_{stream}'
+    name: 'jbosstools-javaee-no-tests_{stream}'
     disabled: '{obj:disabled}'
     description: |
       CI build for '<a href="https://github.com/jbosstools/jbosstools-javaee/">jbosstools-javaee</a>', checking every 8 hrs for changes.
       <h2><a style="color:#FF9933" href="https://github.com/jbosstools/jbosstools-devdoc/blob/master/list_of_projects.adoc">Project Listing</a></h2>
       <h3>Job runs these steps: build using min target platform, 
       publish <a href="http://download.jboss.org/jbosstools/mars/snapshots/builds/">snapshot</a>, 
-      run tests using max target platform</h3>
+      fire downstream job <a href=../jbosstools-javaee-tests-matrix_master>jbosstools-javaee-tests-matrix_master</a></h3>
     node: "{default-nodes}"
     logrotate:
       daysToKeep: "{default-daysToKeep}"
@@ -101,12 +101,12 @@
           artifacts: "**/target/*.zip, **/target/**/*.zip, **/*.log, **/coverage-report/**, **/jacoco.exec" 
           excludes: ".repository, .repository/*, .repository/**"
           latest-only: true
-      - junit:
-          results: "sources/*/*tests/*/target/surefire-reports/TEST-*.xml"
-          keep-long-stdio: false
-      - description-setter: 
-          regexp: "BUILD_DESCRIPTION='(.+)'"
-          description: "\\1"
+      #- junit:
+      #    results: "sources/*tests/*/target/surefire-reports/TEST-*.xml,sources/*/*tests/*/target/surefire-reports/TEST-*.xml"
+      #    keep-long-stdio: false
+      #- description-setter: 
+      #    regexp: "BUILD_DESCRIPTION='(.+)'"
+      #    description: "\\1"
       - email:
           recipients: "{component-responsible} {builds-email}"
           send-to-individuals: true
@@ -116,7 +116,7 @@
           publish-failed-builds: false
     wrappers:
       - timeout:
-          timeout: 120
+          timeout: 420
       - xvnc:
           screenshot: false
           xauthority: true

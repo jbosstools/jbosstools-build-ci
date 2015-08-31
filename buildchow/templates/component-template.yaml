@@ -117,6 +117,7 @@
             - BUILD_NUMBER=${{BUILD_NUMBER}}
             - skipBaselineComparison=true
             - skipITests=false
+            - skipPrivateRequirements=false
             - jbosstools.test.jre.5=${{NATIVE_TOOLS}}${{SEP}}${{JAVA15}} 
             - jbosstools.test.jre.6=${{NATIVE_TOOLS}}${{SEP}}${{JAVA16}}
             - jbosstools.test.jre.7=${{NATIVE_TOOLS}}${{SEP}}${{JAVA17}}
@@ -127,7 +128,7 @@
           excludes: ".repository, .repository/*, .repository/**"
           latest-only: true
       - junit:
-          results: "sources/*/*tests/*/target/surefire-reports/TEST-*.xml"
+          results: "sources/*tests/*/target/surefire-reports/TEST-*.xml,sources/*/*tests/*/target/surefire-reports/TEST-*.xml"
           keep-long-stdio: false
       - description-setter: 
           regexp: "BUILD_DESCRIPTION='(.+)'"
@@ -141,7 +142,7 @@
           publish-failed-builds: false
     wrappers:
       - timeout:
-          timeout: 120
+          timeout: "{job-timeout}"
       - xvnc:
           screenshot: false
           xauthority: true

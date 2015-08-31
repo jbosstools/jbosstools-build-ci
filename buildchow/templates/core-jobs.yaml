@@ -12,13 +12,16 @@
     component: &components # defined here since aliases cannot be shared across files https://storyboard.openstack.org/#!/story/2000173
       - aerogear:
           tests-folder: all-tests
+          job-timeout: 180
       - arquillian
       - base: 
           tests-folder: all-tests
+          job-timeout: 240
       - birt
       - browsersim
       - central:
           tests-folder: all-tests
+          job-timeout: 240
       - forge
       - freemarker
       # - gwt
@@ -27,18 +30,21 @@
       - jst
       #- javaee
       #    tests-folder: all-tests
+      #    job-timeout: 300
       - livereload:
           component-responsible: "xcoulon@redhat.com"
       - openshift
       - portlet
       - server:
           tests-folder: all-tests
+          job-timeout: 180
       - vpe
       - webservices
       - playground
     jobs:
       - 'jbosstools-{component}_{stream}'
-      - 'jbosstools-javaee_{stream}'
+      #- 'jbosstools-javaee_{stream}'
+      - 'jbosstools-javaee-no-tests_{stream}'
       - 'devstudio.product_{devstudio-stream}'
       - 'devstudio.versionwatch_{devstudio-stream}'
       - 'jbosstools-build-sites.aggregate.site_{stream}'
@@ -59,7 +65,8 @@
       *components  # reusing same component list but could use different one per stream if needed
     jobs:
       - 'jbosstools-{component}_{stream}'
-      - 'jbosstools-javaee_{stream}'
+      #- 'jbosstools-javaee_{stream}'
+      - 'jbosstools-javaee-no-tests_{stream}'
       - 'devstudio.product_{devstudio-stream}'
       - 'jbosstools-build-sites.aggregate.site_{stream}'
       - 'jbosstools-buildflow_{stream}'
