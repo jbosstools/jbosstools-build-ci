@@ -5,6 +5,8 @@
                  Bundle version control for JBDS<br/>
                  Maintainers: jpeterka, nboldt<br/>
                  Latest reports: <a href=ws/sources>ws/sources</a>*.html<br/>
+    blockBuildWhenDownstreamBuilding: false
+    blockBuildWhenUpstreamBuilding: false
     logrotate:
       daysToKeep: "{default-daysToKeep}"
       numToKeep: "{default-numToKeep}"

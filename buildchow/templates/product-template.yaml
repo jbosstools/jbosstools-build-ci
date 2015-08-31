@@ -12,6 +12,8 @@
         <li><a href=http://www.jboss.org/jbossas/downloads>EAP 6.x releases</a> (public)
       </ul>
     node: "{default-nodes}"
+    blockBuildWhenDownstreamBuilding: false
+    blockBuildWhenUpstreamBuilding: false
     logrotate:
       daysToKeep: "{default-daysToKeep}"
       numToKeep: "{default-numToKeep}"

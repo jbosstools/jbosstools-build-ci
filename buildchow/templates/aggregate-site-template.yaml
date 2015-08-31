@@ -13,6 +13,8 @@
       artifactDaysToKeep: "{default-artifactDaysToKeep}"
       artifactNumToKeep: "{default-artifactNumToKeep}"
     jdk: '{default-jdk}'
+    blockBuildWhenDownstreamBuilding: false
+    blockBuildWhenUpstreamBuilding: false
      
     parameters:
       - choice:
