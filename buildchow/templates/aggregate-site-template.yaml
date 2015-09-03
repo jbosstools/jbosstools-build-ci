@@ -20,6 +20,7 @@
       - choice:
           name: update.site.description
           choices:
+            - "{update-site-description}"
             - Nightly Build
             - Development Milestone
             - Stable Release
@@ -48,13 +49,14 @@
           
     scm:
       - git:
-          url: https://github.com/jbosstools/jbosstools-build-sites
+          url: git://github.com/jbosstools/jbosstools-build-sites.git
           wipe-workspace: false
+          basedir: "sources"
           branches: 
             - '{default-remote}/{branch}'
 
     triggers:
-      - timed: "H H/6 * * *"
+    #  - timed: "H H/6 * * *"
       - pollscm: "{scm-schedule}"
 
     builders:
