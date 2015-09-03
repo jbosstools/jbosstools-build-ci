@@ -37,7 +37,7 @@ usage ()
   echo "Example (JBoss Central - eXclude sources): $0 \\"
   echo "  -b /path/to/jbosstools-discovery -p jbtcentral -x \\"
   echo "  -z /path/to/eclipse-jee-mars-M5-linux-gtk-x86_64.tar.gz  -d /path/to/executable/p2diff \\"
-  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.50.0.Alpha1-SNAPSHOT/,\\
+  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.50.0.CR1-SNAPSHOT/,\\
 http://download.jboss.org/jbosstools/updates/nightly/core/master/"
   echo "          or, use locally built sites"
   echo "  -u file:///path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,\\
@@ -46,9 +46,9 @@ file:///path/to/jbosstools-build-sites/aggregate/site/target/"
   echo "Example (JBoss Central Early Access - eXclude sources): $0 \\"
   echo "  -b /path/to/jbosstools-discovery -p jbtearlyaccess -x \\"
   echo "  -z /path/to/eclipse-jee-mars-M5-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff \\"
-  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.50.0.Alpha1-SNAPSHOT/,\\
+  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.50.0.CR1-SNAPSHOT/,\\
 http://download.jboss.org/jbosstools/updates/nightly/core/master/,\\
-http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.50.0.Alpha1-SNAPSHOT/"
+http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.50.0.CR1-SNAPSHOT/"
   echo "          or, use locally built sites"
   echo "  -u file:///path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,\\
 file:///path/to/jbosstools-build-sites/aggregate/site/target/,\\
