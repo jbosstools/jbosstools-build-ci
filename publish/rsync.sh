@@ -58,7 +58,7 @@ while [[ "$#" -gt 0 ]]; do
   esac
   shift 1
 done
-echo "[DEBUG] RSYNCFLAGS = $RSYNCFLAGS"
+# echo "[DEBUG] RSYNCFLAGS = $RSYNCFLAGS"
 
 # build the target_path with sftp to ensure intermediate folders exist
 if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
