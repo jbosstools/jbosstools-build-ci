@@ -4,7 +4,7 @@ if [[ $1 ]]; then stream="$1"; else stream="master"; fi
 
 if [[ $2 ]]; then WORKSPACE="$2"; else WORKSPACE="$(pwd)"; fi
 
-if [[ $3 ]]; then path="$3"; else path="mars/snapshots/builds"; fi
+if [[ $3 ]]; then path="$3"; else path="neon/snapshots/builds"; fi
 
 TOOLS="tools@filemgmt.jboss.org:/downloads_htdocs/tools"
 

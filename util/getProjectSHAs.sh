@@ -15,11 +15,11 @@ usage ()
     echo "             -iu issues.jboss.org_USER -ip issues.jboss.org_PWD -jbtm 4.2.0.MILESTONE -jbdsm 8.0.0.MILESTONE -respin a|b|c..."
     echo ""
     # for the milestone, find the related JIRAs and get the associated projects
-    echo "Example 1: $0 -branch jbosstools-4.3.0.Beta1x -jbtstream 4.3.mars -jbdsstream 9.0.mars -ju nboldt -jp j_pwd \\"
-    echo "             -gu nickboldt@gmail.com -gp g_pwd -iu nickboldt -ip i_pwd -jbtm 4.3.0.Beta1 -jbdsm 9.0.0.Beta1 -respin a"
+    echo "Example 1: $0 -branch jbosstools-4.4.0.Alpha1x -jbtstream 4.4.neon -jbdsstream 10.0.neon -ju nboldt -jp j_pwd \\"
+    echo "             -gu nickboldt@gmail.com -gp g_pwd -iu nickboldt -ip i_pwd -jbtm 4.4.0.Alpha1 -jbdsm 10.0.0.Alpha1 -respin a"
     echo ""
     # for a list of projects, find any unbuilt commits
-    echo "Example 2: $0 -branch jbosstools-4.3.0.Beta1x -jbtstream 4.3.mars -jbdsstream 9.0.mars -ju nboldt -jp j_pwd \\"
+    echo "Example 2: $0 -branch jbosstools-4.4.0.Alpha1x -jbtstream 4.4.neon -jbdsstream 10.0.neon -ju nboldt -jp j_pwd \\"
     echo "            -gu nickboldt@gmail.com -gp g_pwd -jbds product -jbt aerogear,arquillian,base,birt,browsersim,central,discovery,\\"
     echo "forge,freemarker,hibernate,javaee,jst,livereload,openshift,portlet,server,vpe,webservices"
     exit 1;
@@ -35,11 +35,11 @@ toggleJenkinsJobs=~/truu/jbdevstudio-ci/bin/toggleJenkinsJobs.py
 JBTPROJECT=""
 #JBDSPROJECT="product"
 JBDSPROJECT=""
-jbtstream=4.3.mars # or master
-jbdsstream=9.0.mars # or master 
-branch=jbosstools-4.3.0.Beta1x # or master
-jbtpath=mars/snapshots/builds # or builds/staging, from JBDS 8 and before
-jbdspath=9.0/snapshots/builds
+jbtstream=4.4.neon # or master
+jbdsstream=10.0.neon # or master 
+branch=jbosstools-4.4.0.Alpha1x # or master
+jbtpath=neon/snapshots/builds # or builds/staging, from JBDS 8 and before
+jbdspath=10.0/snapshots/builds
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -244,7 +244,7 @@ checkProjects () {
       echo "== ${g_project} =="
     fi
 
-    # githash=`firefox https://github.com/jbdevstudio/jbdevstudio-product/commits/jbosstools-4.3.0.Beta1x` 
+    # githash=`firefox https://github.com/jbdevstudio/jbdevstudio-product/commits/jbosstools-4.4.0.Alpha1x` 
     # echo https://api.github.com/repos/jbdevstudio/jbdevstudio-${j}/commits/${branch}
     tmp=`mktemp`
     githash=`curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -u "${g_user}:${g_password}" -s -S > ${tmp} && cat ${tmp} | head -2 | grep sha | \

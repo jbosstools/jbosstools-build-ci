@@ -23,7 +23,7 @@ echo "" | tee -a $log
 #defauls
 numbuildstokeep=1000 # keep X builds per branch
 threshholdwhendelete=365 # purge builds more than X days old
-dirsToScan="mars/snapshots/builds builds/staging/CI builds/nightly/core builds/nightly/coretests builds/nightly/soa-tooling builds/nightly/soatests builds/nightly/webtools builds/nightly/hibernatetools builds/nightly/integrationtests"
+dirsToScan="neon/snapshots/builds mars/snapshots/builds builds/staging/CI builds/nightly/core builds/nightly/coretests builds/nightly/soa-tooling builds/nightly/soatests builds/nightly/webtools builds/nightly/hibernatetools builds/nightly/integrationtests"
 excludes="sftp>|((\.properties|\.jar|\.zip|\.MD5|\.md5)$)|(^(*.*ml|\.blobstore|web|plugins|features|binary|empty_composite_site)$)" # when dir matching, exclude *.*ml, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
 includes=""; # regex pattern to match within subdirs to make cleanup faster + more restrictive; eg., jbosstools-build-sites.aggregate.earlyaccess-site_master
 delete=1 # if 1, files will be deleted. if 0, files will be listed for delete but not actually removed
@@ -39,7 +39,7 @@ if [[ $# -lt 1 ]]; then
 	echo "Example (publish.sh): $0 -k 5 -a 5 -S /all/repo/"
 	echo "Example (promote.sh): $0 --dirs-to-scan 'updates/integration/indigo/soa-tooling/' --regen-metadata-only"
 	echo "Example (promote.sh): $0 --dirs-to-scan 'updates/integration//locus' --regen-metadata-only --no-subdirs"
-	echo "Example (rsync.sh):   $0 -k 2 -a 2 -S /all/repo/ -d mars/snapshots/builds --include jbosstools-build-sites.aggregate"
+	echo "Example (rsync.sh):   $0 -k 2 -a 2 -S /all/repo/ -d neon/snapshots/builds --include jbosstools-build-sites.aggregate"
 	exit 1;
 fi
 

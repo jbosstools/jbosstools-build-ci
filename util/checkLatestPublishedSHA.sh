@@ -12,7 +12,7 @@ usage ()
   echo ""
 
   echo "To compare the generated json file to its published snapshot location:"
-  echo "Usage  : $0 -s \${WORKSPACE}/sources/site/target/repository -t http://download.jboss.org/jbosstools/mars/snapshots/builds/\${JOB_NAME}/latest/all/repo"
+  echo "Usage  : $0 -s \${WORKSPACE}/sources/site/target/repository -t http://download.jboss.org/jbosstools/neon/snapshots/builds/\${JOB_NAME}/latest/all/repo"
 
   echo ""
   echo "If SHAs match, return FALSE."
@@ -26,7 +26,7 @@ if [[ $# -lt 1 ]]; then usage; fi
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     '-s') SOURCE_PATH="$2"; SOURCE_PATH=${SOURCE_PATH%/}; shift 1;; # ${WORKSPACE}/sources/site/target/repository [trim trailing slash]
-    '-t') TARGET_PATH="$2"; TARGET_PATH=${TARGET_PATH%/}; shift 1;; # mars/snapshots/builds/<job-name>/<build-number> [trim trailing slash]
+    '-t') TARGET_PATH="$2"; TARGET_PATH=${TARGET_PATH%/}; shift 1;; # neon/snapshots/builds/<job-name>/<build-number> [trim trailing slash]
   esac
   shift 1
 done

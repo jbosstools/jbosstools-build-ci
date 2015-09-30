@@ -19,8 +19,8 @@ usage ()
   echo "Usage  : $0 [-DESTINATION destination] -v version -vr version-with-respin -is integration-stack-discovery-site"
   echo ""
   # TODO https://issues.jboss.org/browse/JBTIS-498 - should have more consistent URLs here
-  echo "Example 1: $0 -v 4.3.0.CR1 -vr 4.3.0.CR1a -is http://download.jboss.org/jbosstools/mars/snapshots/builds/integration-stack/discovery/4.3.0.Alpha2/"
-  echo "Example 2: $0 -v 9.0.0.CR1 -vr 9.0.0.CR1a -is https://devstudio.redhat.com/9.0/staging/updates/integration-stack/discovery/9.0.0.Alpha2/ -JBDS"
+  echo "Example 1: $0 -v 4.4.0.CR1 -vr 4.4.0.CR1a -is http://download.jboss.org/jbosstools/neon/snapshots/builds/integration-stack/discovery/4.4.0.Alpha2/"
+  echo "Example 2: $0 -v 10.0.0.CR1 -vr 10.0.0.CR1a -is https://devstudio.redhat.com/10.0/staging/updates/integration-stack/discovery/10.0.0.Alpha2/ -JBDS"
 
   echo ""
   exit 1
@@ -44,10 +44,10 @@ done
 
 if [[ $DESTINATION = $TOOLS ]]; then
   directoryXML=jbosstools-directory.xml
-  destinationURL=http://download.jboss.org/jbosstools/mars
+  destinationURL=http://download.jboss.org/jbosstools/neon
 else
   directoryXML=devstudio-directory.xml
-  destinationURL=https://devstudio.redhat.com/9.0
+  destinationURL=https://devstudio.redhat.com/10.0
 fi  
 for quality in ${qualities}; do
   tmpdir=/tmp/merge_${quality}_IS_plugins_to_${directoryXML}; mkdir -p $tmpdir; pushd $tmpdir >/dev/null
@@ -55,22 +55,22 @@ for quality in ${qualities}; do
     wget ${ISsite}/${directoryXML} --no-check-certificate -q -O - | grep integration-stack > $tmpdir/pluginXML.fragment.txt
     # if [[ -f $tmpdir/pluginXML.fragment.txt ]]; then cat $tmpdir/pluginXML.fragment.txt; fi # debugging
     # echo "" # debugging
-    mkdir -p 9.0/${quality}/updates/discovery.central/${versionWithRespin}/plugins/
-    pushd 9.0/${quality}/updates/discovery.central/${versionWithRespin}/plugins/ >/dev/null
+    mkdir -p 10.0/${quality}/updates/discovery.central/${versionWithRespin}/plugins/
+    pushd 10.0/${quality}/updates/discovery.central/${versionWithRespin}/plugins/ >/dev/null
       # get plugin jars names/paths
       plugins=$(cat $tmpdir/pluginXML.fragment.txt | sed "s#.\+url=\"\(.\+\.jar\)\".\+#\1#")
       # get plugin jars into discovery.central
       for plugin in $plugins; do wget ${ISsite}/${plugin} --no-check-certificate -q && echo "[INFO] $plugin"; done
     popd >/dev/null
     # copy into discovery.earlyaccess
-    mkdir -p 9.0/${quality}/updates/discovery.earlyaccess/${versionWithRespin}/plugins/
-    rsync -aq 9.0/${quality}/updates/discovery.central/${versionWithRespin}/plugins/*.jar 9.0/${quality}/updates/discovery.earlyaccess/${versionWithRespin}/plugins/
+    mkdir -p 10.0/${quality}/updates/discovery.earlyaccess/${versionWithRespin}/plugins/
+    rsync -aq 10.0/${quality}/updates/discovery.central/${versionWithRespin}/plugins/*.jar 10.0/${quality}/updates/discovery.earlyaccess/${versionWithRespin}/plugins/
     echo ""
     # get JBDS discovery site XML - both discovery.central and discovery.earlyaccess
     echo "[INFO] Verify changes here:"
     for disco in discovery.central discovery.earlyaccess; do
-      pushd 9.0/${quality}/updates/${disco}/${versionWithRespin}/ >/dev/null
-        rsync -aqrz --rsh=ssh --protocol=28 ${DESTINATION}/9.0/${quality}/updates/${disco}/${versionWithRespin}/${directoryXML} ./
+      pushd 10.0/${quality}/updates/${disco}/${versionWithRespin}/ >/dev/null
+        rsync -aqrz --rsh=ssh --protocol=28 ${DESTINATION}/10.0/${quality}/updates/${disco}/${versionWithRespin}/${directoryXML} ./
         # merge pluginXML fragment into ${directoryXML}
         sed -i "/<\/directory>/d" ${directoryXML} # remove closing tag
         sed -i "/.\+integration-stack.\+/d" ${directoryXML} # remove any existing plugins
@@ -80,7 +80,7 @@ for quality in ${qualities}; do
         #ls -l `pwd`/${directoryXML} `pwd`/plugins # debugging
 
         # push new plugins and updated xml to DESTINATION 
-        rsync -aqrz --rsh=ssh --protocol=28 ./* ${DESTINATION}/9.0/${quality}/updates/${disco}/${versionWithRespin}/
+        rsync -aqrz --rsh=ssh --protocol=28 ./* ${DESTINATION}/10.0/${quality}/updates/${disco}/${versionWithRespin}/
 
         echo " >> ${destinationURL}/${quality}/updates/${disco}/${versionWithRespin}/${directoryXML}"
         echo " >> ${destinationURL}/${quality}/updates/${disco}/${versionWithRespin}/plugins/"

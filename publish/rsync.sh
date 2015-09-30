@@ -23,18 +23,18 @@ usage ()
   echo ""
 
   echo "To push a project build folder from Jenkins to staging:"
-  echo "   $0 -s \${WORKSPACE}/sources/site/target/repository/ -t mars/snapshots/builds/\${JOB_NAME}/\${BUILD_ID}-B\${BUILD_NUMBER}/all/repo/"  # BUILD_ID=2015-02-17_17-57-54; 
+  echo "   $0 -s \${WORKSPACE}/sources/site/target/repository/ -t neon/snapshots/builds/\${JOB_NAME}/\${BUILD_ID}-B\${BUILD_NUMBER}/all/repo/"  # BUILD_ID=2015-02-17_17-57-54; 
   echo ""
 
   echo "To push JBT build + update site folders:"
-  echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite          -t mars/snapshots/builds/\${JOB_NAME}/\${BUILD_ID}-B\${BUILD_NUMBER}"
-  echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite/all/repo -t mars/snapshots/updates/core/\${stream} --del"
+  echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite          -t neon/snapshots/builds/\${JOB_NAME}/\${BUILD_ID}-B\${BUILD_NUMBER}"
+  echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite/all/repo -t neon/snapshots/updates/core/\${stream} --del"
   echo ""
 
   echo "To push JBDS build + update site folders:"
-  echo "   $0 -DESTINATION hudson@dev01.mw.lab.eng.bos.redhat.com:/qa/services/http/binaries/RHDS  -s \${WORKSPACE}/sources/results/target      -t 9.0/snapshots/builds/\${JOB_NAME}/all"
-  echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio -e \*eap.jar         -s \${WORKSPACE}/sources/results/target      -t 9.0/snapshots/builds/\${JOB_NAME}/all"
-  echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio                      -s \${WORKSPACE}/sources/results/target/repo -t 9.0/snapshots/updates/core/\${stream} --del"
+  echo "   $0 -DESTINATION hudson@dev01.mw.lab.eng.bos.redhat.com:/qa/services/http/binaries/RHDS  -s \${WORKSPACE}/sources/results/target      -t 10.0/snapshots/builds/\${JOB_NAME}/all"
+  echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio -e \*eap.jar         -s \${WORKSPACE}/sources/results/target      -t 10.0/snapshots/builds/\${JOB_NAME}/all"
+  echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio                      -s \${WORKSPACE}/sources/results/target/repo -t 10.0/snapshots/updates/core/\${stream} --del"
   echo ""
   exit 1
 }
@@ -46,7 +46,7 @@ while [[ "$#" -gt 0 ]]; do
   case $1 in
     '-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., /qa/services/http/binaries/RHDS
     '-s') SOURCE_PATH="$2"; shift 1;; # ${WORKSPACE}/sources/site/target/repository/
-    '-t') TARGET_PATH="$2"; shift 1;; # mars/snapshots/builds/<job-name>/<build-number>/, mars/snapshots/updates/core/{4.3.0.Alpha1, master}/
+    '-t') TARGET_PATH="$2"; shift 1;; # neon/snapshots/builds/<job-name>/<build-number>/, neon/snapshots/updates/core/{4.4.0.Alpha1, master}/
     '-i') INCLUDES="$2"; shift 1;;
     '-e') EXCLUDES="$2"; shift 1;;
     '-DBUILD_ID','-BUILD_ID')        BUILD_ID="$2"; shift 1;;
@@ -76,10 +76,10 @@ else
         rsync -arzq --protocol=28 ${RSYNCFLAGS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
 fi
 
-# given  TARGET_PATH=/downloads_htdocs/tools/mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master/2015-03-06_17-58-07-B13/all/repo/
-# return PARENT_PATH=mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master
-# given  TARGET_PATH=9.0/snapshots/builds/devstudio.product_master/2015-07-16_00-00-00-B69/all
-# return PARENT_PATH=9.0/snapshots/builds/devstudio.product_master
+# given  TARGET_PATH=/downloads_htdocs/tools/neon/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master/2015-03-06_17-58-07-B13/all/repo/
+# return PARENT_PATH=neon/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master
+# given  TARGET_PATH=10.0/snapshots/builds/devstudio.product_master/2015-07-16_00-00-00-B69/all
+# return PARENT_PATH=10.0/snapshots/builds/devstudio.product_master
 PARENT_PATH=$(echo $TARGET_PATH | sed -e "s#/\?downloads_htdocs/tools/##" -e "s#/\?www_htdocs/devstudio/##" -e "s#/\?qa/services/http/binaries/RHDS/##" -e "s#/\?all/repo/\?##" -e "s#/\?all/\?##" -e "s#/\$##" -e "s#^/##" -e "s#\(.\+\)/[^/]\+#\1#")
 # if TARGET_PATH contains a BUILD_ID-B# folder,
 # create symlink: jbosstools-build-sites.aggregate.earlyaccess-site_master/latest -> jbosstools-build-sites.aggregate.earlyaccess-site_master/${BUILD_ID}-B${BUILD_NUMBER}
@@ -90,7 +90,7 @@ fi
 # for published builds on download.jboss.org ONLY!
 # regenerate http://download.jboss.org/jbosstools/builds/${TARGET_PATH}/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
 if [[ ${WORKSPACE} ]] && [[ ${TARGET_PATH/builds/} != ${TARGET_PATH} ]] && [[ -f ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh ]]; then
-    # given mars/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master return mars/snapshots/builds
+    # given neon/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master return neon/snapshots/builds
     PARENT_PARENT_PATH=$(echo $PARENT_PATH | sed -e "s#\(.\+\)/[^/]\+#\1#")
     chmod +x ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh
     # given above, ${PARENT_PATH#${PARENT_PARENT_PATH}/} returns last path segment jbosstools-build-sites.aggregate.earlyaccess-site_master

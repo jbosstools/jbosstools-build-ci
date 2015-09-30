@@ -5,10 +5,10 @@ debug=0
 usage ()
 {
 	echo "Usage: $0 -b newbranchname [project1] [project2] [project3] ..."
-	echo "Example: $0 -b jbosstools-4.3.0.Beta2x aerogear arquillian base birt browsersim build build-ci build-sites \\"
+	echo "Example: $0 -b jbosstools-4.4.0.Alpha1x aerogear arquillian base birt browsersim build build-ci build-sites \\"
 	echo " central devdoc discovery download.jboss.org forge freemarker hibernate integration-tests javaee jst \\"
 	echo " livereload maven-plugins openshift playground server versionwatch vpe webservices" # portlet
-	echo "Use -s to report similar branches (eg., for 4.3.0.Beta2x, search for *Beta2x)"
+	echo "Use -s to report similar branches (eg., for 4.4.0.Alpha1x, search for *Alpha1x)"
 	exit 1;
 }
 
@@ -49,7 +49,7 @@ norm="\033[0;39m"
 green="\033[1;32m"
 red="\033[1;31m"
 
-# for branch = jbosstools-4.3.0.Alpha1x  check also for a branch ending in Alpha1x
+# for branch = jbosstools-4.4.0.Alpha1x  check also for a branch ending in Alpha1x
 branchAlt=${branch##*.}; 
 cd /tmp
 cnt=0

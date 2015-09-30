@@ -14,7 +14,7 @@ usage ()
     echo ""
     echo "Example 1: $0 -b jbosstools-4.2.x -pv 4.2.3.CR1-SNAPSHOT -w1 /home/nboldt/42x -w2 /home/nboldt/42xx"
     echo ""
-    echo "Example 2: $0 -pv 4.3.0.Alpha2-SNAPSHOT -skipupdate -w1 /home/nboldt/tru -w2 /home/nboldt/truu"
+    echo "Example 2: $0 -pv 4.4.0.Alpha1-SNAPSHOT -skipupdate -w1 /home/nboldt/tru -w2 /home/nboldt/truu"
     echo ""
     exit 1;
 }
@@ -24,10 +24,10 @@ if [[ $# -lt 1 ]]; then
 fi
 
 doGitUpdate=true
-parent=4.2.3.Final-SNAPSHOT # or 4.3.0.Alpha1-SNAPSHOT
-branch=jbosstools-4.2.x # or master
-jbtstream=4.2.luna  # or 4.3.mars or master
-jbdsstream=8.0.luna # or 9.0.mars or master 
+parent=4.4.0.Alpha1-SNAPSHOT # or 4.4.0.Final-SNAPSHOT
+branch=jbosstools-4.4.x # or master
+jbtstream=4.4.neon  # or master
+jbdsstream=10.0.neon # or master 
 
 WORKSPACE1=${HOME}/tru
 WORKSPACE2=${HOME}/truu
@@ -46,10 +46,9 @@ done
 if [[ $branch == "master" ]]; then
   jbtstream="master"
   jbdsstream="master"
-elif [[ ${branch/4.3/} != ${branch} ]]; then
-  # TODO: maybe we want to use mars + 9.0 to match changes in JBDS-3208 ?
-  jbtstream="4.3.mars"
-  jbdsstream="9.0.mars"
+elif [[ ${branch/4.4/} != ${branch} ]]; then
+  jbtstream="4.4.neon"
+  jbdsstream="10.0.neon"
 fi
 
 # TODO parameterize these?
