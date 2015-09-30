@@ -205,7 +205,7 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
       # but just in case fall back to github
       if [[ ! -f ${WORKSPACE}/sources/util/installFromTarget.sh ]]; then
         echo "  Fetch target install script to ${INSTALLSCRIPT} ..." 
-        wget -q --no-check-certificate -N https://raw.githubusercontent.com/jbosstools/jbosstools-build-ci/4.3.x/util/installFromTarget.sh -O ${INSTALLSCRIPT}
+        wget -q --no-check-certificate -N https://raw.githubusercontent.com/jbosstools/jbosstools-build-ci/jbosstools-4.3.x/util/installFromTarget.sh -O ${INSTALLSCRIPT}
       else
         cp -f ${WORKSPACE}/sources/util/installFromTarget.sh ${INSTALLSCRIPT}
       fi
