@@ -7,6 +7,29 @@
 	<version>4.4.0.Alpha1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
+	<name>JBoss Tools - Scripts for Release Engineering</name>
+	<description>Various scripts used as part of JBoss Tools snapshot-publishing and releasing process</description>
+	<url>http://jboss.org/tools</url>
+	<licenses>
+		<license>
+			<name>Eclipse Public License</name>
+			<url>http://www.eclipse.org/legal/epl-v10.html</url>
+		</license>
+	</licenses>
+	<scm>
+		<connection>scm:git:git://git@github.com:jbosstools/jbosstools-build-ci.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com:jbosstools/jbosstools-build-ci.git</developerConnection>
+		<url>git://github.com/jbosstools/jbosstools-build-ci.git</url>
+	</scm>
+	<developers>
+		<developer>
+			<id>tools.jboss.org</id>
+			<name>JBoss Tools</name>
+			<organization>jboss.org/tools</organization>
+			<organizationUrl>http://jboss.org/tools</organizationUrl>
+		</developer>
+	</developers>
+
 	<build>
 	  <plugins>
 	    <plugin>
@@ -104,8 +127,8 @@
 	    <uniqueVersion>false</uniqueVersion>
 	  </snapshotRepository>
 	  <repository>
-	    <id>jboss-staging-repository</id>
-	    <name>JBoss Staging Service</name>
+	    <id>jboss-releases-repository</id>
+	    <name>JBoss Staging Release Service</name>
 	    <uniqueVersion>false</uniqueVersion>
 	    <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
 	  </repository>
