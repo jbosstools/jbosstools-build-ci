@@ -33,8 +33,8 @@ while [[ "$#" -gt 0 ]]; do
   case $1 in
     '-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., /qa/services/http/binaries/RHDS
     '-JBDS') DESTINATION="${JBDS}"; shift 0;; # shortcut
-    '-v') version="$2"; shift 1;;
-    '-vr') versionWithRespin="$2"; shift 1;;
+    '-v','-version') version="$2"; shift 1;;
+    '-vr','-versionWithRespin') versionWithRespin="$2"; shift 1;;
     '-is') ISsite="$2"; shift 1;;
     '-q') qualities="$qualities $2"; shift 1;;
     *) OTHERFLAGS="${OTHERFLAGS} $1"; shift 0;;
