@@ -37,7 +37,7 @@
 	      <version>2.5.4</version>
 	      <executions>
 		<execution>
-		  <id>create-script-zip</id>
+		  <id>create-script-targz</id>
 		  <phase>package</phase>
 		  <goals>
 		    <goal>single</goal>
