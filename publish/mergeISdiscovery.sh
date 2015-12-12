@@ -18,9 +18,8 @@ usage ()
 {
   echo "Usage  : $0 [-DESTINATION destination] -v version -vr version-with-respin -is integration-stack-discovery-site"
   echo ""
-  # TODO https://issues.jboss.org/browse/JBTIS-498 - should have more consistent URLs here
-  echo "Example 1: $0 -v 4.3.0.CR1 -vr 4.3.0.CR1a -is http://download.jboss.org/jbosstools/mars/snapshots/builds/integration-stack/discovery/4.3.0.Alpha2/"
-  echo "Example 2: $0 -v 9.0.0.CR1 -vr 9.0.0.CR1a -is https://devstudio.redhat.com/${rootFolder}/staging/updates/integration-stack/discovery/9.0.0.Alpha2/ -JBDS"
+  echo "Example 1: $0 -v 4.3.0.CR1 -vr 4.3.0.CR1a -is http://download.jboss.org/jbosstools/mars/staging/updates/integration-stack/discovery/4.3.0.Alpha2/"
+  echo "Example 2: $0 -v 9.0.0.CR1 -vr 9.0.0.CR1a -is https://devstudio.redhat.com/9.0/staging/updates/integration-stack/discovery/9.0.0.Alpha2/ -JBDS"
 
   echo ""
   exit 1
@@ -37,6 +36,7 @@ while [[ "$#" -gt 0 ]]; do
     '-vr'|'-versionWithRespin') versionWithRespin="$2"; shift 1;;
     '-is') ISsite="$2"; shift 1;;
     '-q') qualities="$qualities $2"; shift 1;;
+    '-r'|'-rootFolder') rootFolder="$2"; shift 1;;
     *) OTHERFLAGS="${OTHERFLAGS} $1"; shift 0;;
   esac
   shift 1
@@ -44,11 +44,11 @@ done
 
 if [[ $DESTINATION = $TOOLS ]]; then
   directoryXML=jbosstools-directory.xml
-  rootFolder=mars
+  if [[ ! $rootFolder ]]; then rootFolder=mars; fi
   destinationURL=http://download.jboss.org/jbosstools/${rootFolder}
 else
   directoryXML=devstudio-directory.xml
-  rootFolder=9.0
+  if [[ ! $rootFolder ]]; then rootFolder=9.0; fi
   destinationURL=https://devstudio.redhat.com/${rootFolder}
 fi  
 for quality in ${qualities}; do
