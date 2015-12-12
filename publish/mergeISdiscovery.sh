@@ -18,9 +18,8 @@ usage ()
 {
   echo "Usage  : $0 [-DESTINATION destination] -v version -vr version-with-respin -is integration-stack-discovery-site"
   echo ""
-  # TODO https://issues.jboss.org/browse/JBTIS-498 - should have more consistent URLs here
-  echo "Example 1: $0 -v 4.4.0.CR1 -vr 4.4.0.CR1a -is http://download.jboss.org/jbosstools/neon/snapshots/builds/integration-stack/discovery/4.4.0.Alpha2/"
-  echo "Example 2: $0 -v 10.0.0.CR1 -vr 10.0.0.CR1a -is https://devstudio.redhat.com/10.0/staging/updates/integration-stack/discovery/10.0.0.Alpha2/ -JBDS"
+  echo "Example 1: $0 -v 4.4.0.Alpha1 -vr 4.4.0.Alpha1a -is http://download.jboss.org/jbosstools/mars/staging/updates/integration-stack/discovery/4.4.0.Alpha2/"
+  echo "Example 2: $0 -v 10.0.0.Alpha1 -vr 10.0.0.Alpha1a -is https://devstudio.redhat.com/10.0/staging/updates/integration-stack/discovery/10.0.0.Alpha2/ -JBDS"
 
   echo ""
   exit 1
@@ -33,10 +32,11 @@ while [[ "$#" -gt 0 ]]; do
   case $1 in
     '-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., /qa/services/http/binaries/RHDS
     '-JBDS') DESTINATION="${JBDS}"; shift 0;; # shortcut
-    '-v','-version') version="$2"; shift 1;;
-    '-vr','-versionWithRespin') versionWithRespin="$2"; shift 1;;
+    '-v'|'-version') version="$2"; shift 1;;
+    '-vr'|'-versionWithRespin') versionWithRespin="$2"; shift 1;;
     '-is') ISsite="$2"; shift 1;;
     '-q') qualities="$qualities $2"; shift 1;;
+    '-r'|'-rootFolder') rootFolder="$2"; shift 1;;
     *) OTHERFLAGS="${OTHERFLAGS} $1"; shift 0;;
   esac
   shift 1
@@ -44,10 +44,12 @@ done
 
 if [[ $DESTINATION = $TOOLS ]]; then
   directoryXML=jbosstools-directory.xml
-  destinationURL=http://download.jboss.org/jbosstools/neon
+  if [[ ! $rootFolder ]]; then rootFolder=neon; fi
+  destinationURL=http://download.jboss.org/jbosstools/${rootFolder}
 else
   directoryXML=devstudio-directory.xml
-  destinationURL=https://devstudio.redhat.com/10.0
+  if [[ ! $rootFolder ]]; then rootFolder=10.0; fi
+  destinationURL=https://devstudio.redhat.com/${rootFolder}
 fi  
 for quality in ${qualities}; do
   tmpdir=/tmp/merge_${quality}_IS_plugins_to_${directoryXML}; mkdir -p $tmpdir; pushd $tmpdir >/dev/null
@@ -55,32 +57,33 @@ for quality in ${qualities}; do
     wget ${ISsite}/${directoryXML} --no-check-certificate -q -O - | grep integration-stack > $tmpdir/pluginXML.fragment.txt
     # if [[ -f $tmpdir/pluginXML.fragment.txt ]]; then cat $tmpdir/pluginXML.fragment.txt; fi # debugging
     # echo "" # debugging
-    mkdir -p 10.0/${quality}/updates/discovery.central/${versionWithRespin}/plugins/
-    pushd 10.0/${quality}/updates/discovery.central/${versionWithRespin}/plugins/ >/dev/null
+    # echo "[INFO] versionWithRespin = ${versionWithRespin}" # debugging
+    mkdir -p ${rootFolder}/${quality}/updates/discovery.central/${versionWithRespin}/plugins/
+    pushd ${rootFolder}/${quality}/updates/discovery.central/${versionWithRespin}/plugins/ >/dev/null
       # get plugin jars names/paths
       plugins=$(cat $tmpdir/pluginXML.fragment.txt | sed "s#.\+url=\"\(.\+\.jar\)\".\+#\1#")
       # get plugin jars into discovery.central
       for plugin in $plugins; do wget ${ISsite}/${plugin} --no-check-certificate -q && echo "[INFO] $plugin"; done
     popd >/dev/null
     # copy into discovery.earlyaccess
-    mkdir -p 10.0/${quality}/updates/discovery.earlyaccess/${versionWithRespin}/plugins/
-    rsync -aq 10.0/${quality}/updates/discovery.central/${versionWithRespin}/plugins/*.jar 10.0/${quality}/updates/discovery.earlyaccess/${versionWithRespin}/plugins/
+    mkdir -p ${rootFolder}/${quality}/updates/discovery.earlyaccess/${versionWithRespin}/plugins/
+    rsync -aq ${rootFolder}/${quality}/updates/discovery.central/${versionWithRespin}/plugins/*.jar ${rootFolder}/${quality}/updates/discovery.earlyaccess/${versionWithRespin}/plugins/
     echo ""
     # get JBDS discovery site XML - both discovery.central and discovery.earlyaccess
     echo "[INFO] Verify changes here:"
     for disco in discovery.central discovery.earlyaccess; do
-      pushd 10.0/${quality}/updates/${disco}/${versionWithRespin}/ >/dev/null
-        rsync -aqrz --rsh=ssh --protocol=28 ${DESTINATION}/10.0/${quality}/updates/${disco}/${versionWithRespin}/${directoryXML} ./
+      pushd ${rootFolder}/${quality}/updates/${disco}/${versionWithRespin}/ >/dev/null
+        rsync -aqrz --rsh=ssh --protocol=28 ${DESTINATION}/${rootFolder}/${quality}/updates/${disco}/${versionWithRespin}/${directoryXML} ./
         # merge pluginXML fragment into ${directoryXML}
         sed -i "/<\/directory>/d" ${directoryXML} # remove closing tag
         sed -i "/.\+integration-stack.\+/d" ${directoryXML} # remove any existing plugins
-        cat $tmpdir/pluginXML.fragment.txt >> ${directoryXML}
+        cat $tmpdir/pluginXML.fragment.txt | sed -e "s#earlyaccess/plugins/#plugins/#">> ${directoryXML}
         echo "</directory>" >> ${directoryXML} # add closing tag back on
         # echo ""; echo "`pwd` / ${directoryXML} :"; cat ${directoryXML}; echo "" # debugging
         #ls -l `pwd`/${directoryXML} `pwd`/plugins # debugging
 
         # push new plugins and updated xml to DESTINATION 
-        rsync -aqrz --rsh=ssh --protocol=28 ./* ${DESTINATION}/10.0/${quality}/updates/${disco}/${versionWithRespin}/
+        rsync -aqrz --rsh=ssh --protocol=28 ./* ${DESTINATION}/${rootFolder}/${quality}/updates/${disco}/${versionWithRespin}/
 
         echo " >> ${destinationURL}/${quality}/updates/${disco}/${versionWithRespin}/${directoryXML}"
         echo " >> ${destinationURL}/${quality}/updates/${disco}/${versionWithRespin}/plugins/"
