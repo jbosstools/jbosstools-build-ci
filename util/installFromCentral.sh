@@ -2,21 +2,23 @@
 
 # this Jenkins script is used to install a comma-separated list of IUs (.feature.groups) from update site(s) into a pre-existing Eclipse installation
 # sample invocation:
-# eclipse=${HOME}/tmp/Eclipse_Bundles/eclipse-jee-luna-M6-linux-gtk-x86_64.tar.gz
-# workspace=${HOME}/eclipse/workspace-clean44
-# target=${HOME}/eclipse/44clean; rm -fr ${target}/eclipse ${workspace}
+# eclipse=${HOME}/tmp/Eclipse_Bundles/eclipse-jee-neon-M3-linux-gtk.tar.gz
+# workspace=${HOME}/eclipse/workspace-clean46
+# target=${HOME}/eclipse/46clean; rm -fr ${target}/eclipse ${workspace}
 # echo "Unpack $eclipse ..."; pushd ${target}; tar xzf ${eclipse}; popd
 # ./installFromCentral.sh -ECLIPSE ${target}/eclipse/ -WORKSPACE ${workspace} \
-# -INSTALL_PLAN http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/,http://www.qa.jboss.com/binaries/RHDS/discovery/nightly/core/master/devstudio-directory.xml \
+# -INSTALL_PLAN "https://devstudio.redhat.com/10.0/snapshots/builds/jbosstools-discovery.central_4.4.neon/latest/all/repo/;https://devstudio.redhat.com/10.0/snapshots/builds/jbosstools-discovery.earlyaccess_4.4.neon/latest/all/repo/devstudio-directory.xml" \
 # | tee /tmp/installFromCentral_log.txt; cat /tmp/installFromCentral_log.txt | egrep -i "could not be found|FAILED|Missing|Only one of the following|being installed|Cannot satisfy dependency|cannot be installed"
 #
 # See also https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-install-p2director.install-tests.matrix_master/
 
 usage ()
 {
-  echo "Usage: $0 -ECLIPSE /path/to/eclipse-install/ -INSTALL_PLAN http://JBT-or-JBDS-update-site;http://JBT-or-JBDS/composite/directory.xml"
-  echo "Example: $0 -ECLIPSE ${WORKSPACE}/eclipse/ -INSTALL_PLAN http://download.jboss.org/jbosstools/updates/nightly/core/master/,http://download.jboss.org/jbosstools/discovery/nightly/core/master/jbosstools-directory.xml"
-  echo "Example: $0 -ECLIPSE ${HOME}/eclipse/44clean/eclipse/ -INSTALL_PLAN http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/,http://www.qa.jboss.com/binaries/RHDS/discovery/nightly/core/master/devstudio-directory.xml"
+  echo ""
+  echo "Usage: $0 -ECLIPSE /path/to/eclipse-install/ -INSTALL_PLAN \"http://JBT-or-JBDS-update-site;http://JBT-or-JBDS-composite-discovery-site/directory.xml\""
+  echo "Example: $0 -ECLIPSE ${WORKSPACE}/eclipse/ -INSTALL_PLAN \"http://download.jboss.org/jbosstools/neon/snapshots/builds/jbosstools-discovery.central_4.4.neon/latest/all/repo/;http://download.jboss.org/jbosstools/neon/snapshots/builds/jbosstools-discovery.earlyaccess_4.4.neon/latest/all/repo/jbosstools-directory.xml\""
+  echo "Example: $0 -ECLIPSE ${HOME}/eclipse/46clean/eclipse/ -INSTALL_PLAN \"https://devstudio.redhat.com/10.0/snapshots/builds/jbosstools-discovery.central_4.4.neon/latest/all/repo/;https://devstudio.redhat.com/10.0/snapshots/builds/jbosstools-discovery.earlyaccess_4.4.neon/latest/all/repo/devstudio-directory.xml\""
+  echo ""
   exit 1;
 }
 
@@ -73,14 +75,25 @@ checkLogForErrors ()
 {
   errors="$(cat $1 | egrep -B1 -A2 "BUILD FAILED|Cannot complete the install|Only one of the following|exec returned: 13")"
   if [[ $errors ]]; then
+    echo ""
     echo "--------------------------------"
     echo "INSTALL FAILED"
     echo ""
     echo "$errors"
     echo "--------------------------------"
+    echo ""
     exit 2
   fi
 }
+
+echo ""
+echo "--------------------------------"
+date
+echo "FOR ECLIPSE = ${ECLIPSE}"
+installedFeatures0=$(ls ${ECLIPSE}/features | wc -l)
+echo "${installedFeatures0} BASE FEATURES INSTALLED ["$(cd $ECLIPSE;du -sh)"]"
+echo "--------------------------------"
+echo ""
 
 # get a list of IUs to install from the JBT or JBDS update site (using p2.director -list)
 BASE_URL=${SITES%,*}
@@ -95,30 +108,35 @@ if [[ -f ${WORKSPACE}/feature.groups.properties ]]; then
   for f in $FEATURES; do BASE_IUs="${BASE_IUs},${f}"; done; BASE_IUs=${BASE_IUs:1}
 fi
 
-date; du -sh ${ECLIPSE}
-
 # run scripted installation via p2.director
 ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
 -DsourceSites=${SITES} -Dinstall=${BASE_IUs} | tee ${WORKSPACE}/installFromCentral_log.2.txt
 checkLogForErrors ${WORKSPACE}/installFromCentral_log.2.txt
 
-date; du -sh ${ECLIPSE}
-
+echo ""
 echo "--------------------------------"
-echo "BASE FEATURES INSTALLED"
+date
+echo "FOR INSTALL_PLAN = ${INSTALL_PLAN}"
+installedFeatures1=$(ls ${ECLIPSE}/features | wc -l)
+echo  $(( installedFeatures1 - installedFeatures0 ))" NEW FEATURES INSTALLED ["$(cd $ECLIPSE;du -sh)"]"
+echo "FROM ${SITES}"
+# echo "${BASE_IUs}"
 echo "--------------------------------"
+echo ""
 
 # get a list of IUs to install from the Central site (based on the discovery.xml -> plugin.jar -> plugin.xml)
 CENTRAL_URL=${INSTALL_PLAN#*,}; # here, we include discovery.xml
-# echo CENTRAL_URL = $CENTRAL_URL
+#echo CENTRAL_URL = ${CENTRAL_URL}
+
 if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then 
-  curl -k ${CENTRAL_URL} > ${WORKSPACE}/directory.xml 
-  PLUGINJAR=`cat ${WORKSPACE}/directory.xml | egrep "org.jboss.tools.central.discovery_|com.jboss.jbds.central.discovery_" | sed "s#.\+url=\"\(.\+\).jar\".\+#\1.jar#"`
-  echo "Discovery plugin jar: $PLUGINJAR"
+  curl -k ${CENTRAL_URL} > ${WORKSPACE}/directory.xml
+  PLUGINJARS=`cat ${WORKSPACE}/directory.xml | egrep "org.jboss.tools.central.discovery|com.jboss.jbds.central.discovery" | sed "s#.\+url=\"\(.\+\).jar\".\+#\1.jar#"`
+  echo "Discovery plugin jars found: $PLUGINJARS"
   CENTRAL_URL=${SITES#*,}; # this time it excludes discovery.xml
   # echo CENTRAL_URL = $CENTRAL_URL
-  curl -k ${CENTRAL_URL}/${PLUGINJAR} > ${WORKSPACE}/plugin.jar
-  unzip -oq ${WORKSPACE}/plugin.jar plugin.xml
+
+  CENTRAL_IUs=""
+  EXTRA_SITES=""
 
   # extract the <iu id=""> and <connectorDescriptor siteUrl=""> properties, excluding commented out stuff
   # DO NOT INDENT the next lines after cat
@@ -146,41 +164,54 @@ if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then
 </xsl:stylesheet>
 XSLT
 
-  ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} \
-  transform -Dxslt=${WORKSPACE}/get-ius-and-siteUrls.xsl -Dinput=${WORKSPACE}/plugin.xml -Doutput=${WORKSPACE}/plugin.transformed.xml -q | tee ${WORKSPACE}/installFromCentral_log.3.txt
-  checkLogForErrors ${WORKSPACE}/installFromCentral_log.3.txt
+  for PLUGINJAR in $PLUGINJARS; do 
+    curl -k ${CENTRAL_URL}/${PLUGINJAR} > ${WORKSPACE}/plugin.jar
+    unzip -oq -d ${WORKSPACE} ${WORKSPACE}/plugin.jar plugin.xml
 
-  # parse the list of features from plugin.transformed.xml
-  FEATURES=`cat ${WORKSPACE}/plugin.transformed.xml | grep "iu id" | sed "s#.\+id=\"\(.\+\)\"\ */>#\1#" | sort | uniq`
-  CENTRAL_IUs=""; for f in $FEATURES; do CENTRAL_IUs="${CENTRAL_IUs},${f}.feature.group"; done; CENTRAL_IUs=${CENTRAL_IUs:1}; #echo $CENTRAL_IUs
+    ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} \
+    transform -Dxslt=${WORKSPACE}/get-ius-and-siteUrls.xsl -Dinput=${WORKSPACE}/plugin.xml -Doutput=${WORKSPACE}/plugin.transformed.xml -q | tee ${WORKSPACE}/installFromCentral_log.3__${PLUGINJAR/\//_}.txt
+    checkLogForErrors ${WORKSPACE}/installFromCentral_log.3__${PLUGINJAR/\//_}.txt
 
-  # parse the list of 3rd party siteUrl values from plugin.transformed.xml; exclude jboss.discovery.site.url entries
-  EXTRA_URLS=`cat ${WORKSPACE}/plugin.transformed.xml | grep -i siteUrl | egrep -v "jboss.discovery.site.url|jboss.discovery.earlyaccess.site.url" | sed "s#.\+siteUrl=\"\(.\+\)\"\ *>#\1#" | sort | uniq`
-  EXTRA_SITES=""; for e in $EXTRA_URLS; do 
-    if [[ ${e/http/} != ${e} ]] || [[ ${e/ftp:/} != ${e} ]]; then EXTRA_SITES="${EXTRA_SITES},${e}"; else echo "[WARN] Skip EXTRA_SITE = $e"; fi
+    # parse the list of features from plugin.transformed.xml
+    FEATURES=`cat ${WORKSPACE}/plugin.transformed.xml | grep "iu id" | sed "s#.\+id=\"\(.\+\)\"\ */>#\1#" | sort | uniq`
+    for f in $FEATURES; do CENTRAL_IUs="${CENTRAL_IUs},${f}.feature.group"; done
+
+    # parse the list of 3rd party siteUrl values from plugin.transformed.xml; exclude jboss.discovery.site.url entries
+    EXTRA_URLS=`cat ${WORKSPACE}/plugin.transformed.xml | grep -i siteUrl | egrep -v "jboss.discovery.site.url|jboss.discovery.earlyaccess.site.url" | sed "s#.\+siteUrl=\"\(.\+\)\"\ *>#\1#" | sort | uniq`
+    for e in $EXTRA_URLS; do 
+      if [[ ${e/http/} != ${e} ]] || [[ ${e/ftp:/} != ${e} ]]; then EXTRA_SITES="${EXTRA_SITES},${e}"; else echo "[WARN] Skip EXTRA_SITE = $e"; fi
+    done
+    rm -f ${WORKSPACE}/plugin.jar ${WORKSPACE}/plugin.xml ${WORKSPACE}/plugin.transformed.xml
   done
-  EXTRA_SITES=${EXTRA_SITES:1}; # echo $EXTRA_SITES
 
-  date; du -sh ${ECLIPSE}
+  CENTRAL_IUs=${CENTRAL_IUs:1}; #echo CENTRAL_IUs = $CENTRAL_IUs
+  EXTRA_SITES=${EXTRA_SITES:1}; #echo EXTRA_SITES = $EXTRA_SITES
 
-  # run scripted installation via p2.director
+    # run scripted installation via p2.director
   ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
   -DsourceSites=${SITES},${EXTRA_SITES} -Dinstall=${CENTRAL_IUs} | tee ${WORKSPACE}/installFromCentral_log.4.txt
   checkLogForErrors ${WORKSPACE}/installFromCentral_log.4.txt
 
-  date; du -sh ${ECLIPSE}
-
+  echo ""
   echo "--------------------------------"
-  echo "CENTRAL FEATURES INSTALLED"
+  date
+  echo "FOR INSTALL_PLAN = ${INSTALL_PLAN}"
+  installedFeatures2=$(ls ${ECLIPSE}/features | wc -l)
+  echo  $(( installedFeatures2 - installedFeatures1 ))" NEW FEATURES INSTALLED FROM CENTRAL (and/or EARLYACCESS) ["$(cd $ECLIPSE;du -sh)"]"
+  echo "FROM ${SITES},${EXTRA_SITES}"
+  #echo "${CENTRAL_IUs}"
   echo "--------------------------------"
+  echo ""
 else
+  echo ""
   echo "--------------------------------"
   echo "NO CENTRAL DISCOVERY URL FOUND FOR"
   echo "INSTALL_PLAN = ${INSTALL_PLAN}"
   echo "--------------------------------"
+  echo ""
 fi
 
 # cleanup
 if [[ $CLEAN ]]; then
-  rm -f ${WORKSPACE}/installFromCentral_log*.txt ${WORKSPACE}/director.xml ${WORKSPACE}/feature.groups.properties ${WORKSPACE}/directory.xml ${WORKSPACE}/plugin.jar ${WORKSPACE}/plugin.xml ${WORKSPACE}/get-ius-and-siteUrls.xsl ${WORKSPACE}/plugin.transformed.xml 
+  rm -f ${WORKSPACE}/installFromCentral_log*.txt ${WORKSPACE}/director.xml ${WORKSPACE}/feature.groups.properties ${WORKSPACE}/directory.xml ${WORKSPACE}/get-ius-and-siteUrls.xsl 
 fi
