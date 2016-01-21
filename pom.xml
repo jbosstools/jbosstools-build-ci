@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.jboss.tools.releng</groupId>
 	<artifactId>jbosstools-releng-publish</artifactId>
-	<version>4.3.1.Beta2-SNAPSHOT</version>
+	<version>4.3.1.CR1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>JBoss Tools - Scripts for Release Engineering</name>
