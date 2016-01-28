@@ -26,6 +26,9 @@ if [[ $# -lt 1 ]]; then
   usage;
 fi
 
+# comma-separated list of IUs to exclude from installation
+EXCLUDES=""
+
 #director.xml script is used with Eclipse's AntRunner to launch p2.director
 DIRECTORXML="http://download.jboss.org/jbosstools/updates/scripted-install/director.xml"
 
@@ -43,6 +46,7 @@ while [[ "$#" -gt 0 ]]; do
     '-DIRECTORXML') DIRECTORXML="$2"; shift 1;;
     '-CLEAN') CLEAN="$2"; shift 1;;
     '-vm') VM="-vm $2"; shift 1;;
+    '-EXCLUDES') EXCLUDES="$2"; shift 1;;
   esac
   shift 1
 done
@@ -164,6 +168,7 @@ if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then
 </xsl:stylesheet>
 XSLT
 
+  # for each Central Discover plugin
   for PLUGINJAR in $PLUGINJARS; do 
     curl -k ${CENTRAL_URL}/${PLUGINJAR} > ${WORKSPACE}/plugin.jar
     unzip -oq -d ${WORKSPACE} ${WORKSPACE}/plugin.jar plugin.xml
@@ -174,7 +179,16 @@ XSLT
 
     # parse the list of features from plugin.transformed.xml
     FEATURES=`cat ${WORKSPACE}/plugin.transformed.xml | grep "iu id" | sed "s#.\+id=\"\(.\+\)\"\ */>#\1#" | sort | uniq`
-    for f in $FEATURES; do CENTRAL_IUs="${CENTRAL_IUs},${f}.feature.group"; done
+    for f in $FEATURES; do
+      # only add the found features if they're NOT matched by the EXCLUDE rule
+      for e in ${EXCLUDES//,/ }; do
+        if [[ ${f} != ${e} ]] && [[ ${f}.feature.group != ${e} ]]; then
+          CENTRAL_IUs="${CENTRAL_IUs},${f}.feature.group"
+        else
+          echo "Exclude installation of ${f}.feature.group [EXCLUDE = $EXCLUDES ]"
+        fi
+      done
+    done
 
     # parse the list of 3rd party siteUrl values from plugin.transformed.xml; exclude jboss.discovery.site.url entries
     EXTRA_URLS=`cat ${WORKSPACE}/plugin.transformed.xml | grep -i siteUrl | egrep -v "jboss.discovery.site.url|jboss.discovery.earlyaccess.site.url" | sed "s#.\+siteUrl=\"\(.\+\)\"\ *>#\1#" | sort | uniq`
