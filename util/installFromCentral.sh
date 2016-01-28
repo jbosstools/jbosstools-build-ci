@@ -185,7 +185,7 @@ XSLT
         if [[ ${f} == ${e} ]] || [[ ${f}.feature.group == ${e} ]]; then
           echo "Exclude installation of ${f}.feature.group [EXCLUDE = $EXCLUDES ]"
         else
-          # echo "Add ${f}.feature.group ..."
+          echo "Include installation of ${f}.feature.group"
           CENTRAL_IUs="${CENTRAL_IUs},${f}.feature.group"
         fi
       done
