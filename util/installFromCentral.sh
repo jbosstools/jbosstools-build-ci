@@ -182,10 +182,11 @@ XSLT
     for f in $FEATURES; do
       # only add the found features if they're NOT matched by the EXCLUDE rule
       for e in ${EXCLUDES//,/ }; do
-        if [[ ${f} != ${e} ]] && [[ ${f}.feature.group != ${e} ]]; then
-          CENTRAL_IUs="${CENTRAL_IUs},${f}.feature.group"
-        else
+        if [[ ${f} == ${e} ]] || [[ ${f}.feature.group == ${e} ]]; then
           echo "Exclude installation of ${f}.feature.group [EXCLUDE = $EXCLUDES ]"
+        else
+          # echo "Add ${f}.feature.group ..."
+          CENTRAL_IUs="${CENTRAL_IUs},${f}.feature.group"
         fi
       done
     done
