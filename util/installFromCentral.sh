@@ -109,7 +109,21 @@ checkLogForErrors ${WORKSPACE}/installFromCentral_log.1.txt
 BASE_IUs=""
 if [[ -f ${WORKSPACE}/feature.groups.properties ]]; then 
   FEATURES=`cat ${WORKSPACE}/feature.groups.properties | grep ".feature.group=" | sed "s#\(.\+.feature.group\)=.\+#\1#" | sort | uniq`
-  for f in $FEATURES; do BASE_IUs="${BASE_IUs},${f}"; done; BASE_IUs=${BASE_IUs:1}
+  if [[ ${EXCLUDES} ]]; then echo "[B] EXCLUDES = $EXCLUDES"; fi
+  for f in $FEATURES; do
+    include=1
+    if [[ ${EXCLUDES} ]]; then 
+      # only add the found features if they're NOT matched by the EXCLUDE rule
+      for e in ${EXCLUDES//,/ }; do
+        if [[ ${f/.feature.group/} == ${e/.feature.group/} ]]; then
+          echo "[B] Exclude ${f}"
+          include=0
+        fi
+      done
+    fi
+    if [[ $include == 1 ]]; then BASE_IUs="${BASE_IUs},${f}"; fi
+  done
+  BASE_IUs=${BASE_IUs:1}
 fi
 
 # run scripted installation via p2.director
@@ -179,16 +193,19 @@ XSLT
 
     # parse the list of features from plugin.transformed.xml
     FEATURES=`cat ${WORKSPACE}/plugin.transformed.xml | grep "iu id" | sed "s#.\+id=\"\(.\+\)\"\ */>#\1#" | sort | uniq`
+    if [[ ${EXCLUDES} ]]; then echo "[C] EXCLUDES = $EXCLUDES"; fi
     for f in $FEATURES; do
+      include=1
       # only add the found features if they're NOT matched by the EXCLUDE rule
-      for e in ${EXCLUDES//,/ }; do
-        if [[ ${f} == ${e} ]] || [[ ${f}.feature.group == ${e} ]]; then
-          echo "Exclude installation of ${f}.feature.group [EXCLUDE = $EXCLUDES ]"
-        else
-          # echo "Add ${f}.feature.group ..."
-          CENTRAL_IUs="${CENTRAL_IUs},${f}.feature.group"
-        fi
-      done
+      if [[ ${EXCLUDES} ]]; then 
+        for e in ${EXCLUDES//,/ }; do
+          if [[ ${f/.feature.group/} == ${e/.feature.group/} ]]; then
+            echo "[C] Exclude ${f}"
+            include=0
+          fi
+        done
+      fi
+      if [[ $include == 1 ]]; then CENTRAL_IUs="${CENTRAL_IUs},${f}.feature.group"; fi
     done
 
     # parse the list of 3rd party siteUrl values from plugin.transformed.xml; exclude jboss.discovery.site.url entries
