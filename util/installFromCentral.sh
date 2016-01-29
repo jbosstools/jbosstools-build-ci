@@ -114,7 +114,7 @@ if [[ -f ${WORKSPACE}/feature.groups.properties ]]; then
     if [[ ${EXCLUDES} ]]; then 
       # only add the found features if they're NOT matched by the EXCLUDE rule
       for e in ${EXCLUDES//,/ }; do
-        if [[ ${f} == ${e} ]]; then
+        if [[ ${f/.feature.group/} == ${e/.feature.group/} ]]; then
           echo "[B] Exclude ${f}"
         else
           BASE_IUs="${BASE_IUs},${f}"
@@ -199,7 +199,7 @@ XSLT
       # only add the found features if they're NOT matched by the EXCLUDE rule
       if [[ ${EXCLUDES} ]]; then 
         for e in ${EXCLUDES//,/ }; do
-          if [[ ${f} == ${e} ]]; then
+          if [[ ${f/.feature.group/} == ${e/.feature.group/} ]]; then
             echo "[C] Exclude ${f}"
           else
             CENTRAL_IUs="${CENTRAL_IUs},${f}.feature.group"
