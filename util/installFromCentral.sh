@@ -115,7 +115,7 @@ if [[ -f ${WORKSPACE}/feature.groups.properties ]]; then
     if [[ ${EXCLUDES} ]]; then 
       # only add the found features if they're NOT matched by the EXCLUDE rule
       for e in ${EXCLUDES//,/ }; do
-        if [[ ${e} != ${e/*/} ]] && [[ $(echo ${f} | egrep "${e}") ]]; then # using a * wildcard & matched grep pattern
+        if [[ ${e} != ${e//\*/} ]] && [[ $(echo ${f} | egrep "${e}") ]]; then # using a * wildcard & matched grep pattern
           echo "[B] Exclude ${f} by ${e}"
           include=0
           break
