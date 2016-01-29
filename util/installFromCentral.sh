@@ -115,9 +115,14 @@ if [[ -f ${WORKSPACE}/feature.groups.properties ]]; then
     if [[ ${EXCLUDES} ]]; then 
       # only add the found features if they're NOT matched by the EXCLUDE rule
       for e in ${EXCLUDES//,/ }; do
-        if [[ ${f/.feature.group/} == ${e/.feature.group/} ]]; then
+        if [[ ${e} != ${e/*/} ]] && [[ $(echo ${f} | egrep "${e}") ]]; then # using a * wildcard & matched grep pattern
+          echo "[B] Exclude ${f} by ${e}"
+          include=0
+          break
+        elif [[ ${f/.feature.group/} == ${e/.feature.group/} ]]; then # matched exact IU (without .feature.group suffix)
           echo "[B] Exclude ${f}"
           include=0
+          break
         fi
       done
     fi
@@ -199,9 +204,14 @@ XSLT
       # only add the found features if they're NOT matched by the EXCLUDE rule
       if [[ ${EXCLUDES} ]]; then 
         for e in ${EXCLUDES//,/ }; do
-          if [[ ${f/.feature.group/} == ${e/.feature.group/} ]]; then
+          if [[ ${e} != ${e/*/} ]] && [[ $(echo ${f} | egrep "${e}") ]]; then # using a * wildcard & matched grep pattern
+            echo "[C] Exclude ${f} by ${e}"
+            include=0
+            break
+          elif [[ ${f/.feature.group/} == ${e/.feature.group/} ]]; then # matched exact IU (without .feature.group suffix)
             echo "[C] Exclude ${f}"
             include=0
+            break
           fi
         done
       fi
