@@ -11,6 +11,10 @@ DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or devstudio@file
 INCLUDES="*"
 EXCLUDES=""
 
+# defaults
+numbuildstokeep=2
+threshholdwhendelete=2 # in days
+
 # use this to pass in rsync flags
 # eg., use --del -n to PREVIEW what obsolete files might be deleted from target folder while pushing new ones
 # eg., use --del to delete from target folder while pushing new ones: USE WITH CAUTION!
@@ -54,6 +58,8 @@ while [[ "$#" -gt 0 ]]; do
     '-DJOB_NAME','-JOB_NAME')         JOB_NAME="$2"; shift 1;;
     '-DWORKSPACE','-WORKSPACE')       WORKSPACE="$2"; shift 1;;
     '-d'|'--del') RSYNCFLAGS="${RSYNCFLAGS} --del"; shift 0;;
+    '-k'|'--keep') numbuildstokeep="$2"; shift 1;;
+    '-a'|'--age-to-delete') threshholdwhendelete="$2"; shift 1;;
     *) RSYNCFLAGS="${RSYNCFLAGS} $1"; shift 0;;
   esac
   shift 1
@@ -94,7 +100,7 @@ if [[ ${WORKSPACE} ]] && [[ ${TARGET_PATH/builds/} != ${TARGET_PATH} ]] && [[ -f
     PARENT_PARENT_PATH=$(echo $PARENT_PATH | sed -e "s#\(.\+\)/[^/]\+#\1#")
     chmod +x ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh
     # given above, ${PARENT_PATH#${PARENT_PARENT_PATH}/} returns last path segment jbosstools-build-sites.aggregate.earlyaccess-site_master
-    ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh -k 2 -a 2 -S /all/repo/ -d ${PARENT_PARENT_PATH} -i ${PARENT_PATH#${PARENT_PARENT_PATH}/} -DESTINATION ${DESTINATION}
+    ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh -k ${numbuildstokeep} -a ${threshholdwhendelete} -S /all/repo/ -d ${PARENT_PARENT_PATH} -i ${PARENT_PATH#${PARENT_PARENT_PATH}/} -DESTINATION ${DESTINATION}
 fi
 
 wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate -q"
