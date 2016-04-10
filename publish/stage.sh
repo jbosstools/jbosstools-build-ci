@@ -77,7 +77,7 @@ for site in ${sites}; do
   if [[ ${whichID} == "latest" ]]; then
     ID=""
     echo "+ Check ${DEST_URL}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}" | egrep "${grepstring}"
-    if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
+    if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local
       ID=$(ls ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME} | grep "20.\+" | grep -v sftp | sort | tail -1)
     else # remote
       ID=$(echo "ls 20*" | sftp ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1 | grep "20.\+" | grep -v sftp | sort | tail -1)
@@ -96,8 +96,13 @@ for site in ${sites}; do
       # echo "+ ${RSYNC} ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/" | egrep "${grepstring}"
       ${RSYNC} ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
       # copy build folder
-      echo "+ mkdir ${PRODUCT}-${versionWithRespin}-build-${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/" | egrep "${grepstring}"
-      echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/
+      if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
+        echo "+ mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}" | egrep "${grepstring}"
+        mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}
+      else # remote
+        echo "+ mkdir ${PRODUCT}-${versionWithRespin}-build-${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/" | egrep "${grepstring}"
+        echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/
+      fi
       echo "+ ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/${ID}/" | egrep "${grepstring}"
       ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/${ID}/ --exclude="repo"
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/"
@@ -106,13 +111,21 @@ for site in ${sites}; do
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/latest/"
       # copy update site
       if [[ -d ${tmpdir}/all/repo/ ]]; then
-        echo "+ mkdir ${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/" | egrep "${grepstring}"
-        echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/
+        if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
+          echo "+ mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
+          mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}
+        else # remote
+          echo "+ mkdir ${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/" | egrep "${grepstring}"
+          echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/
+        fi
         echo "+ ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
         ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/
         DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/"
       else
-        echo "[WARN] No update site found to publish in ${tmpdir}/all/repo/"
+        # don't warn for discovery sites since they don't have update sites
+        if [[ "${site/discovery}" == "${site}" ]]; then
+          echo "[WARN] No update site found to publish in ${tmpdir}/all/repo/"
+        fi
       fi
       # copy update site zip
       suffix=-updatesite-${sitename}
