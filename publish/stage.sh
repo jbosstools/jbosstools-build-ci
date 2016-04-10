@@ -76,8 +76,9 @@ for site in ${sites}; do
 
   if [[ ${whichID} == "latest" ]]; then
     ID=""
+    echo "+ Check ${DEST_URL}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}" | egrep "${grepstring}"
     ID=$(echo "ls 20*" | sftp ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1 | grep "20.\+" | grep -v sftp | sort | tail -1); ID=${ID%%/*}
-    # echo "${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME} :: ID = $ID" | egrep "${JOB_NAME}|${site}|${ID}|ERROR"
+    echo "+ ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME} :: ID = $ID" | egrep "${JOB_NAME}|${site}|${ID}|ERROR"
   fi
   grepstring="${JOB_NAME}|${site}|${ID}|ERROR|${versionWithRespin}|${DESTDIR}|${DESTTYPE}"
   DEST_URLs=""
@@ -90,7 +91,7 @@ for site in ${sites}; do
       # echo "+ ${RSYNC} ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/" | egrep "${grepstring}"
       ${RSYNC} ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
       # copy build folder
-      echo "+ mkdir ${PRODUCT}-${versionWithRespin}-build-${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/ ..." | egrep "${grepstring}"
+      echo "+ mkdir ${PRODUCT}-${versionWithRespin}-build-${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/" | egrep "${grepstring}"
       echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/
       echo "+ ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/${ID}/" | egrep "${grepstring}"
       ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/${ID}/ --exclude="repo"
@@ -100,7 +101,7 @@ for site in ${sites}; do
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/latest/"
       # copy update site
       if [[ -d ${tmpdir}/all/repo/ ]]; then
-        echo "+ mkdir ${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/ ..." | egrep "${grepstring}"
+        echo "+ mkdir ${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/" | egrep "${grepstring}"
         echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/
         echo "+ ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
         ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/
