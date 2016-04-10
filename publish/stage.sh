@@ -92,7 +92,8 @@ for site in ${sites}; do
   if [[ ${ID} ]]; then
     if [[ ${site} == "site" || ${site} == "product" ]]; then sitename="core"; else sitename=${site/-site/}; fi
     echo "Latest build for ${sitename} (${site}): ${ID}" | egrep "${grepstring}"
-    tmpdir=`mktemp -d` && mkdir -p $tmpdir && pushd $tmpdir >/dev/null
+    # use ${HOME}/temp-stage/ instead of /tmp because insufficient space
+    tmpdir=`mkdir -p ${HOME}/temp-stage/ && mktemp -d -t -p ${HOME}/temp-stage/` && mkdir -p $tmpdir && pushd $tmpdir >/dev/null
       # echo "+ ${RSYNC} ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/" | egrep "${grepstring}"
       ${RSYNC} ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
       # copy build folder
