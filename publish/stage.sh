@@ -6,7 +6,7 @@
 # TODO: add support for JBDS staging steps
 #  - see https://github.com/jbdevstudio/jbdevstudio-devdoc/blob/master/release_guide/9.x/JBDS_Staging_for_QE.adoc#push-installers-update-site-and-discovery-site
 # TODO: create Jenkins job(s)
-# TODO: test this !!
+# TODO: use sshfs to copy files instead of a pull-to-tmp,push-from-tmp model
 # TODO: add verification steps - wget or curl the destination URLs and look for 404s or count of matching child objects
 #  - see end of https://github.com/jbdevstudio/jbdevstudio-devdoc/blob/master/release_guide/9.x/JBDS_Staging_for_QE.adoc#push-installers-update-site-and-discovery-site
 
@@ -91,6 +91,7 @@ for site in ${sites}; do
   RSYNC="rsync -arz --rsh=ssh --protocol=28"
   if [[ ${ID} ]]; then
     if [[ ${site} == "site" || ${site} == "product" ]]; then sitename="core"; else sitename=${site/-site/}; fi
+    if [[ ${site} == "site" ]]; then buildname="core"; else sitename=${site/-site/}; fi
     echo "Latest build for ${sitename} (${site}): ${ID}" | egrep "${grepstring}"
     # use ${HOME}/temp-stage/ instead of /tmp because insufficient space
     tmpdir=`mkdir -p ${HOME}/temp-stage/ && mktemp -d -t -p ${HOME}/temp-stage/` && mkdir -p $tmpdir && pushd $tmpdir >/dev/null
@@ -98,18 +99,18 @@ for site in ${sites}; do
       ${RSYNC} ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
       # copy build folder
       if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
-        echo "+ mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}" | egrep "${grepstring}"
-        mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}
+        echo "+ mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}" | egrep "${grepstring}"
+        mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}
       else # remote
-        echo "+ mkdir ${PRODUCT}-${versionWithRespin}-build-${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/" | egrep "${grepstring}"
-        echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/
+        echo "+ mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/" | egrep "${grepstring}"
+        echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/
       fi
-      echo "+ ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/${ID}/" | egrep "${grepstring}"
-      ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/${ID}/ --exclude="repo"
-      DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/"
+      echo "+ ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/" | egrep "${grepstring}"
+      ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ --exclude="repo"
+      DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/"
       # symlink latest build
-      ln -s ${ID} latest; rsync -aPrz --rsh=ssh --protocol=28 ${tmpdir}/latest ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/
-      DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/latest/"
+      ln -s ${ID} latest; rsync -aPrz --rsh=ssh --protocol=28 ${tmpdir}/latest ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/
+      DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/latest/"
       # copy update site
       if [[ -d ${tmpdir}/all/repo/ ]]; then
         if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
