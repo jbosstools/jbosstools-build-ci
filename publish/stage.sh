@@ -91,7 +91,7 @@ for site in ${sites}; do
   RSYNC="rsync -arz --rsh=ssh --protocol=28"
   if [[ ${ID} ]]; then
     if [[ ${site} == "site" || ${site} == "product" ]]; then sitename="core"; else sitename=${site/-site/}; fi
-    if [[ ${site} == "site" ]]; then buildname="core"; else sitename=${site/-site/}; fi
+    if [[ ${site} == "site" ]]; then buildname="core"; else buildname=${site/-site/}; fi
     echo "Latest build for ${sitename} (${site}): ${ID}" | egrep "${grepstring}"
     # use ${HOME}/temp-stage/ instead of /tmp because insufficient space
     tmpdir=`mkdir -p ${HOME}/temp-stage/ && mktemp -d -t -p ${HOME}/temp-stage/` && mkdir -p $tmpdir && pushd $tmpdir >/dev/null
