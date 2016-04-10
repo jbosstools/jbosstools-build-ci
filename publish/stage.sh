@@ -13,7 +13,10 @@
 DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /qa/services/http/binaries/RHDS
 DEST_URL="http://download.jboss.org/jbosstools"
 whichID=latest
-rawJOB_NAME="jbosstools-\${site}_\${stream}"
+PRODUCT="jbosstools"
+ZIPPREFIX="jbosstools-"
+DESTTYPE="staging"
+rawJOB_NAME="\${PRODUCT}-\${site}_\${stream}"
 sites=""
 
 # can be used to publish a build (including installers, site zips, MD5s, build log) or just an update site folder
@@ -35,20 +38,33 @@ if [[ $# -lt 1 ]]; then usage; fi
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     '-sites') sites="${sites} $2"; shift 1;; # site coretests-site central-site earlyaccess-site discovery.central discovery.earlyaccess
-    '-eclipseReleaseName') eclipseReleaseName="$2"; shift 1;; # mars
-    '-stream') stream="$2"; shift 1;; # 4.3.mars
-    '-versionWithRespin'|'-vr') versionWithRespin="$2"; shift 1;; # 4.3.0.CR2b # a, b, c...
+  
+    '-eclipseReleaseName') DESTDIR="$2"; shift 1;; # mars or neon
+    '-devstudioReleaseVersion') DESTDIR="$2"; shift 1;; # 9.0 or 10.0
+    '-DESTDIR'|'-dd') DESTDIR="$2"; shift 1;; # mars or 9.0 or neon or 10.0
+
+    '-DESTTYPE') DESTTYPE="$2"; shift 1;; # by default, staging but could be development (TODO: UNTESTED!)
+    '-stream') stream="$2"; shift 1;; # 4.3.mars (TODO: could be 9.0.mars?)
+    '-versionWithRespin'|'-vr') versionWithRespin="$2"; shift 1;; # 4.3.0.CR2b, 9.1.0.CR2b
     '-DJOB_NAME'|'-JOB_NAME') rawJOB_NAME="$2"; shift 1;;
 
     '-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /qa/services/http/binaries/RHDS
-    '-DEST_URL')    DEST_URL="$2"; shift 1;; # override for JBDS publishing, eg., https://devstudio.redhat.com
+    '-DEST_URL')    DEST_URL="$2"; shift 1;; # override for JBDS publishing, eg., https://devstudio.redhat.com or http://www.qa.jboss.com/binaries/RHDS
 
-    '-DWORKSPACE'|'-WORKSPACE')      WORKSPACE="$2"; shift 1;; # optional
+    '-DWORKSPACE'|'-WORKSPACE') WORKSPACE="$2"; shift 1;; # optional
     '-DID'|'-ID') whichID="$2"; shift 1;; # optionally, set a specific build ID such as 2015-10-02_18-28-18-B124; if not set, pull latest
     *) OTHERFLAGS="${OTHERFLAGS} $1"; shift 0;;
   esac
   shift 1
 done
+
+# set mars/staging, 9.0/staging, etc.
+if [[ ${DESTDIR} ]]; then DESTDIR=${DESTDIR}/${DESTTYPE}; else echo "ERROR: DESTDIR not set. Please define eclipseReleaseName or devstudioReleaseVersion"; echo ""; usage; fi
+
+if [[ ${DESTINATION/devstudio/} != ${DESTINATION} ]] || [[ ${DESTINATION/RHDS/} != ${DESTINATION} ]]; then
+  PRODUCT="devstudio"
+  ZIPPREFIX="jboss-devstudio-"
+fi
 
 if [[ ! ${WORKSPACE} ]]; then WORKSPACE=${tmpdir}; fi
 
@@ -65,25 +81,39 @@ for site in ${sites}; do
   DEST_URLs=""
 
   if [[ ${ID} ]]; then
-    if [[ ${site} == "site" ]]; then sitename="core"; else sitename=${site/-site/}; fi
+    if [[ ${site} == "site" || ${site} == "product" ]]; then sitename="core"; else sitename=${site/-site/}; fi
     echo "Latest build for ${sitename} (${site}): ${ID}" | egrep "${grepstring}"
     tmpdir=`mktemp -d` && mkdir -p $tmpdir && pushd $tmpdir >/dev/null
       # echo "+ rsync -arz --rsh=ssh --protocol=28 ${DESTINATION}/${eclipseReleaseName}/snapshots/builds/${JOB_NAME}/${ID}/* ${tmpdir}/" | egrep "${grepstring}"
       rsync -arz --rsh=ssh --protocol=28 ${DESTINATION}/${eclipseReleaseName}/snapshots/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
       # copy build folder
-      echo "mkdir jbosstools-${versionWithRespin}-build-${sitename}" | sftp ${DESTINATION}/${eclipseReleaseName}/staging/builds/
-      # echo "+ rsync -arz --rsh=ssh --protocol=28 ${tmpdir}/* ${DESTINATION}/${eclipseReleaseName}/staging/builds/jbosstools-${versionWithRespin}-build-${sitename}/${ID}/" | egrep "${grepstring}"
-      rsync -arz --rsh=ssh --protocol=28 ${tmpdir}/* ${DESTINATION}/${eclipseReleaseName}/staging/builds/jbosstools-${versionWithRespin}-build-${sitename}/${ID}/
-      DEST_URLs="${DEST_URLs} ${DEST_URL}/${eclipseReleaseName}/staging/builds/jbosstools-${versionWithRespin}-build-${sitename}/"
+      echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${sitename}" | sftp ${DESTINATION}/${DESTDIR}/builds/ --exclude="repo"
+      # echo "+ rsync -arz --rsh=ssh --protocol=28 ${tmpdir}/* ${DESTINATION}/${DESTDIR}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/${ID}/" | egrep "${grepstring}"
+      rsync -arz --rsh=ssh --protocol=28 ${tmpdir}/* ${DESTINATION}/${DESTDIR}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/${ID}/ --exclude="repo"
+      DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/"
       # symlink latest build
-      ln -s ${ID} latest; rsync -aPrz --rsh=ssh --protocol=28 ${tmpdir}/latest ${DESTINATION}/${eclipseReleaseName}/staging/builds/jbosstools-${versionWithRespin}-build-${sitename}/
-      DEST_URLs="${DEST_URLs} ${DEST_URL}/${eclipseReleaseName}/staging/builds/jbosstools-${versionWithRespin}-build-${sitename}/latest/"
+      ln -s ${ID} latest; rsync -aPrz --rsh=ssh --protocol=28 ${tmpdir}/latest ${DESTINATION}/${DESTDIR}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/
+      DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/latest/"
       # copy update site
       if [[ -d ${tmpdir}/all/repo/ ]]; then
-        echo "mkdir ${sitename}" | sftp ${DESTINATION}/${eclipseReleaseName}/staging/updates/
-        #echo "+ rsync -arz --rsh=ssh --protocol=28 ${tmpdir}/all/repo/* ${DESTINATION}/${eclipseReleaseName}/staging/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
-        rsync -arz --rsh=ssh --protocol=28 ${tmpdir}/all/repo/* ${DESTINATION}/${eclipseReleaseName}/staging/updates/${sitename}/${versionWithRespin}/
-        DEST_URLs="${DEST_URLs} ${DEST_URL}/${eclipseReleaseName}/staging/updates/${sitename}/${versionWithRespin}/"
+        echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/updates/
+        #echo "+ rsync -arz --rsh=ssh --protocol=28 ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
+        rsync -arz --rsh=ssh --protocol=28 ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/updates/${sitename}/${versionWithRespin}/
+        DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/updates/${sitename}/${versionWithRespin}/"
+      else
+        echo "[WARN] No update site found to publish in ${tmpdir}/all/repo/"
+      fi
+      # copy update site zip
+      suffix=-updatesite-${sitename}
+      y=${tmpdir}/all/repository.zip
+      if [[ ! -f $y ]]; then
+        y=$(find ${tmpdir}/all/ -name "${ZIPPREFIX}*${suffix}.zip" -a -not -name "*latest*")
+      fi
+      if [[ -f $y ]]; then
+        rsync -aPrz --rsh=ssh --protocol=28 ${y} ${DESTINATION}/${DESTDIR}/updates/core/${ZIPPREFIX}${versionWithRespin}${suffix}.zip
+        rsync -aPrz --rsh=ssh --protocol=28 ${y}.sha256 ${DESTINATION}/${DESTDIR}/updates/core/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256
+      else
+        echo "[WARN] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/" 
       fi
     popd >/dev/null
     rm -fr $tmpdir
