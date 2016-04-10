@@ -79,28 +79,31 @@ for site in ${sites}; do
     ID=$(echo "ls 20*" | sftp ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1 | grep "20.\+" | grep -v sftp | sort | tail -1); ID=${ID%%/*}
     # echo "${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME} :: ID = $ID" | egrep "${JOB_NAME}|${site}|${ID}|ERROR"
   fi
-  grepstring="${JOB_NAME}|${site}|${ID}|ERROR|${versionWithRespin}"
+  grepstring="${JOB_NAME}|${site}|${ID}|ERROR|${versionWithRespin}|${DESTDIR}|${DESTTYPE}"
   DEST_URLs=""
 
+  RSYNC="rsync -arz --rsh=ssh --protocol=28"
   if [[ ${ID} ]]; then
     if [[ ${site} == "site" || ${site} == "product" ]]; then sitename="core"; else sitename=${site/-site/}; fi
     echo "Latest build for ${sitename} (${site}): ${ID}" | egrep "${grepstring}"
     tmpdir=`mktemp -d` && mkdir -p $tmpdir && pushd $tmpdir >/dev/null
-      # echo "+ rsync -arz --rsh=ssh --protocol=28 ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/" | egrep "${grepstring}"
-      rsync -arz --rsh=ssh --protocol=28 ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
+      # echo "+ ${RSYNC} ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/" | egrep "${grepstring}"
+      ${RSYNC} ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
       # copy build folder
-      echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/ --exclude="repo"
-      # echo "+ rsync -arz --rsh=ssh --protocol=28 ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/${ID}/" | egrep "${grepstring}"
-      rsync -arz --rsh=ssh --protocol=28 ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/${ID}/ --exclude="repo"
+      echo "+ mkdir ${PRODUCT}-${versionWithRespin}-build-${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/ ..." | egrep "${grepstring}"
+      echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/
+      echo "+ ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/${ID}/" | egrep "${grepstring}"
+      ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/${ID}/ --exclude="repo"
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/"
       # symlink latest build
       ln -s ${ID} latest; rsync -aPrz --rsh=ssh --protocol=28 ${tmpdir}/latest ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${sitename}/latest/"
       # copy update site
       if [[ -d ${tmpdir}/all/repo/ ]]; then
+        echo "+ mkdir ${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/ ..." | egrep "${grepstring}"
         echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/
-        #echo "+ rsync -arz --rsh=ssh --protocol=28 ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
-        rsync -arz --rsh=ssh --protocol=28 ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/
+        echo "+ ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
+        ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/
         DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/"
       else
         echo "[WARN] No update site found to publish in ${tmpdir}/all/repo/"
@@ -112,8 +115,8 @@ for site in ${sites}; do
         y=$(find ${tmpdir}/all/ -name "${ZIPPREFIX}*${suffix}.zip" -a -not -name "*latest*")
       fi
       if [[ -f $y ]]; then
-        rsync -aPrz --rsh=ssh --protocol=28 ${y} ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/core/${ZIPPREFIX}${versionWithRespin}${suffix}.zip
-        rsync -aPrz --rsh=ssh --protocol=28 ${y}.sha256 ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/core/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256
+        ${RSYNC} ${y} ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/core/${ZIPPREFIX}${versionWithRespin}${suffix}.zip
+        ${RSYNC} ${y}.sha256 ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/core/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256
       else
         echo "[WARN] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/" 
       fi
