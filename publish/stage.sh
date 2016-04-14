@@ -1,4 +1,4 @@
-  #!/bin/bash
+#!/bin/bash
 # Script to copy a CI build to staging for QE review
 # From Jenkins, call this script 7 times in parallel (&) then call wait to block until they're all done
 
@@ -19,6 +19,12 @@ SRC_TYPE="snapshots"
 DESTTYPE="staging"
 rawJOB_NAME="\${PRODUCT}-\${site}_\${stream}"
 sites=""
+quiet=0
+
+log ()
+{
+  if [[ $quiet == 0 ]]; then echo $1; fi
+}
 
 # can be used to publish a build (including installers, site zips, MD5s, build log) or just an update site folder
 usage ()
@@ -29,7 +35,7 @@ usage ()
   echo "To stage JBT core, coretests, central & earlyaccess"
   echo "   $0 -sites \"site coretests-site central-site earlyaccess-site\" -dd mars -stream 4.3.mars -vr 4.3.1.CR1a -JOB_NAME jbosstools-build-sites.aggregate.\\\${site}_\\\${stream}"
   echo "To stage JBT discovery.* sites & browsersim-standalone"
-  echo "   $0 -sites \"discovery.central discovery.earlyaccess browsersim-standalone\" -dd mars -stream 4.3.mars -vr 4.3.1.CR1a"
+  echo "   $0 -sites \"discovery.central discovery.earlyaccess browsersim-standalone\" -dd mars -stream 4.3.mars -vr 4.3.1.CR1a -q"
   exit 1
 }
 
@@ -55,10 +61,13 @@ while [[ "$#" -gt 0 ]]; do
 
     '-DWORKSPACE'|'-WORKSPACE') WORKSPACE="$2"; shift 1;; # optional
     '-DID'|'-ID') whichID="$2"; shift 1;; # optionally, set a specific build ID such as 2015-10-02_18-28-18-B124; if not set, pull latest
+    '-q') quiet=1; shift 0;; # suppress extra console output
     *) OTHERFLAGS="${OTHERFLAGS} $1"; shift 0;;
   esac
   shift 1
 done
+
+if [[ $quiet == 1 ]]; then consoleDest=/dev/null; else consoleDest=/dev/tty; fi
 
 # set mars/staging, 9.0/staging, etc.
 if [[ ! ${DESTDIR} ]]; then echo "ERROR: DESTDIR not set. Please define eclipseReleaseName or devstudioReleaseVersion"; echo ""; usage; fi
@@ -76,14 +85,14 @@ for site in ${sites}; do
 
   if [[ ${whichID} == "latest" ]]; then
     ID=""
-    echo "+ Check ${DEST_URL}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}" | egrep "${grepstring}"
+    log "[DEBUG] [$site] + Check ${DEST_URL}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}" | egrep "${grepstring}"
     if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local
       ID=$(ls ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME} | grep "20.\+" | grep -v sftp | sort | tail -1)
     else # remote
       ID=$(echo "ls 20*" | sftp ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1 | grep "20.\+" | grep -v sftp | sort | tail -1)
     fi
     ID=${ID%%/*}
-    echo "+ ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME} :: ID = $ID" | egrep "${JOB_NAME}|${site}|${ID}|ERROR"
+    echo "[INFO] [$site] In ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME} found ID = $ID" | egrep "${JOB_NAME}|${site}|${ID}|ERROR"
   fi
   grepstring="${JOB_NAME}|${site}|${ID}|ERROR|${versionWithRespin}|${DESTDIR}|${DESTTYPE}"
   DEST_URLs=""
@@ -92,41 +101,41 @@ for site in ${sites}; do
   if [[ ${ID} ]]; then
     if [[ ${site} == "site" || ${site} == "product" ]]; then sitename="core"; else sitename=${site/-site/}; fi
     if [[ ${site} == "site" ]]; then buildname="core"; else buildname=${site/-site/}; fi
-    echo "Latest build for ${sitename} (${site}): ${ID}" | egrep "${grepstring}"
+    log "[DEBUG] [$site] Latest build for ${sitename} (${site}): ${ID}" | egrep "${grepstring}"
     # use ${HOME}/temp-stage/ instead of /tmp because insufficient space
     tmpdir=`mkdir -p ${HOME}/temp-stage/ && mktemp -d -t -p ${HOME}/temp-stage/` && mkdir -p $tmpdir && pushd $tmpdir >/dev/null
       # echo "+ ${RSYNC} ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/" | egrep "${grepstring}"
       ${RSYNC} ${DESTINATION}/${DESTDIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
       # copy build folder
       if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
-        echo "+ mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}" | egrep "${grepstring}"
-        mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}
+        log "[DEBUG] [$site] + mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}" | egrep "${grepstring}"
+        mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname} 1>$consoleDest 2>$consoleDest
       else # remote
-        echo "+ mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/" | egrep "${grepstring}"
-        echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/
+        log "[DEBUG] [$site] + mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/" | egrep "${grepstring}"
+        echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/ 1>$consoleDest 2>$consoleDest
       fi
-      echo "+ ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/" | egrep "${grepstring}"
+      log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/" | egrep "${grepstring}"
       ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ --exclude="repo"
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/"
       # symlink latest build
-      ln -s ${ID} latest; rsync -aPrz --rsh=ssh --protocol=28 ${tmpdir}/latest ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/
+      ln -s ${ID} latest; ${RSYNC} ${tmpdir}/latest ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/ 1>$consoleDest
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/latest/"
       # copy update site
       if [[ -d ${tmpdir}/all/repo/ ]]; then
         if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
-          echo "+ mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
-          mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}
+          log "[DEBUG] [$site] + mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
+          mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename} 1>$consoleDest 2>$consoleDest
         else # remote
-          echo "+ mkdir ${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/" | egrep "${grepstring}"
-          echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/
+          log "[DEBUG] [$site] + mkdir ${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/" | egrep "${grepstring}"
+          echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/ 1>$consoleDest 2>$consoleDest
         fi
-        echo "+ ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
-        ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/
+        log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
+        ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/ 1>$consoleDest
         DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/"
       else
         # don't warn for discovery sites since they don't have update sites
         if [[ "${site/discovery}" == "${site}" ]]; then
-          echo "[WARN] No update site found to publish in ${tmpdir}/all/repo/"
+          echo "[WARN] [$site] No update site found to publish in ${tmpdir}/all/repo/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}"
         fi
       fi
       # copy update site zip
@@ -136,17 +145,17 @@ for site in ${sites}; do
         y=$(find ${tmpdir}/all/ -name "${ZIPPREFIX}*${suffix}.zip" -a -not -name "*latest*")
       fi
       if [[ -f $y ]]; then
-        ${RSYNC} ${y} ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/core/${ZIPPREFIX}${versionWithRespin}${suffix}.zip
-        ${RSYNC} ${y}.sha256 ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/core/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256
+        ${RSYNC} ${y} ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip 1>$consoleDest
+        ${RSYNC} ${y}.sha256 ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256 1>$consoleDest
       else
-        echo "[WARN] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/" 
+        echo "[WARN] [$site] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" 
       fi
     popd >/dev/null
     rm -fr $tmpdir
-    echo "DONE: ${JOB_NAME} :: ${site} :: ${ID}" | egrep "${grepstring}"
-    for du in ${DEST_URLs}; do echo "${du}" | egrep "${grepstring}"; done
+    for du in ${DEST_URLs}; do echo "[INFO] [$site] ${du}" | egrep "${grepstring}"; done
+    echo "[INFO] [$site] DONE: ${JOB_NAME} :: ${site} :: ${ID}" | egrep "${grepstring}"
     echo ""
   else
-    echo "ERROR: no latest build found for ${JOB_NAME} :: ${site} :: ${ID}" | egrep "${grepstring}"
+    echo "[ERROR] [$site] No latest build found for ${JOB_NAME} :: ${site} :: ${ID}" | egrep "${grepstring}"
   fi
 done
