@@ -152,8 +152,8 @@ for site in ${sites}; do
       fi
     popd >/dev/null
     rm -fr $tmpdir
-    echo "[INFO] [$site] DONE: ${JOB_NAME} :: ${site} :: ${ID}" | egrep "${grepstring}"
     for du in ${DEST_URLs}; do echo "[INFO] [$site] ${du}" | egrep "${grepstring}"; done
+    echo "[INFO] [$site] DONE: ${JOB_NAME} :: ${site} :: ${ID}" | egrep "${grepstring}"
     echo ""
   else
     echo "[ERROR] [$site] No latest build found for ${JOB_NAME} :: ${site} :: ${ID}" | egrep "${grepstring}"
