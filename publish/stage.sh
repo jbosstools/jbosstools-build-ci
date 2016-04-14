@@ -67,7 +67,7 @@ while [[ "$#" -gt 0 ]]; do
   shift 1
 done
 
-if [[ $quiet == 0 ]]; then consoleDest=/dev/null; else consoleDest=/dev/tty; fi
+if [[ $quiet == 1 ]]; then consoleDest=/dev/null; else consoleDest=/dev/tty; fi
 
 # set mars/staging, 9.0/staging, etc.
 if [[ ! ${DESTDIR} ]]; then echo "ERROR: DESTDIR not set. Please define eclipseReleaseName or devstudioReleaseVersion"; echo ""; usage; fi
@@ -109,10 +109,10 @@ for site in ${sites}; do
       # copy build folder
       if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
         log "[DEBUG] [$site] + mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}" | egrep "${grepstring}"
-        mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname} 1>$consoleDest
+        mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname} 1>$consoleDest 2>$consoleDest
       else # remote
         log "[DEBUG] [$site] + mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/" | egrep "${grepstring}"
-        echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/ 1>$consoleDest
+        echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/ 1>$consoleDest 2>$consoleDest
       fi
       log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/" | egrep "${grepstring}"
       ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ --exclude="repo"
@@ -124,10 +124,10 @@ for site in ${sites}; do
       if [[ -d ${tmpdir}/all/repo/ ]]; then
         if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
           log "[DEBUG] [$site] + mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
-          mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename} 1>$consoleDest
+          mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename} 1>$consoleDest 2>$consoleDest
         else # remote
           log "[DEBUG] [$site] + mkdir ${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/" | egrep "${grepstring}"
-          echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/ 1>$consoleDest
+          echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/ 1>$consoleDest 2>$consoleDest
         fi
         log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
         ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/ 1>$consoleDest
