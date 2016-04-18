@@ -141,6 +141,20 @@ for site in ${sites}; do
       # symlink latest build
       ln -s ${ID} latest; ${RSYNC} ${tmpdir}/latest ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/ 1>$consoleDest
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/latest/"
+      # copy update site zip
+      suffix=-updatesite-${sitename}
+      y=${tmpdir}/all/repository.zip
+      if [[ ! -f $y ]]; then
+        y=$(find ${tmpdir}/all/ -name "${ZIPPREFIX}*${suffix}.zip" -a -not -name "*latest*")
+      fi
+      if [[ -f $y ]]; then
+        ${RSYNC} ${y} ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip 1>$consoleDest
+        ${RSYNC} ${y}.sha256 ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256 1>$consoleDest
+      else
+        echo "[WARN] [$site] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" 
+      fi
+      # if we have a zip but no repo folder, unpack the zip into update site folder
+      if [[ -f $y ]] && [[ ! -d ${tmpdir}/all/repo/ ]]; then unzip -q $y -d ${tmpdir}/all/repo/; fi
       # copy update site
       if [[ -d ${tmpdir}/all/repo/ ]]; then
         if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
@@ -158,18 +172,6 @@ for site in ${sites}; do
         if [[ "${site/discovery}" == "${site}" ]]; then
           echo "[WARN] [$site] No update site found to publish in ${tmpdir}/all/repo/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}"
         fi
-      fi
-      # copy update site zip
-      suffix=-updatesite-${sitename}
-      y=${tmpdir}/all/repository.zip
-      if [[ ! -f $y ]]; then
-        y=$(find ${tmpdir}/all/ -name "${ZIPPREFIX}*${suffix}.zip" -a -not -name "*latest*")
-      fi
-      if [[ -f $y ]]; then
-        ${RSYNC} ${y} ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip 1>$consoleDest
-        ${RSYNC} ${y}.sha256 ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256 1>$consoleDest
-      else
-        echo "[WARN] [$site] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" 
       fi
     popd >/dev/null
     rm -fr $tmpdir
