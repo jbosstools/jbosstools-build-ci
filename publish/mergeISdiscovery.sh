@@ -11,9 +11,6 @@ JBDS=devstudio@filemgmt.jboss.org:/www_htdocs/devstudio
 # by default, push to TOOLS, not JBDS
 DESTINATION="${TOOLS}" # or "${JBDS}"
 
-# by default, only affect the staging site; use '-q development' to change LIVE development site too (use with caution!)
-qualities=staging
-
 usage ()
 {
   echo "Usage  : $0 [-DESTINATION destination] -v version -vr version-with-respin -is integration-stack-discovery-site"
@@ -41,6 +38,9 @@ while [[ "$#" -gt 0 ]]; do
   esac
   shift 1
 done
+
+# by default, only affect the staging site; use '-q development -q stable' to change LIVE development and stable site (use with caution!)
+if [[ ! ${qualities} ]]; then qualities=staging; fi
 
 if [[ $DESTINATION = $TOOLS ]]; then
   directoryXML=jbosstools-directory.xml
