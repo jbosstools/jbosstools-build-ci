@@ -1,0 +1,22 @@
+python findLostPatches.py --jbide 4.4.0.Alpha1 --jbds 10.0.0.Alpha1 --task "Find Missing Commits From jbosstools-4.3.x for master" --taskfull "Ensure all commits pushed to jbosstools-4.3.x have either been made in master, or are intentionally excluded from master. 
+
+Below are listed all commits made to jbosstools-4.3.x that have not been found in master. It is possible these commits do exist in master, but the patches are not identical. It is also possible that the commits made in jbosstools-4.3.x are not relevant to master or should not be applied. 
+
+If there are no commits listed below, please close (do not resolve) this issue. 
+
+Otherwise:
+
+   1) Click on each link below. 
+
+   2) Evaluate whether the given commit *should* be in master
+
+   3) If it should be in master, please find out why it is not in master. You may need to browse master's commit log to find a commit that should match. 
+
+   4) If you cannot find a matching commit, and it *should* be committed to master, please cherry-pick that commit to master or otherwise merge it in. 
+
+   5) In comments, please indicate any suspicious commits (ie, commits not related to simple version changes), whether it exists in master, whether you have successfully merged it in now, or whether it is not intended to be committed to master or is inappropriate for master.
+
+   6) When all complete, please close (do not resolve) this issue.
+   
+" -s https://issues.jboss.org/ -b jbosstools-4.3.x -u rob.stryker -p PASSWORD
+
