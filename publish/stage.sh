@@ -157,8 +157,9 @@ for site in ${sites}; do
       if [[ -f $y ]]; then
         ${RSYNC} ${y} ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip 1>$consoleDest
         ${RSYNC} ${y}.sha256 ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256 1>$consoleDest
-      else
-        echo "[WARN] [$site] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" 
+      elif [[ "${site/discovery}" == "${site}" ]]; then
+        # don't warn for discovery sites since they don't have update sites
+        echo "[WARN] [$site] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
       fi
       # if we have a zip but no repo folder, unpack the zip into update site folder
       if [[ -f $y ]] && [[ ! -d ${tmpdir}/all/repo/ ]]; then unzip -q $y -d ${tmpdir}/all/repo/; fi
@@ -180,7 +181,7 @@ for site in ${sites}; do
       else
         # don't warn for discovery sites since they don't have update sites
         if [[ "${site/discovery}" == "${site}" ]]; then
-          echo "[WARN] [$site] No update site found to publish in ${tmpdir}/all/repo/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}"
+          echo "[WARN] [$site] No update site found to publish in ${tmpdir}/all/repo/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
         fi
       fi
     popd >/dev/null
