@@ -137,6 +137,9 @@ for site in ${sites}; do
         mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname} 1>$consoleDest 2>$consoleDest
       else # remote
         log "[DEBUG] [$site] + mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/" | egrep "${grepstring}"
+        echo "mkdir ${DESTDIR}" | sftp ${DESTINATION}/ 1>$consoleDest 2>$consoleDest
+        echo "mkdir ${DESTTYPE}" | sftp ${DESTINATION}/${DESTDIR}/ 1>$consoleDest 2>$consoleDest
+        echo "mkdir builds" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ 1>$consoleDest 2>$consoleDest
         echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/ 1>$consoleDest 2>$consoleDest
       fi
       log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING}" | egrep "${grepstring}"
@@ -166,6 +169,9 @@ for site in ${sites}; do
           mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename} 1>$consoleDest 2>$consoleDest
         else # remote
           log "[DEBUG] [$site] + mkdir ${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/" | egrep "${grepstring}"
+          echo "mkdir ${DESTDIR}" | sftp ${DESTINATION}/ 1>$consoleDest 2>$consoleDest
+          echo "mkdir ${DESTTYPE}" | sftp ${DESTINATION}/${DESTDIR}/ 1>$consoleDest 2>$consoleDest
+          echo "mkdir updates" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ 1>$consoleDest 2>$consoleDest
           echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/ 1>$consoleDest 2>$consoleDest
         fi
         log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
