@@ -99,7 +99,7 @@ function contains() {
    MASTERPATCHID=()
    git checkout $BRANCH2 > /dev/null 2>&1
    for i in ${MASTERCOMMITS[@]}; do
-        TMPPATCHID=`git show $i | git patch-id`
+        TMPPATCHID=`git show -U1 $i | git patch-id`
         MASTERPATCHID+=($TMPPATCHID)
    done
    
@@ -110,7 +110,7 @@ function contains() {
    MAINTPATCHID=()
    git checkout $BRANCH1 > /dev/null 2>&1
    for i in ${MAINTCOMMITS[@]}; do
-        TEMPPATCHID=`git show $i | git patch-id | cut -f 1 -d " "`
+        TEMPPATCHID=`git show -U1 $i | git patch-id | cut -f 1 -d " "`
         MAINTPATCHID+=($TEMPPATCHID)
         # if $BRANCH2 doesn't contain a matching commit, we should output this as a missing commit
         IFTEST=$(contains "${MASTERPATCHID[@]}" "$TEMPPATCHID")
