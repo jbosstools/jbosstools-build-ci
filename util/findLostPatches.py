@@ -27,6 +27,7 @@ parser = OptionParser(usage)
 parser.add_option("-u", "--user", dest="username", help="JIRA Username")
 parser.add_option("-p", "--pwd", dest="password", help="JIRA Password")
 parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues-stg.jboss.org or https://issues.jboss.org")
+parser.add_option("-b", "--branch", dest="frombranch", help="The branch containing commits that should be in master (ie, our maintenance branch, jbosstools-4.3.x")
 parser.add_option("-i", "--jbide", dest="jbidefixversion", help="JBIDE Fix Version, eg., 4.1.0.qualifier")
 parser.add_option("-d", "--jbds", dest="jbdsfixversion", help="JBDS Fix Version, eg., 7.0.0.qualifier")
 parser.add_option("-t", "--task", dest="taskdescription", help="Task Summary, eg., \"Code Freeze + Branch\"")
@@ -35,10 +36,11 @@ parser.add_option("-f", "--taskfull", dest="taskdescriptionfull", help="Task Des
 
 (options, args) = parser.parse_args()
 
-if not options.username or not options.password or not options.jiraserver or not options.jbidefixversion or not options.jbdsfixversion or not options.taskdescription:
+if not options.username or not options.password or not options.jiraserver or not options.frombranch or not options.jbidefixversion or not options.jbdsfixversion or not options.taskdescription:
     parser.error("Must to specify ALL commandline flags")
     
 jiraserver = options.jiraserver
+frombranch = options.frombranch
 jira = JIRA(options={'server':jiraserver}, basic_auth=(options.username, options.password))
 
 jbide_fixversion = options.jbidefixversion
@@ -146,7 +148,7 @@ for name, comps in JBT_components.iteritems():
     os.system("git clone " + githubrepo)
     os.chdir(workingdir + "/" + subfoldername.strip())
     #  TODO externalize the branch here
-    p = Popen(['bash', '../../findLostPatchesOneRepository.sh', 'jbosstools-4.3.x'], stdout=PIPE, stderr=PIPE, stdin=PIPE)
+    p = Popen(['bash', '../../findLostPatchesOneRepository.sh', frombranch], stdout=PIPE, stderr=PIPE, stdin=PIPE)
     output = p.stdout.read()
     print output
     comptasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery + " and component in (" + ",".join(map(quote,comps)) + ")")

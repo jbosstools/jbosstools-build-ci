@@ -17,5 +17,5 @@ Otherwise:
 
    6) When all complete, please close (do not resolve) this issue.
    
-" -s https://issues.jboss.org/ -u rob.stryker -p PASSWORD
+" -s https://issues.jboss.org/ -b jbosstools-4.3.x -u rob.stryker -p PASSWORD
 
