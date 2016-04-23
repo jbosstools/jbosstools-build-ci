@@ -99,7 +99,7 @@ function contains() {
    MASTERPATCHID=()
    git checkout $BRANCH2 > /dev/null 2>&1
    for i in ${MASTERCOMMITS[@]}; do
-        TMPPATCHID=`git show -U1 $i | git patch-id`
+        TMPPATCHID=`git show -U1 $i | git patch-id | cut -f 1 -d " "`
         MASTERPATCHID+=($TMPPATCHID)
    done
    
@@ -118,7 +118,7 @@ function contains() {
            echo "* missing: [$i|$REPOURL2$i]"
            COMMITMSG=`git log --format=%f -n 1 $i`
            git log $BRANCH2 --format='%H - %f' -n 1000 | grep $COMMITMSG | cut -f 1 -d " " \
-           | awk -v originalid="$i" -v repo="$REPOURL2" '{ print "** possible match: [" $0 "|" repo $0 "]. diff <(git show [" originalid "|" repo $0 "]) <(git show [" $0 "|" repo $0 "])"; system("git show " originalid " > .testscript1"); system("git show " $0 " > .testscript2"); system("diff .testscript1 .testscript2 | wc -l");}' | sed  -e 's/\(^[0-9][0-9]*\)/\*\*\* The diff between the two patches is \1 lines/'
+           | awk -v originalid="$i" -v repo="$REPOURL2" '{ print "** possible match: [" $0 "|" repo $0 "]."; system("git show " originalid " > .testscript1"); system("git show " $0 " > .testscript2"); system("diff .testscript1 .testscript2 | curl -s -F \"sprunge=<-\" \"http://sprunge.us\"");}' | sed  -e 's/^http/\*\*\* Inspect the difference between the two patches:  http/'
         fi
    done
 
