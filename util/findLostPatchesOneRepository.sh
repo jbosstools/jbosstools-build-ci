@@ -59,7 +59,7 @@ function contains() {
    PWD1=`pwd`
    BASENAME=`basename "$PWD1"`
    # get the repo url for linking in the report
-   REPOURL="https://github.com/jbosstools/$BASENAME/"
+   REPOURL="https://github.com/jbosstools/$BASENAME"
 
    # print some info about the repo / folder
    echo "Folder: $BASENAME at $REPOURL"
@@ -115,7 +115,10 @@ function contains() {
         # if $BRANCH2 doesn't contain a matching commit, we should output this as a missing commit
         IFTEST=$(contains "${MASTERPATCHID[@]}" "$TEMPPATCHID")
         if [ $IFTEST == "y" ]; then :; else
-           echo "     - $REPOURL2$i"
+           echo "* missing: [$i|$REPOURL2$i]"
+           COMMITMSG=`git log --format=%f -n 1 $i`
+           git log $BRANCH2 --format='%H - %f' -n 1000 | grep $COMMITMSG | cut -f 1 -d " " \
+           | awk -v originalid="$i" -v repo="$REPOURL2" '{ print "** possible match: [" $0 "|" repo $0 "]. diff <(git show [" originalid "|" repo $0 "]) <(git show [" $0 "|" repo $0 "])"; system("git show " originalid " > .testscript1"); system("git show " $0 " > .testscript2"); system("diff .testscript1 .testscript2 | wc -l");}' | sed  -e 's/\(^[0-9][0-9]*\)/\*\*\* The diff between the two patches is \1 lines/'
         fi
    done
 
