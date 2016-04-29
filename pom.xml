@@ -35,7 +35,7 @@
 		<!-- <jbossNexus>repository.jboss.org</jbossNexus> -->
 		<jbossNexus>origin-repository.jboss.org</jbossNexus>
 	</properties>
-	
+
 	<build>
 	  <plugins>
 	    <plugin>
@@ -123,7 +123,7 @@
 	  </plugins>
 	</build>
 	
-	<!-- To deploy parent to Nexus -->
+	<!-- To deploy to Nexus -->
 	<!--	Don't change "id" since it should match credentials entry in $M2_REPO/settings.xml -->
 	<distributionManagement>
 	  <snapshotRepository>
