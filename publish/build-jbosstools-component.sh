@@ -45,12 +45,27 @@ if [[ ! ${ghprbPullId} ]]; then
   mvnStep2="$M2_HOME/bin/mvn deploy -Pdeploy-to-jboss.org ${BUILD_FLAGS}" # deploy if new
   mvnStep3="$M2_HOME/bin/mvn help:effective-pom verify ${TEST_FLAGS}" # run tests & fail if problems found
 else
-  mvnStep1="$M2_HOME/bin/mvn deploy -Pdeploy-pr ${BUILD_FLAGS}" # build and test, then deploy to /pulls/ folder if successful or fail if tests fail
+  mvnStep1="$M2_HOME/bin/mvn clean install ${BUILD_FLAGS}" # build (no tests)
+  mvnStep2="$M2_HOME/bin/mvn deploy -Pdeploy-pr ${BUILD_FLAGS}" # deploy if new
+  mvnStep3="$M2_HOME/bin/mvn help:effective-pom verify ${TEST_FLAGS}" # run tests & fail if problems found
 fi
 
 # build and deploy PR in one step
 if [[ ${ghprbPullId} ]]; then 
   ${mvnStep1}
+  ${mvnStep2}
+
+  echo "Available JREs for testing:"
+  echo "jbosstools.test.jre.5=${NATIVE_TOOLS}${SEP}${JAVA15}"
+  echo "jbosstools.test.jre.6=${NATIVE_TOOLS}${SEP}${JAVA16}"
+  echo "jbosstools.test.jre.7=${NATIVE_TOOLS}${SEP}${JAVA17}"
+  echo "jbosstools.test.jre.8=${NATIVE_TOOLS}${SEP}${JAVA18}"
+  if [[ -d ${WORKSPACE}/sources/all-tests/ ]] && [[ -f ${WORKSPACE}/sources/all-tests/pom.xml ]]; then
+    cd ${WORKSPACE}/sources/all-tests/
+  elif [[ -d ${WORKSPACE}/sources/tests/ ]] && [[ -f ${WORKSPACE}/sources/tests/pom.xml ]]; then
+    cd ${WORKSPACE}/sources/tests/
+  fi
+  ${mvnStep3}
 else
   ${mvnStep1}
   if [[ ${skipRevisionCheckWhenPublishing} == "true" ]] || [[ $([[ -x $p2diff ]] && ${p2diff} file://${WORK}/target/fullSite/all/repo/ http://download.jboss.org/jbosstools/mars/snapshots/builds/jbosstools-build-sites.aggregate.${projectName}-site_${jbosstools_site_stream}/latest/all/repo/ -vmargs -Dosgi.locking=none | egrep "<|>" | egrep -v "(<|>) (Alpha[0-9]+|Beta[0-9]+|CR[0-9]+|Final|GA).+-B[0-9]+\.") ]] || [[ $(. ${WORKSPACE}/sources/util/checkLatestPublishedSHA.sh -s ${WORKSPACE}/sources/aggregate/${projectName}-site/target/fullSite/all/repo -t http://download.jboss.org/jbosstools/mars/snapshots/builds/jbosstools-build-sites.aggregate.${projectName}-site_${jbosstools_site_stream}/latest/all/repo/ -all) == "true" ]]; then
