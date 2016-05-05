@@ -61,10 +61,8 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
     ${RSYNC} --delete ${WORKDIR}/${VERSION} ${DESTINATION}/updates/${PUBLISH_PATH}/${REQ_NAME}/
 
     # regen composite metadata 
-    pushd ${WORKSPACE}/tmp
-      wget --no-check-certificate https://raw.githubusercontent.com/jbosstools/jbosstools-build-ci/master/util/cleanup/jbosstools-cleanup.sh
-      chmod +x jbosstools-cleanup.sh; ./jbosstools-cleanup.sh --dirs-to-scan "updates/${PUBLISH_PATH}/${REQ_NAME}" --regen-metadata-only --no-subdirs
-    popd
+    chmod +x ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh
+    ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh --dirs-to-scan "updates/${PUBLISH_PATH}/${REQ_NAME}" --regen-metadata-only --no-subdirs
   fi
 
   date
