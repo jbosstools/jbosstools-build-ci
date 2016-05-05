@@ -86,6 +86,11 @@
 						<classifier>promote</classifier>
 					</artifact>
 					<artifact>
+						<file>publish/mirror.sh</file>
+						<type>sh</type>
+						<classifier>mirror</classifier>
+					</artifact>
+					<artifact>
 						<file>publish/publish.sh</file>
 						<type>sh</type>
 						<classifier>publish</classifier>
