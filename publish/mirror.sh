@@ -72,4 +72,4 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
 
 fi
 
-echo "New requirement site: http://download.jboss.org/jbosstools/updates/${PUBLISH_PATH}/${REQ_NAME}/${VERSION}"
+echo "New requirement site: http://download.jboss.org/jbosstools/updates/${PUBLISH_PATH}/${REQ_NAME}/${VERSION}/#new"
