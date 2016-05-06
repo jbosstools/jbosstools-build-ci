@@ -5,7 +5,6 @@
 # 1. fetch and parse http://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job/jbosstoolstargetplatformrequirements-mirror-matrix/38/api/xml?xpath=//description
 tmpfile=/tmp/jbosstoolstargetplatformrequirements-mirror-matrix-descriptions.txt
 descriptionURL=http://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job/jbosstoolstargetplatformrequirements-mirror-matrix/38/api/xml?xpath=//description
-TPVERSION=4.60.0.Alpha1-SNAPSHOT
 curl -s ${descriptionURL} > ${tmpfile}
 if [[ ! $(cat ${tmpfile} | grep "http://download.jboss.org/jbosstools/updates/requirements/") ]]; then
 	echo "Error: could not parse description from ${descriptionURL}"
@@ -30,14 +29,14 @@ done
 wait
 
 # 4. generate p2diffs
+TPVERSION=4.60.0.Alpha1-SNAPSHOT
+P2DIFF=/home/nboldt/bin/p2diff
 for d in jbosstools jbdevstudio; do
-  prefix=http://download.jboss.org/jbosstools/; if [[ $d == "jbdevstudio" ]]; then prefix="https://devstudio.jboss.com/"; fi
-
-  p2diff ${prefix}/targetplatforms/${jbosstools}target/${TPVERSION}/REPO/ \
-    `pwd`/${jbosstools}/multiple/target/${jbosstools}-multiple.target.repo/ \
-    | tee /tmp/p2diff_${d}_${TPVERSION}_latest.txt 
-  ${0/changeTargetURLs.sh/p2diff-check.sh} /tmp/p2diff_${d}_${TPVERSION}_latest.txt \
-    | tee /tmp/p2diff_${d}_${TPVERSION}_summary_latest.txt
+  prefix=http://download.jboss.org/jbosstools; if [[ $d == "jbdevstudio" ]]; then prefix="https://devstudio.jboss.com"; fi
+  p2diffcmd="${P2DIFF} ${prefix}/targetplatforms/${d}target/${TPVERSION}/REPO/ file://"$(pwd)"/${d}/multiple/target/${d}-multiple.target.repo/"
+  ${p2diffcmd} | tee /tmp/p2diff_${d}_${TPVERSION}_latest.txt
+  if [[ ${0/changeTargetURLs.sh/} != $0 ]]; then P2DIFFCHECK=${0/changeTargetURLs.sh/p2diff-check.sh}; else P2DIFFCHECK=~/tru/buildci/util/p2diff-check.sh; fi
+  ${P2DIFFCHECK} /tmp/p2diff_${d}_${TPVERSION}_latest.txt | tee /tmp/p2diff_${d}_${TPVERSION}_summary_latest.txt
 done
 
 echo ""
