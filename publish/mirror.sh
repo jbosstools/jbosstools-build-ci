@@ -32,20 +32,29 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
     popd
   fi
 
+  if [[ $(grep ant-contrib ${SCRIPTNAME}) ]]; then
+    M2_HOME=/qa/tools/opt/apache-maven-3.2.5/
+    $M2_HOME/bin/mvn dependency:copy -DoutputDirectory=${WORKSPACE}/updates/requirements/ -Dartifact=ant-contrib:ant-contrib:1.0b3:jar
+  fi
+
   # get the mirror
   if [[ ${SOURCE_URL} ]]; then
     date; ${JDK8}/bin/java -cp ${WORKSPACE}/eclipse/plugins/org.eclipse.equinox.launcher_*.jar \
-        org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp -application org.eclipse.ant.core.antRunner -f ${SCRIPTNAME} -Dversion=${VERSION} -DURL=${SOURCE_URL}
+        org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp -application org.eclipse.ant.core.antRunner -f ${SCRIPTNAME} -Dversion=${VERSION} -DURL=${SOURCE_URL} ${TASK}
   else
     date; ${JDK8}/bin/java -cp ${WORKSPACE}/eclipse/plugins/org.eclipse.equinox.launcher_*.jar \
-        org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp -application org.eclipse.ant.core.antRunner -f ${SCRIPTNAME} -Dversion=${VERSION}
+        org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp -application org.eclipse.ant.core.antRunner -f ${SCRIPTNAME} -Dversion=${VERSION} ${TASK}
   fi
 
   # publish to /builds/staging/${JOB_NAME}_${REQ_NAME}/${VERSION}
   DESTINATION="tools@filemgmt.jboss.org:/downloads_htdocs/tools"
   date
-  ${RSYNC} --delete ${WORKDIR}/${VERSION} ${DESTINATION}/builds/staging/${JOB_NAME}_${REQ_NAME}/
-  ${RSYNC} ${WORKDIR}/build.xml ${DESTINATION}/builds/staging/${JOB_NAME}_${REQ_NAME}/
+
+  # deprecated: only for non-requirements releases 
+  # if [[ ${PUBLISH_PATH} != "requirements" ]]; then
+  #   ${RSYNC} --delete ${WORKDIR}/${VERSION} ${DESTINATION}/builds/staging/${JOB_NAME}_${REQ_NAME}/
+  #   ${RSYNC} ${WORKDIR}/${SCRIPTNAME} ${DESTINATION}/builds/staging/${JOB_NAME}_${REQ_NAME}/
+  # fi
 
   # optionally, publish to updates/requirements/${REQ_NAME}/ too
   if [[ ${VERSION} != "SNAPSHOT" ]]; then
