@@ -13,6 +13,7 @@ EXCLUDES=""
 
 # defaults
 numbuildstokeep=2
+numbuildstolink=2
 threshholdwhendelete=2 # in days
 
 # use this to pass in rsync flags
@@ -59,6 +60,7 @@ while [[ "$#" -gt 0 ]]; do
     '-DWORKSPACE','-WORKSPACE')       WORKSPACE="$2"; shift 1;;
     '-d'|'--del') RSYNCFLAGS="${RSYNCFLAGS} --del"; shift 0;;
     '-k'|'--keep') numbuildstokeep="$2"; shift 1;;
+    '-l'|'--link') numbuildstolink="$2"; shift 1;;
     '-a'|'--age-to-delete') threshholdwhendelete="$2"; shift 1;;
     *) RSYNCFLAGS="${RSYNCFLAGS} $1"; shift 0;;
   esac
@@ -101,7 +103,7 @@ if [[ ${WORKSPACE} ]] && [[ -f ${WORKSPACE}/sources/util/cleanup/jbosstools-clea
     PARENT_PARENT_PATH=$(echo $PARENT_PATH | sed -e "s#\(.\+\)/[^/]\+#\1#")
     chmod +x ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh
     # given above, ${PARENT_PATH#${PARENT_PARENT_PATH}/} returns last path segment jbosstools-build-sites.aggregate.earlyaccess-site_master
-    ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh -k ${numbuildstokeep} -a ${threshholdwhendelete} -S /all/repo/ -d ${PARENT_PARENT_PATH} -i ${PARENT_PATH#${PARENT_PARENT_PATH}/} -DESTINATION ${DESTINATION}
+    ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh -k ${numbuildstokeep} -l ${numbuildstolink} -a ${threshholdwhendelete} -S /all/repo/ -d ${PARENT_PARENT_PATH} -i ${PARENT_PATH#${PARENT_PARENT_PATH}/} -DESTINATION ${DESTINATION}
   fi
 fi
 
