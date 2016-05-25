@@ -155,6 +155,10 @@ for site in ${sites}; do
         y=$(find ${tmpdir}/all/ -name "${ZIPPREFIX}*${suffix}.zip" -a -not -name "*latest*")
       fi
       if [[ -f $y ]]; then
+        echo "mkdir ${DESTDIR}" | sftp ${DESTINATION}/ 1>$consoleDest 2>$consoleDest
+        echo "mkdir ${DESTTYPE}" | sftp ${DESTINATION}/${DESTDIR}/ 1>$consoleDest 2>$consoleDest
+        echo "mkdir updates" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ 1>$consoleDest 2>$consoleDest
+        echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/ 1>$consoleDest 2>$consoleDest
         ${RSYNC} ${y} ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip 1>$consoleDest
         ${RSYNC} ${y}.sha256 ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256 1>$consoleDest
       elif [[ "${site/discovery}" == "${site}" ]]; then
