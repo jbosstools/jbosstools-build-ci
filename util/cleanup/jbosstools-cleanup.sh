@@ -116,7 +116,7 @@ clean ()
 	numbuildstolink=$4 # number of TOTAL builds to keep
 	somepath=${somepath//\/\//\/}; # remove duplicate slashes in paths - replace all // with / 
 	somepath=${somepath//\/\//\/}; # repeat to replace /// with /
-	echo "Check for $somepath builds more than ${threshholdwhendelete} days old; keep minimum ${numbuildstokeep} builds per branch (link: ${numbuildstolink}" | tee -a $log 
+	echo "Check for $somepath builds more than ${threshholdwhendelete} days old; keep minimum ${numbuildstokeep} builds per branch (linked in composite: ${numbuildstolink})" | tee -a $log 
 
 	getSubDirs ${DEST_PATH}/$somepath/ 0 $includes
 	subdirs=$getSubDirsReturn
