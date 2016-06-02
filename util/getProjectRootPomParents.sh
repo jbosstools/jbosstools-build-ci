@@ -104,7 +104,7 @@ echo "Found these root pom versions   [CORRECT]:" > ${logfile}; echo "" >> ${log
 echo "Found these root pom versions [INCORRECT]:" > ${errfile}; echo "" >> ${errfile}
 
 # portlet and birt removed
-checkProjects ${WORKSPACE1}/jbosstools- "aerogear arquillian base browsersim central discovery forge freemarker hibernate javaee jst livereload openshift playground server vpe webservices" pom.xml jbosstools- jbosstools/jbosstools- "${jbtstream}"
+checkProjects ${WORKSPACE1}/jbosstools- "aerogear arquillian base browsersim central discovery forge freemarker hibernate javaee jst livereload openshift server vpe webservices" pom.xml jbosstools- jbosstools/jbosstools- "${jbtstream}"
 checkProjects ${WORKSPACE1}/jbosstools- "build-sites" aggregate/pom.xml jbosstools- jbosstools/jbosstools- "${jbtstream}"
 checkProjects ${WORKSPACE2}/jbdevstudio- "product" pom.xml devstudio. jbdevstudio/jbdevstudio- "${jbdsstream}"
 
