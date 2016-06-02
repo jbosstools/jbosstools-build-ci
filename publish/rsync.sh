@@ -51,7 +51,7 @@ while [[ "$#" -gt 0 ]]; do
   case $1 in
     '-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., /qa/services/http/binaries/RHDS
     '-s') SOURCE_PATH="$2"; shift 1;; # ${WORKSPACE}/sources/site/target/repository/
-    '-t') TARGET_PATH="$2"; shift 1;; # neon/snapshots/builds/<job-name>/<build-number>/, neon/snapshots/updates/core/{4.4.0.Alpha1, master}/
+    '-t') TARGET_PATH="$2"; shift 1;; # neon/snapshots/builds/<job-name>/<build-number>/, neon/snapshots/updates/core/{4.4.0.Final, master}/
     '-i') INCLUDES="$2"; shift 1;;
     '-e') EXCLUDES="$2"; shift 1;;
     '-DBUILD_ID','-BUILD_ID')         BUILD_ID="$2"; shift 1;;

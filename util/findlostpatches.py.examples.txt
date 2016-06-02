@@ -1,4 +1,4 @@
-python findLostPatches.py --jbide 4.4.0.Alpha1 --jbds 10.0.0.Alpha1 --task "Find Missing Commits From jbosstools-4.3.x for master" --taskfull "Ensure all commits pushed to jbosstools-4.3.x have either been made in master, or are intentionally excluded from master. 
+python findLostPatches.py --jbide 4.4.0.Final --jbds 10.0.0.GA --task "Find Missing Commits From jbosstools-4.3.x for master" --taskfull "Ensure all commits pushed to jbosstools-4.3.x have either been made in master, or are intentionally excluded from master. 
 
 Below are listed all commits made to jbosstools-4.3.x that have not been found in master. It is possible these commits do exist in master, but the patches are not identical. It is also possible that the commits made in jbosstools-4.3.x are not relevant to master or should not be applied. 
 

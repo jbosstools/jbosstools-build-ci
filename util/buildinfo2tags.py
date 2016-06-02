@@ -14,7 +14,7 @@ This script will convert a buildinfo.json to CSV list of projects, SHAs, and tag
 parser = OptionParser(usage)
 
 # required
-parser.add_option("-n", dest="name", help="symbolic name to use, jbosstools-4.4.0.Alpha1")
+parser.add_option("-n", dest="name", help="symbolic name to use, jbosstools-4.4.0.Final")
 
 (options, args) = parser.parse_args()
 
@@ -25,13 +25,13 @@ j = json.load(sys.stdin)
 if j:
   
   # upstream/*/revision/knownReferences[0]/url = git repo from which build happened, eg., "git://github.com/jbosstools/jbosstools-base.git"
-  # upstream/*/revision/knownReferences[0]/ref = branch from which build happened, eg., "jbosstools-4.4.0.Alpha1x" or "master"
+  # upstream/*/revision/knownReferences[0]/ref = branch from which build happened, eg., "jbosstools-4.4.x" or "master"
   for entry in j['upstream']:
       if debug : print "[DEBUG] " + entry
       if type(j['upstream'][entry]) is dict :
           if debug : print "[DEBUG] " + " >> " + j['upstream'][entry]["revision"]["HEAD"]
           if debug : print "[DEBUG] " + " >> " + j['upstream'][entry]["revision"]["knownReferences"][0]["url"] # github project: "git://github.com/jbosstools/jbosstools-base.git"
-          if debug : print "[DEBUG] " + " >> " + j['upstream'][entry]["revision"]["knownReferences"][0]["ref"] # branch: "jbosstools-4.4.0.Alpha1x" or "master"
+          if debug : print "[DEBUG] " + " >> " + j['upstream'][entry]["revision"]["knownReferences"][0]["ref"] # branch: "jbosstools-4.4.x" or "master"
           m = re.search('.+/([^/]+)/([^/]+)\.git', j['upstream'][entry]["revision"]["knownReferences"][0]["url"]) 
           if m:
             org = m.group(1)

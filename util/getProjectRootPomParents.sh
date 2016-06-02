@@ -14,7 +14,7 @@ usage ()
     echo ""
     echo "Example 1: $0 -b jbosstools-4.2.x -pv 4.2.3.CR1-SNAPSHOT -w1 /home/nboldt/42x -w2 /home/nboldt/42xx"
     echo ""
-    echo "Example 2: $0 -pv 4.4.0.Alpha1-SNAPSHOT -skipupdate -w1 /home/nboldt/tru -w2 /home/nboldt/truu"
+    echo "Example 2: $0 -pv 4.4.0.Final-SNAPSHOT -skipupdate -w1 /home/nboldt/tru -w2 /home/nboldt/truu"
     echo ""
     exit 1;
 }
@@ -24,7 +24,7 @@ if [[ $# -lt 1 ]]; then
 fi
 
 doGitUpdate=true
-parent=4.4.0.Alpha1-SNAPSHOT # or 4.4.0.Final-SNAPSHOT
+parent=4.4.0.Final-SNAPSHOT # or 4.4.0.Final-SNAPSHOT
 branch=jbosstools-4.4.x # or master
 jbtstream=4.4.neon  # or master
 jbdsstream=10.0.neon # or master 

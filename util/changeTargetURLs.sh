@@ -29,7 +29,7 @@ done
 wait
 
 # 4. generate p2diffs
-TPVERSION=4.60.0.Alpha1-SNAPSHOT
+TPVERSION=4.60.0.Final-SNAPSHOT
 P2DIFF=/home/nboldt/bin/p2diff
 for d in jbosstools jbdevstudio; do
   prefix=http://download.jboss.org/jbosstools; if [[ $d == "jbdevstudio" ]]; then prefix="https://devstudio.jboss.com"; fi

@@ -15,8 +15,8 @@ usage ()
 {
   echo "Usage  : $0 [-DESTINATION destination] -v version -vr version-with-respin -is integration-stack-discovery-site"
   echo ""
-  echo "Example 1: $0 -v 4.4.0.Alpha1 -vr 4.4.0.Alpha1a -is http://download.jboss.org/jbosstools/neon/staging/updates/integration-stack/discovery/4.4.0.Alpha2/"
-  echo "Example 2: $0 -v 10.0.0.Alpha1 -vr 10.0.0.Alpha1a -is https://devstudio.redhat.com/10.0/staging/updates/integration-stack/discovery/10.0.0.Alpha2/ -JBDS"
+  echo "Example 1: $0 -v 4.4.0.Final -vr 4.4.0.Final -is http://download.jboss.org/jbosstools/neon/staging/updates/integration-stack/discovery/4.4.0.Alpha2/"
+  echo "Example 2: $0 -v 10.0.0.GA -vr 10.0.0.GA -is https://devstudio.redhat.com/10.0/staging/updates/integration-stack/discovery/10.0.0.Alpha2/ -JBDS"
 
   echo ""
   exit 1
