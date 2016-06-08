@@ -30,6 +30,7 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 if [[ ! ${WORKSPACE} ]]; then WORKSPACE=/tmp; fi
+if [[ ! -x $p2diff ]]; then echo "Error: cannot run p2diff from $p2diff"; echo ""; usage; fi
 
 # 1. fetch and parse http://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job/jbosstoolstargetplatformrequirements-mirror-matrix/${whichBuild}/api/xml?xpath=//description
 tmpfile=${WORKSPACE}/jbosstoolstargetplatformrequirements-mirror-matrix-descriptions.txt
@@ -60,10 +61,10 @@ wait
 # 4. generate p2diffs
 for d in jbosstools jbdevstudio; do
   prefix=http://download.jboss.org/jbosstools; if [[ $d == "jbdevstudio" ]]; then prefix="https://devstudio.jboss.com"; fi
-  p2diffcmd="${P2DIFF} ${prefix}/targetplatforms/${d}target/${TARGET_PLATFORM_VERSION_MAXIMUM}/REPO/ file://"$(pwd)"/${d}/multiple/target/${d}-multiple.target.repo/"
+  p2diffcmd="${p2diff} ${prefix}/targetplatforms/${d}target/${TARGET_PLATFORM_VERSION_MAXIMUM}/REPO/ file://"$(pwd)"/${d}/multiple/target/${d}-multiple.target.repo/"
   ${p2diffcmd} | tee ${WORKSPACE}/p2diff_${d}_${TARGET_PLATFORM_VERSION_MAXIMUM}_latest.txt
-  if [[ ${0/changeTargetURLs.sh/} != $0 ]]; then P2DIFFCHECK=${0/changeTargetURLs.sh/p2diff-check.sh}; else P2DIFFCHECK=~/tru/buildci/util/p2diff-check.sh; fi
-  ${P2DIFFCHECK} ${WORKSPACE}/p2diff_${d}_${TARGET_PLATFORM_VERSION_MAXIMUM}_latest.txt | tee ${WORKSPACE}/p2diff_${d}_${TARGET_PLATFORM_VERSION_MAXIMUM}_summary_latest.txt
+  if [[ ${0/changeTargetURLs.sh/} != $0 ]]; then p2diffcheck=${0/changeTargetURLs.sh/p2diff-check.sh}; else p2diffcheck=~/tru/buildci/util/p2diff-check.sh; fi
+  ${p2diffcheck} ${WORKSPACE}/p2diff_${d}_${TARGET_PLATFORM_VERSION_MAXIMUM}_latest.txt | tee ${WORKSPACE}/p2diff_${d}_${TARGET_PLATFORM_VERSION_MAXIMUM}_summary_latest.txt
 done
 
 echo ""
