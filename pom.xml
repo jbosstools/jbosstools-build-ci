@@ -121,6 +121,11 @@
 						<classifier>install-from-target</classifier>
 					</artifact>
 					<artifact>
+						<file>util/p2diff-check.sh</file>
+						<type>sh</type>
+						<classifier>p2diff-check</classifier>
+					</artifact>
+					<artifact>
 						<file>util/verifyTarget.sh</file>
 						<type>sh</type>
 						<classifier>verify-target</classifier>
