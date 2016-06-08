@@ -16,6 +16,8 @@ if [[ $# -lt 1 ]]; then usage; fi
 
 p2diff=/home/hudson/static_build_env/jbds/p2diff/x86$(if [[ $(uname -a | grep x86_64) ]]; then echo _64; fi)/p2diff
 whichBuild=lastSuccessfulBuild
+M2_HOME=/qa/tools/opt/apache-maven-3.2.5/
+MVN=${M2_HOME}/bin/mvn
 
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
@@ -24,6 +26,8 @@ while [[ "$#" -gt 0 ]]; do
 	'-p2diff') p2diff="$2"; shift 1;; # /path/to/p2diff executable
 	'-b') whichBuild="$2"; shift 1;; # could be lastBuild, lastCompletedBuild, lastSuccessfulBuild, or a build by number, eg., 38
 	'-WORKSPACE') WORKSPACE="$2"; shift 1;;
+	'-mh') M2_HOME="$2"; shift 1;;
+	'-m') MVN="$2"; shift 1;;
     *) OTHER="${OTHER} $1"; shift 0;;
   esac
   shift 1
@@ -54,7 +58,7 @@ done
 
 # 3. run verifyTarget.sh from same util/ folder 
 for d in jbosstools jbdevstudio; do
-  ${0/changeTargetURLs.sh/verifyTarget.sh} -x -b `pwd` -p $d &
+  ${0/changeTargetURLs.sh/verifyTarget.sh} -x -b `pwd` -p $d -m ${MVN} -mrl ${WORKSPACE}/.repository &
 done
 wait
 
