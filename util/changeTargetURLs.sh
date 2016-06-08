@@ -2,9 +2,15 @@
 
 # 0. run in ~/tru/jbosstools-target-platforms
 
-# 1. fetch and parse http://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job/jbosstoolstargetplatformrequirements-mirror-matrix/38/api/xml?xpath=//description
-tmpfile=/tmp/jbosstoolstargetplatformrequirements-mirror-matrix-descriptions.txt
-descriptionURL=http://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job/jbosstoolstargetplatformrequirements-mirror-matrix/38/api/xml?xpath=//description
+# could be lastBuild, lastCompletedBuild, lastSuccessfulBuild, or a build by number, eg., 38
+whichBuild=lastSuccessfulBuild
+if [[ $1 ]]; then whichBuild="$1"; fi 
+
+if [[ ! ${WORKSPACE} ]]; then WORKSPACE=/tmp; fi
+
+# 1. fetch and parse http://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job/jbosstoolstargetplatformrequirements-mirror-matrix/${whichBuild}/api/xml?xpath=//description
+tmpfile=${WORKSPACE}/jbosstoolstargetplatformrequirements-mirror-matrix-descriptions.txt
+descriptionURL=http://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job/jbosstoolstargetplatformrequirements-mirror-matrix/${whichBuild}/api/xml?xpath=//description
 curl -s ${descriptionURL} > ${tmpfile}
 if [[ ! $(cat ${tmpfile} | grep "http://download.jboss.org/jbosstools/updates/requirements/") ]]; then
 	echo "Error: could not parse description from ${descriptionURL}"
@@ -34,18 +40,21 @@ P2DIFF=/home/nboldt/bin/p2diff
 for d in jbosstools jbdevstudio; do
   prefix=http://download.jboss.org/jbosstools; if [[ $d == "jbdevstudio" ]]; then prefix="https://devstudio.jboss.com"; fi
   p2diffcmd="${P2DIFF} ${prefix}/targetplatforms/${d}target/${TPVERSION}/REPO/ file://"$(pwd)"/${d}/multiple/target/${d}-multiple.target.repo/"
-  ${p2diffcmd} | tee /tmp/p2diff_${d}_${TPVERSION}_latest.txt
+  ${p2diffcmd} | tee ${WORKSPACE}/p2diff_${d}_${TPVERSION}_latest.txt
   if [[ ${0/changeTargetURLs.sh/} != $0 ]]; then P2DIFFCHECK=${0/changeTargetURLs.sh/p2diff-check.sh}; else P2DIFFCHECK=~/tru/buildci/util/p2diff-check.sh; fi
-  ${P2DIFFCHECK} /tmp/p2diff_${d}_${TPVERSION}_latest.txt | tee /tmp/p2diff_${d}_${TPVERSION}_summary_latest.txt
+  ${P2DIFFCHECK} ${WORKSPACE}/p2diff_${d}_${TPVERSION}_latest.txt | tee ${WORKSPACE}/p2diff_${d}_${TPVERSION}_summary_latest.txt
 done
 
 echo ""
 for d in jbosstools jbdevstudio; do
-  echo "p2diff files: /tmp/p2diff_${d}_${TPVERSION}_latest.txt"
-  echo "p2diff files: /tmp/p2diff_${d}_${TPVERSION}_summary_latest.txt"
+  echo "p2diff files: ${WORKSPACE}/p2diff_${d}_${TPVERSION}_latest.txt"
+  echo "p2diff files: ${WORKSPACE}/p2diff_${d}_${TPVERSION}_summary_latest.txt"
 done
 echo ""
 
-# 5. cleanup
+# 5. generate git diff
+git diff --color=never > ${WORKSPACE}/git.diff.txt
+
+# 6. cleanup
 rm -f ${tmpfile}
 

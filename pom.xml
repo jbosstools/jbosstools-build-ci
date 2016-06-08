@@ -96,6 +96,11 @@
 						<classifier>publish</classifier>
 					</artifact>
 					<artifact>
+						<file>util/changeTargetURLs.sh</file>
+						<type>sh</type>
+						<classifier>change-target-urls</classifier>
+					</artifact>
+					<artifact>
 						<file>util/checkLatestPublishedSHA.sh</file>
 						<type>sh</type>
 						<classifier>check-latest-published-sha</classifier>

@@ -16,6 +16,7 @@
 	      <include>publish/mirror.sh</include>
 	      <include>publish/publish.sh</include>
 	      <include>publish/promote.sh</include>
+	      <include>util/changeTargetURLs.sh</include>
 	      <include>util/checkLatestPublishedSHA.sh</include>
 	      <include>util/installAndDisplayCompositeSiteContent.sh</include>
 	      <include>util/installFromCentral.sh</include>
