@@ -67,6 +67,7 @@ fi
 
 # defaults
 MVN="mvn"
+MRL="" # placeholder for -Dmaven.repo.local, if used
 includeSources="-Dmirror-target-to-repo.includeSources=true" # by default, include sources
 INSTALLSCRIPT=/tmp/installFromTarget.sh
 LOG_GREP_INCLUDES="BUILD FAILURE|Only one of the following|Missing requirement|Unresolved requirement|IllegalArgumentException|Could not resolve|could not be found|being installed|Cannot satisfy dependency|FAILED"
@@ -93,6 +94,7 @@ while [[ "$#" -gt 0 ]]; do
     '-x') includeSources=""; shift 0;;
     '-V') targetplatformutilsversion="$2"; shift 1;;
     '-vm') VM="-vm $2"; shift 1;;
+    '-mrl') MRL="-Dmaven.repo.local=$2"; shift 1;;
        *) others="$others,$1"; shift 0;;
   esac
   shift 1
@@ -167,8 +169,8 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
   for tf in *.target; do
     if [[ ${tf/_fixedVersion.target} == ${tf} ]]; then 
       logfile=/tmp/fix-versions_${tf}_log_${PROJECT}_${NOW}.txt
-      echo "${MVN} -U org.jboss.tools.tycho-plugins:target-platform-utils:${targetplatformutilsversion}:fix-versions -DtargetFile=${tf}" | tee $logfile
-      ${MVN} -U -c org.jboss.tools.tycho-plugins:target-platform-utils:${targetplatformutilsversion}:fix-versions -DtargetFile=${tf} | tee -a $logfile
+      echo "${MVN} ${MRL} -U org.jboss.tools.tycho-plugins:target-platform-utils:${targetplatformutilsversion}:fix-versions -DtargetFile=${tf}" | tee $logfile
+      ${MVN} ${MRL} -U -c org.jboss.tools.tycho-plugins:target-platform-utils:${targetplatformutilsversion}:fix-versions -DtargetFile=${tf} | tee -a $logfile
       egrep -i -v "$LOG_GREP_EXCLUDES" $logfile | egrep -i -A2 "$LOG_GREP_INCLUDES"; if [[ "$?" == "0" ]]; then break 2; fi
       if [[ -f ${tf}_fixedVersion.target ]]; then rm -f ${tf} *_update_hints.txt; mv -f ${tf}{_fixedVersion.target,}; fi
     fi
@@ -187,8 +189,8 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
   # TODO: if you removed IUs, be sure to do a `mvn clean install`, rather than just a `mvn install`; process will be much longer but will guarantee metadata is correct
   pushd ${WORKSPACE}
   logfile=/tmp/resolve_log_${PROJECT}_${NOW}.txt
-  echo "${MVN} install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources} -X" | tee $logfile
-  ${MVN} install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources} -X | tee -a $logfile
+  echo "${MVN} ${MRL} install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources} -X" | tee $logfile
+  ${MVN} ${MRL} install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources} -X | tee -a $logfile
   egrep -i -v "$LOG_GREP_EXCLUDES" $logfile | egrep -i -A2 "$LOG_GREP_INCLUDES|$LOG_GREP_INCLUDES2"; if [[ "$?" == "0" ]]; then break 2; fi
 
   popd
