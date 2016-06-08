@@ -21,6 +21,7 @@
 	      <include>util/installAndDisplayCompositeSiteContent.sh</include>
 	      <include>util/installFromCentral.sh</include>
 	      <include>util/installFromTarget.sh</include>
+	      <include>util/p2diff-check.sh</include>
 	      <include>util/verifyTarget.sh</include>
 	      <include>util/cleanup/jbosstools-cleanup.sh</include>
 	    </includes>
