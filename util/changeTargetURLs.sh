@@ -6,7 +6,7 @@ usage ()
 {
   echo "Usage  : $0 -tp TARGET_PLATFORM_VERSION_MAXIMUM [-p2diff /path/to/p2diff] [-b whichBuild]"
   echo ""
-  echo "Example: $0 -tp 4.60.0.Final-SNAPSHOT -p2diff /home/nboldt/bin/p2diff -b lastSuccessfulBuild"
+  echo "Example: $0 -tp 4.60.0.Final-SNAPSHOT -p2diff /home/nboldt/bin/p2diff -m /opt/apache-maven-3.2.5/bin/mvn -b lastSuccessfulBuild "
   echo "Example: $0 -tp 4.60.0.Final -b 47"
   echo ""
   exit 1
