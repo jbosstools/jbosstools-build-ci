@@ -103,14 +103,10 @@ JBT_components = {
     "LiveReload        ": { "livereload" },
     "OpenShift         ": { "openshift", "cdk" },
     "Freemarker        ": { "freemarker" },
-    "Playground        ": { "playground" }, 
 
-# disabled and probably never coming back / EOL
-    # "Birt              ": { "birt" } ,
-    #"GWT               ": { "gwt"},
-    #"Portlet           ": { "portal-gatein"},
-    #"XULRunner         ": { "xulrunner" },
-    "Discovery ": { "discovery" },
+    "Integration Tests ": { "qa" },
+    "Central Discovery ": { "central-update" },
+    "build, build-sites, build-ci, maven-plugins, dl.jb.org, devdoc, versionwatch": { "build" }
     }
 
 # Currently, the repo url (for printing links to the missing commits)
