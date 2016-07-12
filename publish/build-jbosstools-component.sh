@@ -70,7 +70,7 @@ if [[ ${ghprbPullId} ]]; then
   ${mvnStep3}
 else
   ${mvnStep1}
-  if [[ ${skipRevisionCheckWhenPublishing} == "true" ]] || [[ $([[ -x $p2diff ]] && ${p2diff} file://${WORK}/target/fullSite/all/repo/ http://download.jboss.org/jbosstools/mars/snapshots/builds/jbosstools-build-sites.aggregate.${projectName}-site_${jbosstools_site_stream}/latest/all/repo/ -vmargs -Dosgi.locking=none | egrep "<|>" | egrep -v "(<|>) (Alpha[0-9]+|Beta[0-9]+|CR[0-9]+|Final|GA).+-B[0-9]+\.") ]] || [[ $(. ${WORKSPACE}/sources/util/checkLatestPublishedSHA.sh -s ${WORKSPACE}/sources/aggregate/${projectName}-site/target/fullSite/all/repo -t http://download.jboss.org/jbosstools/mars/snapshots/builds/jbosstools-build-sites.aggregate.${projectName}-site_${jbosstools_site_stream}/latest/all/repo/ -all) == "true" ]]; then
+  if [[ ${skipRevisionCheckWhenPublishing} == "true" ]] || [[ $([[ -x $p2diff ]] && ${p2diff} file://${WORK}/target/fullSite/all/repo/ http://download.jboss.org/jbosstools/mars/snapshots/builds/jbosstools-build-sites.aggregate.${projectName}-site_${jbosstools_site_stream}/latest/all/repo/ -vmargs -Dosgi.locking=none | egrep "<|>" | egrep -v "(<|>) (AM[0-9]+|Alpha[0-9]+|Beta[0-9]+|CR[0-9]+|Final|GA).+-B[0-9]+\.") ]] || [[ $(. ${WORKSPACE}/sources/util/checkLatestPublishedSHA.sh -s ${WORKSPACE}/sources/aggregate/${projectName}-site/target/fullSite/all/repo -t http://download.jboss.org/jbosstools/mars/snapshots/builds/jbosstools-build-sites.aggregate.${projectName}-site_${jbosstools_site_stream}/latest/all/repo/ -all) == "true" ]]; then
     ${mvnStep2}
 
     echo "Available JREs for testing:"
