@@ -30,6 +30,7 @@ delete=1 # if 1, files will be deleted. if 0, files will be listed for delete bu
 checkTimeStamps=1 # if 1, check for timestamped folders, eg., 2012-09-30_04-01-36-H5622 and deduce the age from name. if 0, skip name-to-age parsing and delete nothing
 childFolderSuffix="/" # for component update sites, set to "/"; for aggregate builds (not update sites) use "/all/repo/"
 regenMetadataOnly=0 # set to 1 if only regenerating metadata, not cleaning up old build folders
+doRegenMetadata=1; # set to 0 to suppress regenerating metadata entirely (no composite site will be produced)
 noSubDirs=0 # normally, we want to scan for subdirs, but for a project like Locus, there's one less level of nesting so we need to override this with noSubDirs=1
 DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or devstudio@filemgmt.jboss.org:/www_htdocs/devstudio
 
@@ -52,6 +53,7 @@ while [[ "$#" -gt 0 ]]; do
 		'-i'|'--include') includes="$2"; shift 1;;
 		'-S'|'--childFolderSuffix') childFolderSuffix="$2"; shift 1;;
 		'-M'|'--regen-metadata-only') delete=0; checkTimeStamps=0; regenMetadataOnly=1; shift 0;;
+		'-R'|'--no-regen-metadata') doRegenMetadata=0; shift 0;;
 		'-N'|'--no-subdirs') noSubDirs=1; shift 0;;
 		'-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., devstudio@filemgmt.jboss.org:/www_htdocs/devstudio
 	esac
@@ -216,21 +218,25 @@ clean ()
 
 regenProcess ()
 {
-	subdirCount=$1
-	sd=$2
-	all=$(cat $tmp | sort -r) # check these
-	rm -f $tmp
-	if [[ $subdirCount -gt 0 ]]; then
-		siteName=${sd##*${DEST_PATH}/}
-		echo "Generate metadata for ${subdirCount} subdir(s) in $sd/ (siteName = ${siteName}" | tee -a $log
-		mkdir -p ${tmpdir}/cleanup-fresh-metadata/
-		regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "${tmpdir}/cleanup-fresh-metadata/compositeContent.xml"
-		regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "${tmpdir}/cleanup-fresh-metadata/compositeArtifacts.xml"
-		rsync --rsh=ssh --protocol=28 -q ${tmpdir}/cleanup-fresh-metadata/composite*.xml ${DEST_SERV}:$sd/
-		rm -fr ${tmpdir}/cleanup-fresh-metadata/
+	if [[ $doRegenMetadata == 1 ]]; then
+		subdirCount=$1
+		sd=$2
+		all=$(cat $tmp | sort -r) # check these
+		rm -f $tmp
+		if [[ $subdirCount -gt 0 ]]; then
+			siteName=${sd##*${DEST_PATH}/}
+			echo "Generate metadata for ${subdirCount} subdir(s) in $sd/ (siteName = ${siteName}" | tee -a $log
+			mkdir -p ${tmpdir}/cleanup-fresh-metadata/
+			regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "${tmpdir}/cleanup-fresh-metadata/compositeContent.xml"
+			regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "${tmpdir}/cleanup-fresh-metadata/compositeArtifacts.xml"
+			rsync --rsh=ssh --protocol=28 -q ${tmpdir}/cleanup-fresh-metadata/composite*.xml ${DEST_SERV}:$sd/
+			rm -fr ${tmpdir}/cleanup-fresh-metadata/
+		else
+			echo "No subdirs found in $sd/" | tee -a $log
+			# TODO delete composite*.xml from $sd/ folder if there are no subdirs present
+		fi
 	else
-		echo "No subdirs found in $sd/" | tee -a $log
-		# TODO delete composite*.xml from $sd/ folder if there are no subdirs present
+		echo "Metadata generation skipped by --no-regen-metadata flag."
 	fi
 }
 
