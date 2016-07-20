@@ -29,11 +29,11 @@ usage ()
 	echo ""
 
 	echo "To push a project build folder from Jenkins to staging:"
-	echo "   $0 -s \${WORKSPACE}/sources/site/target/repository/ -t neon/snapshots/builds/\${JOB_NAME}/\${BUILD_ID}-B\${BUILD_NUMBER}/all/repo/"  # BUILD_ID=2015-02-17_17-57-54; 
+	echo "   $0 -s \${WORKSPACE}/sources/site/target/repository/ -t neon/snapshots/builds/\${JOB_NAME}/\${BUILD_TIMESTAMP}-B\${BUILD_NUMBER}/all/repo/"  # BUILD_TIMESTAMP=2015-02-17_17-57-54; 
 	echo ""
 
 	echo "To push JBT build + update site folders:"
-	echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite          -t neon/snapshots/builds/\${JOB_NAME}/\${BUILD_ID}-B\${BUILD_NUMBER}"
+	echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite          -t neon/snapshots/builds/\${JOB_NAME}/\${BUILD_TIMESTAMP}-B\${BUILD_NUMBER}"
 	echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite/all/repo -t neon/snapshots/updates/core/\${stream} --del"
 	echo ""
 
@@ -55,7 +55,8 @@ while [[ "$#" -gt 0 ]]; do
 		'-t') TARGET_PATH="$2"; shift 1;; # neon/snapshots/builds/<job-name>/<build-number>/, neon/snapshots/updates/core/{4.4.0.Final, master}/
 		'-i') INCLUDES="$2"; shift 1;;
 		'-e') EXCLUDES="$2"; shift 1;;
-		'-DBUILD_ID','-BUILD_ID')         BUILD_ID="$2"; shift 1;;
+		'-DBUILD_TIMESTAMP','-BUILD_TIMESTAMP') BUILD_TIMESTAMP="$2"; shift 1;;
+		'-DBUILD_ID','-BUILD_ID')         BUILD_ID="$2"; shift 1;;  # deprecated
 		'-DBUILD_NUMBER','-BUILD_NUMBER') BUILD_NUMBER="$2"; shift 1;;
 		'-DJOB_NAME','-JOB_NAME')         JOB_NAME="$2"; shift 1;;
 		'-DWORKSPACE','-WORKSPACE')       WORKSPACE="$2"; shift 1;;
@@ -91,9 +92,11 @@ fi
 # given  TARGET_PATH=10.0/snapshots/builds/devstudio.product_master/2015-07-16_00-00-00-B69/all
 # return PARENT_PATH=10.0/snapshots/builds/devstudio.product_master
 PARENT_PATH=$(echo $TARGET_PATH | sed -e "s#/\?downloads_htdocs/tools/##" -e "s#/\?www_htdocs/devstudio/##" -e "s#/\?qa/services/http/binaries/RHDS/##" -e "s#/\?all/repo/\?##" -e "s#/\?all/\?##" -e "s#/\$##" -e "s#^/##" -e "s#\(.\+\)/[^/]\+#\1#")
-# if TARGET_PATH contains a BUILD_ID-B# folder,
-# create symlink: jbosstools-build-sites.aggregate.earlyaccess-site_master/latest -> jbosstools-build-sites.aggregate.earlyaccess-site_master/${BUILD_ID}-B${BUILD_NUMBER}
-if [[ ${BUILD_ID} ]] && [[ ${BUILD_NUMBER} ]] && [[ ${TARGET_PATH/${BUILD_ID}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
+# if TARGET_PATH contains a BUILD_TIMESTAMP-B# folder (or, previously / deprecated, a BUILD_ID-B# folder),
+# create symlink: jbosstools-build-sites.aggregate.earlyaccess-site_master/latest -> jbosstools-build-sites.aggregate.earlyaccess-site_master/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}
+if [[ ${BUILD_TIMESTAMP} ]] && [[ ${BUILD_NUMBER} ]] && [[ ${TARGET_PATH/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
+	pushd $tmpdir >/dev/null; ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
+elif [[ ${BUILD_ID} ]] && [[ ${BUILD_NUMBER} ]] && [[ ${TARGET_PATH/${BUILD_ID}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
 	pushd $tmpdir >/dev/null; ln -s ${BUILD_ID}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
 fi
 
