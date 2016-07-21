@@ -55,8 +55,8 @@ while [[ "$#" -gt 0 ]]; do
 		'-d'|'--dirs-to-scan') dirsToScan="$2"; shift 1;;
 		'-i'|'--include') includes="$2"; shift 1;;
 		'-S'|'--childFolderSuffix') childFolderSuffix="$2"; shift 1;;
-		'-M'|'--regen-metadata-only') delete=0; checkTimeStamps=0; regenMetadataOnly=1; shift 0;;
-		'-R'|'--no-regen-metadata') doRegenMetadata=0; shift 0;;
+		'-M'|'--regen-metadata-only') delete=0; checkTimeStamps=0; doRegenMetadata=1; regenMetadataOnly=1; shift 0;;
+		'-R'|'--no-regen-metadata') doRegenMetadata=0; regenMetadataOnly=0; shift 0;;
 		'-N'|'--no-subdirs') noSubDirs=1; shift 0;;
 		'-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., devstudio@filemgmt.jboss.org:/www_htdocs/devstudio
 	esac
@@ -223,7 +223,7 @@ clean ()
 
 regenProcess ()
 {
-	if [[ $doRegenMetadata == 1 ]]; then
+	if [[ $doRegenMetadata -gt 0 ]]; then
 		subdirCount=$1
 		sd=$2
 		numbuildstolink=$3
