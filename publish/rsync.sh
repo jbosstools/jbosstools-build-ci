@@ -55,11 +55,11 @@ while [[ "$#" -gt 0 ]]; do
 		'-t') TARGET_PATH="$2"; shift 1;; # neon/snapshots/builds/<job-name>/<build-number>/, neon/snapshots/updates/core/{4.4.0.Final, master}/
 		'-i') INCLUDES="$2"; shift 1;;
 		'-e') EXCLUDES="$2"; shift 1;;
-		'-DBUILD_TIMESTAMP','-BUILD_TIMESTAMP') BUILD_TIMESTAMP="$2"; shift 1;;
-		'-DBUILD_ID','-BUILD_ID')         BUILD_ID="$2"; shift 1;;  # deprecated
-		'-DBUILD_NUMBER','-BUILD_NUMBER') BUILD_NUMBER="$2"; shift 1;;
-		'-DJOB_NAME','-JOB_NAME')         JOB_NAME="$2"; shift 1;;
-		'-DWORKSPACE','-WORKSPACE')       WORKSPACE="$2"; shift 1;;
+		'-DBUILD_TIMESTAMP'|'-BUILD_TIMESTAMP') BUILD_TIMESTAMP="$2"; shift 1;;
+		'-DBUILD_ID'|'-BUILD_ID')         BUILD_ID="$2"; shift 1;;  # deprecated
+		'-DBUILD_NUMBER'|'-BUILD_NUMBER') BUILD_NUMBER="$2"; shift 1;;
+		'-DJOB_NAME'|'-JOB_NAME')         JOB_NAME="$2"; shift 1;;
+		'-DWORKSPACE'|'-WORKSPACE')       WORKSPACE="$2"; shift 1;;
 		'-d'|'--del') RSYNCFLAGS="${RSYNCFLAGS} --del"; shift 0;;
 		'-k'|'--keep') numbuildstokeep="$2"; shift 1;;
 		'-l'|'--link') numbuildstolink="$2"; shift 1;;
