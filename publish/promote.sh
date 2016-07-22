@@ -17,7 +17,7 @@ SOURCE_ZIP=
 tmpfile=`mktemp`
 tmpdir=`mktemp -d`
 
-# TODO: update examples to include both the old style of publishing - {JOB_NAME}/all/repo - and the new style - {JOB_NAME}/{BUILD_ID}/all/repo
+# TODO: update examples to include both the old style of publishing - {JOB_NAME}/all/repo - and the new style - {JOB_NAME}/{BUILD_TIMESTAMP}/all/repo
 if [[ $# -lt 1 ]]; then
   echo "Usage  : $0 [-DESTINATION destination] [-RELEASE_TYPE release_type] -BUILD_TYPE build_type -TARGET_PLATFORM target_platform -PROJECT_NAME project_name -TARGET_FOLDER target_folder -SOURCE_PATH source_path"
   # push to http://download.jboss.org/jbosstools/updates/integration/kepler/core/base/4.1.0.Alpha1/

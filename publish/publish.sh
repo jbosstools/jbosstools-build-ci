@@ -12,9 +12,10 @@ if [ -z "${JOB_NAME}" ]; then
 fi
 
 
-# to use timestamp when naming dirs instead of ${BUILD_ID}-B${BUILD_NUMBER}, use:
-# BUILD_ID=2010-08-31_19-16-10; timestamp=$(echo $BUILD_ID | tr -d "_-"); timestamp=${timestamp:0:12}; echo $timestamp; # 201008311916
-
+# to use timestamp when naming dirs instead of ${BUILD_TIMESTAMP}-B${BUILD_NUMBER}, use:
+# BUILD_TIMESTAMP=2010-08-31_19-16-10; timestamp=$(echo $BUILD_TIMESTAMP | tr -d "_-"); timestamp=${timestamp:0:12}; echo $timestamp; # 201008311916
+if [[ ! ${BUILD_TIMESTAMP} ]]; then BUILD_TIMESTAMP=`date -u +%Y-%m-%d_%H-%M-%S`
+  
 #set up tmpdir
 tmpdir=`mktemp -d`
 mkdir -p $tmpdir
@@ -52,7 +53,7 @@ getRemoteFile ()
 
 # releases get named differently than snapshots
 if [[ ${RELEASE} == "Yes" ]]; then
-  ZIPSUFFIX="${BUILD_ID}-B${BUILD_NUMBER}"
+  ZIPSUFFIX="${BUILD_TIMESTAMP}-B${BUILD_NUMBER}"
 else
   ZIPSUFFIX="SNAPSHOT"
 fi
@@ -297,7 +298,7 @@ else
   BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_SHORT}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://www.qa.jboss.com/binaries/RHDS/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://www.qa.jboss.com/binaries/RHDS/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://www.qa.jboss.com/binaries/RHDS/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="http://www.qa.jboss.com/binaries/RHDS/builds/staging/'${JOB_NAME}'/installer/">Installers & Zips</a></li> <li>Upstream: <a href="http://download.jboss.org/jbosstools/builds/staging/'${UPSTREAM_JOB_NAME}'/all/repo/">Update Site</a>'
 fi
 
-METAFILE="${BUILD_ID}-B${BUILD_NUMBER}.txt"
+METAFILE="${BUILD_TIMESTAMP}-B${BUILD_NUMBER}.txt"
 mkdir -p ${STAGINGDIR}/logs
 touch ${STAGINGDIR}/logs/${METAFILE}
 METAFILE=build.properties
@@ -305,7 +306,7 @@ METAFILE=build.properties
 echo "BUILD_ALIAS = ${BUILD_ALIAS}" >> ${STAGINGDIR}/logs/${METAFILE}
 echo "JOB_NAME = ${JOB_NAME}" >> ${STAGINGDIR}/logs/${METAFILE}
 echo "BUILD_NUMBER = ${BUILD_NUMBER}" >> ${STAGINGDIR}/logs/${METAFILE}
-echo "BUILD_ID = ${BUILD_ID}" >> ${STAGINGDIR}/logs/${METAFILE}
+echo "BUILD_TIMESTAMP = ${BUILD_TIMESTAMP}" >> ${STAGINGDIR}/logs/${METAFILE}
 echo "WORKSPACE = ${WORKSPACE}" >> ${STAGINGDIR}/logs/${METAFILE}
 echo "HUDSON_SLAVE = $(uname -a)" >> ${STAGINGDIR}/logs/${METAFILE}
 echo "RELEASE = ${RELEASE}" >> ${STAGINGDIR}/logs/${METAFILE}
@@ -535,7 +536,7 @@ if [[ $ec == "0" ]] && [[ $fc == "0" ]]; then
     
     # if an aggregate build, put output elsewhere on disk
     if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
-      # JBIDE-18102 # echo "<meta http-equiv=\"refresh\" content=\"0;url=${BUILD_ID}-B${BUILD_NUMBER}/\">" > $tmpdir/latestBuild.html
+      # JBIDE-18102 # echo "<meta http-equiv=\"refresh\" content=\"0;url=${BUILD_TIMESTAMP}-B${BUILD_NUMBER}/\">" > $tmpdir/latestBuild.html
       if [[ ${PUBLISHPATHSUFFIX} ]]; then
         date
         # create folders if not already there
@@ -544,17 +545,17 @@ if [[ $ec == "0" ]] && [[ $fc == "0" ]]; then
         else
           mkdir -p $DESTINATION/builds/nightly/${PUBLISHPATHSUFFIX}
         fi
-        date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/* $DESTINATION/builds/nightly/${PUBLISHPATHSUFFIX}/${BUILD_ID}-B${BUILD_NUMBER}/
+        date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/* $DESTINATION/builds/nightly/${PUBLISHPATHSUFFIX}/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}/
         # sftp only works with user@server, not with local $DESTINATIONS, so use rsync to push symlink instead
-        # echo -e "rm latest\nln ${BUILD_ID}-B${BUILD_NUMBER} latest" | sftp ${DESTINATIONREDUX}/builds/nightly/${PUBLISHPATHSUFFIX}/ 
-        pushd $tmpdir >/dev/null; ln -s ${BUILD_ID}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/builds/nightly/${PUBLISHPATHSUFFIX}/; rm -f latest; popd >/dev/null
+        # echo -e "rm latest\nln ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest" | sftp ${DESTINATIONREDUX}/builds/nightly/${PUBLISHPATHSUFFIX}/ 
+        pushd $tmpdir >/dev/null; ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/builds/nightly/${PUBLISHPATHSUFFIX}/; rm -f latest; popd >/dev/null
         # JBIDE-18102 # date; rsync -arzq --protocol=28 --delete $tmpdir/latestBuild.html $DESTINATION/builds/nightly/${PUBLISHPATHSUFFIX}/
       else
         # JBIDE-18102 # date; rsync -arzq --protocol=28 --delete $tmpdir/latestBuild.html $DESTINATION/builds/nightly/${JOBNAMEREDUX}/ 
         # sftp only works with user@server, not with local $DESTINATIONS, so use rsync to push symlink instead
-        # echo -e "rm latest\nln ${BUILD_ID}-B${BUILD_NUMBER} latest" | sftp ${DESTINATIONREDUX}/builds/nightly/${JOBNAMEREDUX}/
-        pushd $tmpdir >/dev/null; ln -s ${BUILD_ID}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/builds/nightly/${JOBNAMEREDUX}/; rm -f latest; popd >/dev/null
-        date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/* $DESTINATION/builds/nightly/${JOBNAMEREDUX}/${BUILD_ID}-B${BUILD_NUMBER}/
+        # echo -e "rm latest\nln ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest" | sftp ${DESTINATIONREDUX}/builds/nightly/${JOBNAMEREDUX}/
+        pushd $tmpdir >/dev/null; ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/builds/nightly/${JOBNAMEREDUX}/; rm -f latest; popd >/dev/null
+        date; rsync -arzq --protocol=28 --delete ${STAGINGDIR}/* $DESTINATION/builds/nightly/${JOBNAMEREDUX}/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}/
       fi
       # JBIDE-18102 # rm -f $tmpdir/latestBuild.html
     #else
