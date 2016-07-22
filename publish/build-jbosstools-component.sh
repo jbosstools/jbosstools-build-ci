@@ -12,14 +12,14 @@ TARGET_PLATFORM_VERSION_MAXIMUM=4.60.0.Final-SNAPSHOT
 
 MAVEN_FLAGS="-B -U -fae -e -P hudson,unified.target,pack200"
 
-BUILD_FLAGS="-Dmaven.repo.local=$WORKSPACE/.repository -DJOB_NAME=${JOB_NAME} -DBUILD_ID=${BUILD_ID} -DBUILD_NUMBER=${BUILD_NUMBER} \
+BUILD_FLAGS="-Dmaven.repo.local=$WORKSPACE/.repository -DJOB_NAME=${JOB_NAME} -DBUILD_NUMBER=${BUILD_NUMBER} \
 -DTARGET_PLATFORM_VERSION=${TARGET_PLATFORM_VERSION} -Ddownload.cache.directory=/home/hudson/static_build_env/jbds/download-cache \
 -DskipBaselineComparison=false -Dmaven.test.skip=true -DskipITests=true -DskipPrivateRequirements=false \
 -Djbosstools.test.jre.5=${NATIVE_TOOLS}${SEP}${JAVA15} -Djbosstools.test.jre.6=${NATIVE_TOOLS}${SEP}${JAVA16} \
 -Djbosstools.test.jre.7=${NATIVE_TOOLS}${SEP}${JAVA17} -Djbosstools.test.jre.8=${NATIVE_TOOLS}${SEP}${JAVA18} \
 -Djbosstools_site_stream=${jbosstools_site_stream} ${MAVEN_FLAGS}"
 
-TEST_FLAGS="-Dmaven.repo.local=$WORKSPACE/.repository -DJOB_NAME=${JOB_NAME} -DBUILD_ID=${BUILD_ID} -DBUILD_NUMBER=${BUILD_NUMBER} \
+TEST_FLAGS="-Dmaven.repo.local=$WORKSPACE/.repository -DJOB_NAME=${JOB_NAME} -DBUILD_NUMBER=${BUILD_NUMBER} \
 -DTARGET_PLATFORM_VERSION=${TARGET_PLATFORM_VERSION_MAXIMUM} -Ddownload.cache.directory=/home/hudson/static_build_env/jbds/download-cache \
 -Dmaven.test.failure.ignore=true -Dmaven.test.error.ignore=true -DskipBaselineComparison=true -DskipPrivateRequirements=false \
 -Djbosstools.test.jre.5=${NATIVE_TOOLS}${SEP}${JAVA15} -Djbosstools.test.jre.6=${NATIVE_TOOLS}${SEP}${JAVA16} \
