@@ -55,7 +55,7 @@ while [[ "$#" -gt 0 ]]; do
 		'-t') TARGET_PATH="$2"; shift 1;; # neon/snapshots/builds/<job-name>/<build-number>/, neon/snapshots/updates/core/{4.4.0.Final, master}/
 		'-i') INCLUDES="$2"; shift 1;;
 		'-e') EXCLUDES="$2"; shift 1;;
-		'-DBUILD_TIMESTAMP'|'-BUILD_TIMESTAMP') BUILD_TIMESTAMP="$2"; shift 1;;
+		'-DBUILD_TIMESTAMP'|'-BUILD_TIMESTAMP') BUILD_TIMESTAMP="$2"; shift 1;; # does this work?
 		'-DBUILD_ID'|'-BUILD_ID')         BUILD_ID="$2"; shift 1;;  # deprecated
 		'-DBUILD_NUMBER'|'-BUILD_NUMBER') BUILD_NUMBER="$2"; shift 1;;
 		'-DJOB_NAME'|'-JOB_NAME')         JOB_NAME="$2"; shift 1;;
@@ -69,7 +69,8 @@ while [[ "$#" -gt 0 ]]; do
 	esac
 	shift 1
 done
-# echo "[DEBUG] RSYNCFLAGS = $RSYNCFLAGS"
+echo "[DEBUG] BUILD_TIMESTAMP = $BUILD_TIMESTAMP"
+echo "[DEBUG] RSYNCFLAGS = $RSYNCFLAGS"
 
 # build the target_path with sftp to ensure intermediate folders exist
 if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
@@ -94,9 +95,15 @@ fi
 PARENT_PATH=$(echo $TARGET_PATH | sed -e "s#/\?downloads_htdocs/tools/##" -e "s#/\?www_htdocs/devstudio/##" -e "s#/\?qa/services/http/binaries/RHDS/##" -e "s#/\?all/repo/\?##" -e "s#/\?all/\?##" -e "s#/\$##" -e "s#^/##" -e "s#\(.\+\)/[^/]\+#\1#")
 # if TARGET_PATH contains a BUILD_TIMESTAMP-B# folder (or, previously / deprecated, a BUILD_ID-B# folder),
 # create symlink: jbosstools-build-sites.aggregate.earlyaccess-site_master/latest -> jbosstools-build-sites.aggregate.earlyaccess-site_master/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}
-if [[ ${BUILD_TIMESTAMP} ]] && [[ ${BUILD_NUMBER} ]] && [[ ${TARGET_PATH/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
+BUILD_DIR=$(echo ${TARGET_PATH#${PARENT_PATH}/} | sed -e "s#/\?all/repo/\?##" -e "s#/\?all/\?##")
+if [[ ${BUILD_NUMBER} ]] && [[ ${BUILD_DIR} ]] && [[ ${BUILD_DIR%B${BUILD_NUMBER}} != ${BUILD_DIR} ]]; then 
+	echo "[DEBUG] Symlink[0] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_DIR}"
+	pushd $tmpdir >/dev/null; ln -s ${BUILD_DIR} latest; rsync --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
+elif [[ ${BUILD_TIMESTAMP} ]] && [[ ${BUILD_NUMBER} ]] && [[ ${TARGET_PATH/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
+	echo "[DEBUG] Symlink[1] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_TIMESTAMP}-B${BUILD_NUMBER}"
 	pushd $tmpdir >/dev/null; ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
 elif [[ ${BUILD_ID} ]] && [[ ${BUILD_NUMBER} ]] && [[ ${TARGET_PATH/${BUILD_ID}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
+	echo "[DEBUG] Symlink[2] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_ID}-B${BUILD_NUMBER}"
 	pushd $tmpdir >/dev/null; ln -s ${BUILD_ID}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
 fi
 
