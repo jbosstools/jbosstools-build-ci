@@ -89,7 +89,6 @@
             - "{jvm-memory}"
           properties: 
             - JOB_NAME=${{JOB_NAME}}
-            - BUILD_ID=${{BUILD_ID}}
             - BUILD_NUMBER=${{BUILD_NUMBER}}
             - maven.test.failure.ignore=true
             - maven.test.error.ignore=true
@@ -111,7 +110,6 @@
             - "{jvm-memory}"
           properties: 
             - JOB_NAME=${{JOB_NAME}}
-            - BUILD_ID=${{BUILD_ID}}
             - BUILD_NUMBER=${{BUILD_NUMBER}}
             - maven.test.failure.ignore=true
             - maven.test.error.ignore=true

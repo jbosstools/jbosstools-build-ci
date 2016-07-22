@@ -62,7 +62,6 @@
             - maven.test.error.ignore=true
             - download.cache.directory={download-cache}
             - JOB_NAME=${{JOB_NAME}}
-            - BUILD_ID=${{BUILD_ID}}
             - BUILD_NUMBER=${{BUILD_NUMBER}}
             - skipPrivateRequirements=false
             - jbosstools.test.jre.5=${{NATIVE_TOOLS}}${{SEP}}${{JAVA15}} 
