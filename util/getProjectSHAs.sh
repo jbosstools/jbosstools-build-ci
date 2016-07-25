@@ -40,6 +40,7 @@ jbdsstream=10.0.neon # or master
 branch=jbosstools-4.4.x # or master
 jbtpath=neon/snapshots/builds # or builds/staging, from JBDS 8 and before
 jbdspath=10.0/snapshots/builds
+launchBrowser=0; # set to 1 to automatically launch a browser if any missing builds are found
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -71,6 +72,7 @@ while [[ "$#" -gt 0 ]]; do
     '-jbtm') jbtm="$2"; shift 1;;
     '-jbdsm') jbdsm="$2"; shift 1;;
     '-respin') respin="$2"; shift 1;;
+    '-launch') launchBrowser=1; shift 0;;
   esac
   shift 1
 done
@@ -305,5 +307,8 @@ checkProjects "${JBDSPROJECTS}" jbdevstudio/jbdevstudio- http://www.qa.jboss.com
 if [[ ${jobsToCheck} ]]; then
   echo "Run the following to build incomplete jobs:"
   echo ""
-  echo "firefox${jobsToCheck}"
+  echo "google-chrome ${jobsToCheck}"
+  if [[ ${launchBrowser} == 1 ]]; then 
+    google-chrome && google-chrome ${jobsToCheck}
+  fi
 fi
