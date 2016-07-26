@@ -133,7 +133,7 @@ clean ()
 			# echo "[${subdirCount}] Found $buildid"
 			echo $buildid >> $tmp
 		done
-		regenProcess ${subdirCount} ${DEST_PATH}/$somepath/
+		regenProcess ${subdirCount} ${DEST_PATH}/$somepath/ ${numbuildstolink}
 	else # for everyone else, work in sub-subfolders
 		for sd in $subdirs; do
 			getSubDirs $sd 1
@@ -233,10 +233,10 @@ regenProcess ()
 		rm -f $tmp
 		if [[ $subdirCount -gt 0 ]]; then
 			siteName=${sd##*${DEST_PATH}/}
-			echo "Generate metadata for ${subdirCount} subdir(s) in $sd/ (siteName = ${siteName}" | tee -a $log
+			echo "Generate metadata for first ${numbuildstolink} of ${subdirCount} subdir(s) in $sd/ (siteName = ${siteName}" | tee -a $log
 			mkdir -p ${tmpdir}/cleanup-fresh-metadata/
-			regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "${tmpdir}/cleanup-fresh-metadata/compositeContent.xml"
-			regenCompositeMetadata "$siteName" "$all" "$subdirCount" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "${tmpdir}/cleanup-fresh-metadata/compositeArtifacts.xml"
+			regenCompositeMetadata "$siteName" "$all" "$numbuildstolink" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "${tmpdir}/cleanup-fresh-metadata/compositeContent.xml"
+			regenCompositeMetadata "$siteName" "$all" "$numbuildstolink" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "${tmpdir}/cleanup-fresh-metadata/compositeArtifacts.xml"
 			rsync --rsh=ssh --protocol=28 -q ${tmpdir}/cleanup-fresh-metadata/composite*.xml ${DEST_SERV}:$sd/
 			rm -fr ${tmpdir}/cleanup-fresh-metadata/
 		else
