@@ -259,7 +259,7 @@ regenCompositeMetadata ()
 	now=$(date +%s000)
 	
 	echo "<?xml version='1.0' encoding='UTF-8'?><?compositeArtifactRepository version='1.0.0'?>
-<repository name='JBoss Tools Builds - ${siteName}' type='${fileType}' version='1.0.0'>
+<repository name='${siteName}' type='${fileType}' version='1.0.0'>
 <properties size='2'><property name='p2.timestamp' value='${now}'/><property name='p2.compressed' value='true'/></properties>
 <children size='${countChildren}'>" > ${fileName}
 	for ssd in $subsubdirs; do
