@@ -42,9 +42,9 @@ while [[ "$#" -gt 0 ]]; do
     '-skipupdate'|'-k') doGitUpdate=false; shift 0;;
     '-w1') WORKSPACE1="$2"; shift 1;;
     '-w2') WORKSPACE2="$2"; shift 1;;
-    '-p1') PROJECTS1="$1"; shift 1;; # jbosstools-* projects
-    '-p2') PROJECTS2="$1"; shift 1;; # jbosstools-build-* projects
-    '-p3') PROJECTS3="$1"; shift 1;; # jbdevstudio-* projects
+    '-p1') PROJECTS1="$2"; shift 1;; # jbosstools-* projects
+    '-p2') PROJECTS2="$2"; shift 1;; # jbosstools-build-* projects
+    '-p3') PROJECTS3="$2"; shift 1;; # jbdevstudio-* projects
   esac
   shift 1
 done
