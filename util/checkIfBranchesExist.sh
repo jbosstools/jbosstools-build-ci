@@ -5,10 +5,11 @@ debug=0
 usage ()
 {
 	echo "Usage: $0 -b newbranchname [project1] [project2] [project3] ..."
-	echo "Example: $0 -b jbosstools-4.4.x aerogear arquillian base birt browsersim build build-ci build-sites \\"
+	echo "Example1: $0 -b jbosstools-4.4.0.x aerogear arquillian base birt browsersim build build-ci build-sites \\"
 	echo " central devdoc discovery download.jboss.org forge freemarker hibernate integration-tests javaee jst \\"
 	echo " livereload maven-plugins openshift playground server versionwatch vpe webservices" # portlet
 	echo "Use -s to report similar branches (eg., for 4.4.x, search for *Alpha1x)"
+	echo "Example2: $0 -b jbosstools-4.4.0.x -g jbdevstudio/jbdevstudio- devdoc product website"
 	exit 1;
 }
 
@@ -21,6 +22,7 @@ fi
 
 quiet=0
 checkAlternatives=0
+g_project_prefix=jbosstools/jbosstools- # or jbdevstudio/jbdevstudio-
 
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
@@ -28,6 +30,7 @@ while [[ "$#" -gt 0 ]]; do
 		'-b') branch="$2"; shift 1;;
 		'-q') quiet=1; shift 0;;
 		'-s') checkAlternatives=1; shift 0;;
+		'-g') g_project_prefix="$2"; shift 1;;
 		*) projects="$projects $1";;
 	esac
 	shift 1
@@ -54,20 +57,22 @@ branchAlt=${branch##*.};
 cd /tmp
 cnt=0
 OK=0
+notOK=0
 for d in $projects; do 
   (( cnt++ ))
 	if [[ $quiet == 0 ]]; then echo -n -e "[${cnt}] ${norm}$d"; fi
-	if [[ `wget https://github.com/jbosstools/jbosstools-${d}/tree/${branch} 2>&1 | egrep "ERROR 404"` ]]; then
-		#echo " * Not found  checking https://api.github.com/repos/jbosstools/jbosstools-${d}/branches for branches ending in ${branchAlt} ..."
+	if [[ `wget https://github.com/${g_project_prefix}${d}/tree/${branch} 2>&1 | egrep "ERROR 404"` ]]; then
+		#echo " * Not found  checking https://api.github.com/repos/${g_project_prefix}${d}/branches for branches ending in ${branchAlt} ..."
 		if [[ $quiet == 1 ]]; then echo -n -e "[${cnt}] ${norm}$d"; fi
 		echo -e " ... ${red}NO${norm}"
+		(( notOK++ ))
 		if [[ $checkAlternatives == 1 ]]; then
-			altBranches=`wget https://api.github.com/repos/jbosstools/jbosstools-${d}/branches 2>/dev/null -O - | egrep "\"name\":" | egrep "${branchAlt}"`
+			altBranches=`wget https://api.github.com/repos/${g_project_prefix}${d}/branches 2>/dev/null -O - | egrep "\"name\":" | egrep "${branchAlt}"`
 			if [[ $altBranches ]]; then
 				echo "* Found possible alternate branches:" 
 				echo "$altBranches"
 			else
-				debug "* Branch $branch not found; no alternates found at https://api.github.com/repos/jbosstools/jbosstools-${d}/branches:"
+				debug "* Branch $branch not found; no alternates found at https://api.github.com/repos/${g_project_prefix}${d}/branches:"
 				debug "$altBranches"
 			fi
 			if [[ $quiet == 0 ]]; then echo ""; fi 
@@ -79,3 +84,5 @@ for d in $projects; do
 	rm -f ${branch} branches
 done
 echo -e "${norm}OK: ${green}$OK${norm} of $cnt"
+
+exit ${notOK}
