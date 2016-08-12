@@ -88,10 +88,11 @@ checkProjects () {
   jobname_prefix="$5" # jbosstools- or devstudio.
   g_project_prefix="$6" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
   stream="$7" # ${stream_jbt} or ${stream_ds}
+  mkdir -p ${workspace}
   for j in ${projects}; do
     if [[ ! -d ${workspace}/${prefix}${j} ]]; then
       # fetch the project to the workspace as it's not already here!
-      mkdir -p ${workspace} && pushd ${workspace} >/dev/null
+      pushd ${workspace} >/dev/null
       git clone --depth 1 -b ${github_branch} -q https://github.com/${g_project_prefix}${j}.git # shallow clone just the branch we want
       popd >/dev/null
     fi
@@ -118,10 +119,8 @@ checkProjects () {
   done
 }
 
-echo "Found these root pom versions   [CORRECT]:" > ${logfile}; echo "" >> ${logfile}
-
-
 mkdir -p ${WORKSPACE1} ${WORKSPACE2}
+echo "Found these root pom versions   [CORRECT]:" > ${logfile}; echo "" >> ${logfile}
 checkProjects ${WORKSPACE1} jbosstools-  "${PROJECTS1}" pom.xml           jbosstools- jbosstools/jbosstools-   "${stream_jbt}"
 checkProjects ${WORKSPACE1} jbosstools-  "${PROJECTS2}" aggregate/pom.xml jbosstools- jbosstools/jbosstools-   "${stream_jbt}"
 checkProjects ${WORKSPACE2} jbdevstudio- "${PROJECTS3}" pom.xml           devstudio.  jbdevstudio/jbdevstudio- "${stream_ds}"
