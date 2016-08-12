@@ -91,7 +91,7 @@ checkProjects () {
   for j in ${projects} ; do
     if [[ ! -d ${workspace}/${prefix}${j} ]]; then
       # fetch the project to the workspace as it's not already here!
-      mkdir -p ${workspace} && pushd ${workspace} >/dev/null && git clone https://github.com/${g_project_prefix}${j}.git && popd >/dev/null
+      mkdir -p ${workspace} && pushd ${workspace} >/dev/null && git clone -q https://github.com/${g_project_prefix}${j}.git && popd >/dev/null
     fi
     if [[ ${doGitUpdate} != "false" ]]; then echo "== ${j} =="; fi
     pushd ${workspace}/${prefix}${j} >/dev/null
