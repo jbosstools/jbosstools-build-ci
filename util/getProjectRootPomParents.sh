@@ -112,16 +112,14 @@ checkProjects () {
 }
 
 echo "Found these root pom versions   [CORRECT]:" > ${logfile}; echo "" >> ${logfile}
-echo "Found these root pom versions [INCORRECT]:" > ${errfile}; echo "" >> ${errfile}
 
-# portlet and birt removed
+
+mkdir -p ${WORKSPACE1} ${WORKSPACE2}
 checkProjects ${WORKSPACE1} jbosstools-  "${PROJECTS1}" pom.xml           jbosstools- jbosstools/jbosstools-   "${stream_jbt}"
 checkProjects ${WORKSPACE1} jbosstools-  "${PROJECTS2}" aggregate/pom.xml jbosstools- jbosstools/jbosstools-   "${stream_jbt}"
 checkProjects ${WORKSPACE2} jbdevstudio- "${PROJECTS3}" pom.xml           devstudio.  jbdevstudio/jbdevstudio- "${stream_ds}"
 
 cat $logfile
-echo ""
-cat $errfile
 echo ""
 
 if [[ ${reposToCheck} ]]; then
@@ -137,4 +135,9 @@ if [[ ${jobsToCheck} ]]; then
   echo ""
 fi
 
-if [[ $(cat $errfile) ]]; then exit 1; fi
+if [[ $(cat $errfile) ]]; then 
+  echo "Found these root pom versions [INCORRECT]:"; echo ""
+  cat $errfile
+  echo ""
+  exit 1
+fi
