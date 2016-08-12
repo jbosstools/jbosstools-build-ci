@@ -26,11 +26,14 @@ fi
 doGitUpdate=true
 parent=4.4.0.Final-SNAPSHOT # or 4.4.0.Final-SNAPSHOT
 branch=jbosstools-4.4.x # or master
-jbtstream=4.4.neon  # or master
-jbdsstream=10.0.neon # or master 
+stream_jbt=4.4.neon  # or master
+stream_ds=10.0.neon # or master 
 
 WORKSPACE1=${HOME}/tru
 WORKSPACE2=${HOME}/truu
+PROJECTS1="aerogear arquillian base browsersim central discovery forge freemarker hibernate javaee jst livereload openshift server vpe webservices"
+PROJECTS2="build-sites"
+PROJECTS3="product"
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -39,16 +42,19 @@ while [[ "$#" -gt 0 ]]; do
     '-skipupdate'|'-k') doGitUpdate=false; shift 0;;
     '-w1') WORKSPACE1="$2"; shift 1;;
     '-w2') WORKSPACE2="$2"; shift 1;;
+    '-p1') PROJECTS1="$1"; shift 1;; # jbosstools-* projects
+    '-p2') PROJECTS2="$1"; shift 1;; # jbosstools-build-* projects
+    '-p3') PROJECTS3="$1"; shift 1;; # jbdevstudio-* projects
   esac
   shift 1
 done
 
 if [[ $branch == "master" ]]; then
-  jbtstream="master"
-  jbdsstream="master"
+  stream_jbt="master"
+  stream_ds="master"
 elif [[ ${branch/4.4/} != ${branch} ]]; then
-  jbtstream="4.4.neon"
-  jbdsstream="10.0.neon"
+  stream_jbt="4.4.neon"
+  stream_ds="10.0.neon"
 fi
 
 # TODO parameterize these?
@@ -57,7 +63,7 @@ errfile=/tmp/getProjectRootPomParents.err.txt
 
 gitUpdate () {
   branch=$1
-  if [[ ${doGitUpdate} != "false" ]]; then 
+  if [[ ${doGitUpdate} != "false" ]]; then
     git stash; 
     git checkout -- .; git reset HEAD .
     git checkout -- .; git reset HEAD .
@@ -70,15 +76,20 @@ gitUpdate () {
 jobsToCheck=""
 reposToCheck=""
 checkProjects () {
-  prefix="$1"
-  projects="$2"
-  pomfile="$3"
-  jobname_prefix="$4" # jbosstools- or devstudio.
-  g_project_prefix="$5" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
-  stream="$6" # ${jbtstream} or ${jbdsstream}
+  workspace="${1}"
+  prefix="$2"
+  projects="$3"
+  pomfile="$4"
+  jobname_prefix="$5" # jbosstools- or devstudio.
+  g_project_prefix="$6" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
+  stream="$7" # ${stream_jbt} or ${stream_ds}
   for j in ${projects} ; do
+    if [[ ! -d ${workspace}/${prefix}${j} ]]; then
+      # fetch the project to the workspace as it's not already here!
+      git clone https://github.com/${g_project_prefix}${j}.git
+    fi
     if [[ ${doGitUpdate} != "false" ]]; then echo "== ${j} =="; fi
-    pushd ${prefix}${j} >/dev/null
+    pushd ${workspace}/${prefix}${j} >/dev/null
     gitUpdate ${branch}
     thisparent=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<"` # contains actual version
     isCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep $parent` # empty string if wrong version
@@ -104,9 +115,9 @@ echo "Found these root pom versions   [CORRECT]:" > ${logfile}; echo "" >> ${log
 echo "Found these root pom versions [INCORRECT]:" > ${errfile}; echo "" >> ${errfile}
 
 # portlet and birt removed
-checkProjects ${WORKSPACE1}/jbosstools- "aerogear arquillian base browsersim central discovery forge freemarker hibernate javaee jst livereload openshift server vpe webservices" pom.xml jbosstools- jbosstools/jbosstools- "${jbtstream}"
-checkProjects ${WORKSPACE1}/jbosstools- "build-sites" aggregate/pom.xml jbosstools- jbosstools/jbosstools- "${jbtstream}"
-checkProjects ${WORKSPACE2}/jbdevstudio- "product" pom.xml devstudio. jbdevstudio/jbdevstudio- "${jbdsstream}"
+checkProjects ${WORKSPACE1} jbosstools-  "${PROJECTS1}" pom.xml           jbosstools- jbosstools/jbosstools-   "${stream_jbt}"
+checkProjects ${WORKSPACE1} jbosstools-  "${PROJECTS2}" aggregate/pom.xml jbosstools- jbosstools/jbosstools-   "${stream_jbt}"
+checkProjects ${WORKSPACE2} jbdevstudio- "${PROJECTS3}" pom.xml           devstudio.  jbdevstudio/jbdevstudio- "${stream_ds}"
 
 cat $logfile
 echo ""
@@ -125,3 +136,5 @@ if [[ ${jobsToCheck} ]]; then
   echo "firefox${jobsToCheck}"
   echo ""
 fi
+
+if [[ $(cat $errfile) ]]; then exit 1; fi
