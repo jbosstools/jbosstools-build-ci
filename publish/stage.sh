@@ -84,7 +84,7 @@ while [[ "$#" -gt 0 ]]; do
   shift 1
 done
 
-if [[ $quiet == 1 ]]; then consoleDest=">1/dev/null >2/dev/null"; else consoleDest=""; fi
+if [[ $quiet == 1 ]]; then consoleDest=/dev/null; else consoleDest=$(tty); fi
 
 # set mars, 9.0, etc.
 if [[ ! ${DESTDIR} ]] && [[ ! ${SRC_DIR} ]]; then echo "ERROR: DESTDIR and SRC_DIR not set. Please set at least one."; echo ""; usage; fi
@@ -134,19 +134,19 @@ for site in ${sites}; do
       # copy build folder
       if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
         log "[DEBUG] [$site] + mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}" | egrep "${grepstring}"
-        mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname} ${consoleDest}
+        mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname} &>${consoleDest}
       else # remote
         log "[DEBUG] [$site] + mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/" | egrep "${grepstring}"
-        echo "mkdir ${DESTDIR}" | sftp ${DESTINATION}/ ${consoleDest}
-        echo "mkdir ${DESTTYPE}" | sftp ${DESTINATION}/${DESTDIR}/ ${consoleDest}
-        echo "mkdir builds" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ ${consoleDest}
-        echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/ ${consoleDest}
+        echo "mkdir ${DESTDIR}" | sftp ${DESTINATION}/ &>${consoleDest}
+        echo "mkdir ${DESTTYPE}" | sftp ${DESTINATION}/${DESTDIR}/ &>${consoleDest}
+        echo "mkdir builds" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
+        echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/ &>${consoleDest}
       fi
       log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING}" | egrep "${grepstring}"
       ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING}
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/"
       # symlink latest build
-      ln -s ${ID} latest; ${RSYNC} ${tmpdir}/latest ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/ ${consoleDest}
+      ln -s ${ID} latest; ${RSYNC} ${tmpdir}/latest ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/ &>${consoleDest}
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/latest/"
       # copy update site zip
       suffix=-updatesite-${sitename}
@@ -155,12 +155,12 @@ for site in ${sites}; do
         y=$(find ${tmpdir}/all/ -name "${ZIPPREFIX}*${suffix}.zip" -a -not -name "*latest*")
       fi
       if [[ -f $y ]]; then
-        echo "mkdir ${DESTDIR}" | sftp ${DESTINATION}/ ${consoleDest}
-        echo "mkdir ${DESTTYPE}" | sftp ${DESTINATION}/${DESTDIR}/ ${consoleDest}
-        echo "mkdir updates" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ ${consoleDest}
-        echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/ ${consoleDest}
-        ${RSYNC} ${y} ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip ${consoleDest}
-        ${RSYNC} ${y}.sha256 ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256 ${consoleDest}
+        echo "mkdir ${DESTDIR}" | sftp ${DESTINATION}/ &>${consoleDest}
+        echo "mkdir ${DESTTYPE}" | sftp ${DESTINATION}/${DESTDIR}/ &>${consoleDest}
+        echo "mkdir updates" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
+        echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/ &>${consoleDest}
+        ${RSYNC} ${y} ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip &>${consoleDest}
+        ${RSYNC} ${y}.sha256 ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256 &>${consoleDest}
       elif [[ "${site/discovery}" == "${site}" ]]; then
         # don't warn for discovery sites since they don't have update sites
         echo "[WARN] [$site] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
@@ -171,16 +171,16 @@ for site in ${sites}; do
       if [[ -d ${tmpdir}/all/repo/ ]]; then
         if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
           log "[DEBUG] [$site] + mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
-          mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename} ${consoleDest}
+          mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename} &>${consoleDest}
         else # remote
           log "[DEBUG] [$site] + mkdir ${sitename} | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/" | egrep "${grepstring}"
-          echo "mkdir ${DESTDIR}" | sftp ${DESTINATION}/ ${consoleDest}
-          echo "mkdir ${DESTTYPE}" | sftp ${DESTINATION}/${DESTDIR}/ ${consoleDest}
-          echo "mkdir updates" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ ${consoleDest}
-          echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/ ${consoleDest}
+          echo "mkdir ${DESTDIR}" | sftp ${DESTINATION}/ &>${consoleDest}
+          echo "mkdir ${DESTTYPE}" | sftp ${DESTINATION}/${DESTDIR}/ &>${consoleDest}
+          echo "mkdir updates" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
+          echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/ &>${consoleDest}
         fi
         log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
-        ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/ ${consoleDest}
+        ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/ &>${consoleDest}
         DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/"
       else
         # don't warn for discovery sites since they don't have update sites
