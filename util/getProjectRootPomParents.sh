@@ -62,33 +62,33 @@ if [[ ! ${stream_jbt} ]] || [[ ! ${stream_ds} ]]; then
   fi
 fi
 
-# TODO parameterize these?
-logfile=/tmp/getProjectRootPomParents.log.txt
-errfile=/tmp/getProjectRootPomParents.err.txt
+logfile=${WORKSPACE1}/getProjectRootPomParents.log.txt
+errfile=${WORKSPACE1}/getProjectRootPomParents.err.txt
+rm -f ${logfile} ${errfile}
 
 gitUpdate () {
   github_branch=$1
   if [[ ${doGitUpdate} != "false" ]]; then
-    git stash; 
-    git checkout -- .; git reset HEAD .
-    git checkout -- .; git reset HEAD .
-    git checkout master; git pull --rebase origin master -p; git rebase --abort 
-    git pull origin
-    git checkout ${github_branch}; git pull origin ${github_branch}
+    git stash -q; 
+    git checkout -q -- .; git reset -q HEAD .
+    git checkout -q -- .; git reset -q HEAD .
+    git checkout -q master; git pull --rebase origin master -p -q; git rebase --abort >/dev/null 2>&1
+    git pull -q origin ${github_branch}
+    git checkout -q ${github_branch}; git pull -q origin ${github_branch}
   fi
 }
 
 jobsToCheck=""
 reposToCheck=""
 checkProjects () {
-  workspace="${1}"
-  prefix="$2"
-  projects="$3"
-  pomfile="$4"
+  workspace="$1" # absolure path to the root folder where git projects are checked out
+  prefix="$2" # jbosstools- or jbdevstudio-
+  projects="$3" # list of projects to check
+  pomfile="$4" # path to pomfile to check, eg., pom.xml or aggregate/pom.xml
   jobname_prefix="$5" # jbosstools- or devstudio.
   g_project_prefix="$6" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
   stream="$7" # ${stream_jbt} or ${stream_ds}
-  for j in ${projects} ; do
+  for j in ${projects}; do
     if [[ ! -d ${workspace}/${prefix}${j} ]]; then
       # fetch the project to the workspace as it's not already here!
       mkdir -p ${workspace} && pushd ${workspace} >/dev/null
@@ -99,7 +99,7 @@ checkProjects () {
     pushd ${workspace}/${prefix}${j} >/dev/null
     gitUpdate ${github_branch}
     thisparent=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<"` # contains actual version
-    isCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep ${version_parent}` # empty string if wrong version
+    isCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep $version_parent` # empty string if wrong version
     #echo "thisparent = [$thisparent]"
     #echo "isCorrectVersion = [$isCorrectVersion]"
     if [[ ! $isCorrectVersion ]]; then
@@ -142,7 +142,7 @@ if [[ ${jobsToCheck} ]]; then
   echo ""
 fi
 
-if [[ $(cat $errfile) ]]; then 
+if [[ -f $errfile ]]; then 
   echo "Found these root pom versions [INCORRECT]:"; echo ""
   cat $errfile
   echo ""
