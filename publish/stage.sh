@@ -21,6 +21,10 @@ rawJOB_NAME="\${PRODUCT}-\${site}_\${stream}"
 sites=""
 quiet=0
 
+norm="\033[0;39m"
+green="\033[1;32m"
+red="\033[1;31m"
+
 log ()
 {
   if [[ $quiet == 0 ]]; then echo $1; fi
@@ -113,7 +117,7 @@ for site in ${sites}; do
       ID=$(echo "ls 20*" | sftp ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1 | grep "20.\+" | grep -v sftp | sort | tail -1)
     fi
     ID=${ID%%/*}
-    echo "[INFO] [$site] In ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} found ID = $ID" | egrep "${JOB_NAME}|${site}|${ID}|ERROR"
+    echo -e "[INFO] [$site] In ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} found ID = ${green}${ID}${norm}" | egrep "${JOB_NAME}|${site}|${ID}|ERROR"
   fi
   grepstring="${JOB_NAME}|${site}|${ID}|ERROR|${versionWithRespin}|${SRC_DIR}|${DESTDIR}|${SRC_TYPE}|${DESTTYPE}|exclude"
   DEST_URLs=""
@@ -190,10 +194,10 @@ for site in ${sites}; do
       fi
     popd >/dev/null
     rm -fr $tmpdir
-    for du in ${DEST_URLs}; do echo "[INFO] [$site] ${du}" | egrep "${grepstring}"; done
-    echo "[INFO] [$site] DONE: ${JOB_NAME} :: ${site} :: ${ID}" | egrep "${grepstring}"
+    for du in ${DEST_URLs}; do echo -e "[INFO] [$site] ${green}${du}${norm}" | egrep "${grepstring}"; done
+    echo -e "[INFO] [$site] ${green}DONE${norm}: ${green}${JOB_NAME}${norm} :: ${green}${site}${norm} :: ${green}${ID}${norm}" | egrep "${grepstring}"
     echo ""
   else
-    echo "[ERROR] [$site] No latest build found for ${JOB_NAME} :: ${site} :: ${ID}" | egrep "${grepstring}"
+    echo -e "[ERROR] [$site] No latest build found for ${red}${JOB_NAME}${norm} :: ${red}${site}${norm} :: ${red}${ID}${norm}" | egrep "${grepstring}"
   fi
 done
