@@ -10,6 +10,7 @@ JBDS=devstudio@filemgmt.jboss.org:/www_htdocs/devstudio
 
 # by default, push to TOOLS, not JBDS
 DESTINATION="${TOOLS}" # or "${JBDS}"
+quiet="" # or -q
 
 usage ()
 {
@@ -34,6 +35,7 @@ while [[ "$#" -gt 0 ]]; do
     '-is') ISsite="$2"; shift 1;;
     '-q') qualities="$qualities $2"; shift 1;;
     '-r'|'-rootFolder') rootFolder="$2"; shift 1;;
+    '-quiet') quiet="-q"; shift 0;;
     *) OTHERFLAGS="${OTHERFLAGS} $1"; shift 0;;
   esac
   shift 1
@@ -54,7 +56,7 @@ fi
 for quality in ${qualities}; do
   tmpdir=/tmp/merge_${quality}_IS_plugins_to_${directoryXML}; mkdir -p $tmpdir; pushd $tmpdir >/dev/null
     # get plugin jar xml
-    wget ${ISsite}/${directoryXML} --no-check-certificate -q -O - | grep integration-stack > $tmpdir/pluginXML.fragment.txt
+    wget ${ISsite}/${directoryXML} --no-check-certificate ${quiet} -O - | grep integration-stack > $tmpdir/pluginXML.fragment.txt
     # if [[ -f $tmpdir/pluginXML.fragment.txt ]]; then cat $tmpdir/pluginXML.fragment.txt; fi # debugging
     # echo "" # debugging
     # echo "[INFO] versionWithRespin = ${versionWithRespin}" # debugging
@@ -63,7 +65,7 @@ for quality in ${qualities}; do
       # get plugin jars names/paths
       plugins=$(cat $tmpdir/pluginXML.fragment.txt | sed "s#.\+url=\"\(.\+\.jar\)\".\+#\1#")
       # get plugin jars into discovery.central
-      for plugin in $plugins; do wget ${ISsite}/${plugin} --no-check-certificate -q && echo "[INFO] $plugin"; done
+      for plugin in $plugins; do wget ${ISsite}/${plugin} --no-check-certificate ${quiet} && echo "[INFO] $plugin"; done
     popd >/dev/null
     # copy into discovery.earlyaccess
     mkdir -p ${rootFolder}/${quality}/updates/discovery.earlyaccess/${versionWithRespin}/plugins/
