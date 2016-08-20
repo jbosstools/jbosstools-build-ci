@@ -12,11 +12,19 @@ usage ()
 {
     echo "Usage:     $0 -b GITHUBBRANCH -pv PARENTVERSION [-skipupdate] -w1 [/path/to/jbosstools-projects/parent-folder] -w2 [/path/to/jbdevstudio-projects/parent-folder]"
     echo ""
-    echo "Example 1: $0 -b jbosstools-4.2.x -pv 4.2.3.CR1-SNAPSHOT -w1 /home/nboldt/42x -w2 /home/nboldt/42xx"
+    echo "Example 1: $0 -b jbosstools-4.2.x -pv 4.2.3.CR1-SNAPSHOT -w1 /home/nboldt/42x -w2 /home/nboldt/42xx \\"
+    echo "              -p1 \"aerogear arquillian base browsersim central discovery forge freemarker \\"
+    echo "              hibernate javaee jst livereload openshift server vpe webservices\""
     echo ""
-    echo "Example 2: $0 -pv 4.4.0.Final-SNAPSHOT -skipupdate -w1 /home/nboldt/tru -w2 /home/nboldt/truu"
+    echo "Example 2: $0 -pv 4.4.0.Final-SNAPSHOT -skipupdate -w1 /home/nboldt/tru -w2 /home/nboldt/truu -p2 build-sites -p3 product"
     echo ""
-    echo "Example 3: $0 -b master -pv 4.4.1.Alpah1-SNAPSHOT -w1 \${WORKSPACE}/jbosstools.github -w2 \${WORKSPACE}/jbdevstudio.github"
+    echo "Example 3: $0 -b master -pv 4.4.1.Alpha1-SNAPSHOT -w1 \${WORKSPACE}/jbosstools.github -w2 \${WORKSPACE}/jbdevstudio.github \\"
+    echo"               -p1 openshift -p2 build-sites -p3 product"
+    echo ""
+    echo "Example 4: $0 -updateRootPom -createBranch -b jbosstools-4.4.1.x -b2 master -pv 4.4.1.Final-SNAPSHOT \\"
+    echo "              -w1 /tmp/jbosstools.github -p1 \"aerogear arquillian base browsersim central discovery \\"
+    echo "               forge freemarker hibernate javaee jst livereload openshift server vpe webservices\" \\"
+    echo "              -p2 \"build build-sites\" -p3 \"devdoc product\" -q"
     echo ""
     exit 1;
 }
@@ -25,21 +33,27 @@ if [[ $# -lt 1 ]]; then
   usage;
 fi
 
-doGitUpdate=true
-version_parent=4.4.1.Alpha1-SNAPSHOT # or 4.4.0.Final-SNAPSHOT
-github_branch=jbosstools-4.4.x # or master
+quiet="" # or "" or "-q"
+doGitUpdate=1 # perform a git update to ensure we're current; default true
+doUpdateRootPom=0 # if the wrong parent pom is referenced from the root pom (and all-tests/pom.xml) update it locally and push to master
+doCreateBranch=0 # if the required branch doesn't exist, fetch from master instead, and create a new branch after pushing root pom update to master
+logfileprefix=${0##*/}; logfileprefix=${logfileprefix%.sh}
+version_parent=4.4.1.Final-SNAPSHOT
+github_branch=jbosstools-4.4.1.x # or master
+github_branch_fallback=master # if required branch doesn't exist, fall back to fetching sources from this branch instead; default: master
 
-WORKSPACE1=${HOME}/tru
-WORKSPACE2=${HOME}/truu
-PROJECTS1="aerogear arquillian base browsersim central discovery forge freemarker hibernate javaee jst livereload openshift server vpe webservices"
-PROJECTS2="build-sites"
-PROJECTS3="product"
+WORKSPACE1=/tmp
+PROJECTS1="" # or "aerogear arquillian base browsersim central discovery forge freemarker hibernate javaee jst livereload openshift server vpe webservices"
+PROJECTS2="" # or "build-sites"
+PROJECTS3="" # or "product"
+hadError=0
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     '-b') github_branch="$2"; shift 1;;
+    '-b2') github_branch_fallback="$2"; shift 1;;
     '-pv') version_parent="$2"; shift 1;;
-    '-skipupdate'|'-k') doGitUpdate=false; shift 0;;
+    '-skipupdate'|'-k') doGitUpdate=0; shift 0;;
     '-w1') WORKSPACE1="$2"; shift 1;;
     '-w2') WORKSPACE2="$2"; shift 1;;
     '-p1') PROJECTS1="$2"; shift 1;; # jbosstools-* projects
@@ -47,12 +61,15 @@ while [[ "$#" -gt 0 ]]; do
     '-p3') PROJECTS3="$2"; shift 1;; # jbdevstudio-* projects
     '-sj') stream_jbt="$2"; shift 1;;
     '-sd') stream_ds="$2"; shift 1;;
+    '-updateRootPom') doUpdateRootPom=1; shift 0;;
+    '-createBranch') doCreateBranch=1; shift 0;;
+    '-q') quiet="-q"; shift 0;;
   esac
   shift 1
 done
 
 # backups if not set above
-if [[ ! ${stream_jbt} ]] || [[ ! ${stream_ds} ]]; then 
+if [[ ! ${stream_jbt} ]] || [[ ! ${stream_ds} ]]; then
   if [[ $github_branch == "master" ]]; then
     stream_jbt="master"
     stream_ds="master"
@@ -61,89 +78,157 @@ if [[ ! ${stream_jbt} ]] || [[ ! ${stream_ds} ]]; then
     stream_ds="10.0.neon"
   fi
 fi
-
-logfile=${WORKSPACE1}/getProjectRootPomParents.log.txt
-errfile=${WORKSPACE1}/getProjectRootPomParents.err.txt
-rm -f ${logfile} ${errfile}
+if [[ ! ${WORKSPACE2} ]]; then
+  WORKSPACE2=${WORKSPACE1}
+fi
 
 gitUpdate () {
-  github_branch=$1
-  if [[ ${doGitUpdate} != "false" ]]; then
-    git stash -q; 
-    git checkout -q -- .; git reset -q HEAD .
-    git checkout -q -- .; git reset -q HEAD .
-    git checkout -q master; git pull --rebase origin master -p -q; git rebase --abort >/dev/null 2>&1
-    git pull -q origin ${github_branch}
-    git checkout -q ${github_branch}; git pull -q origin ${github_branch}
+  ghb=$1
+  # if [[ ${quiet} != "-q" ]]; then echo "[INFO] Stash any changes, checkout, reset, rebase, pull changes... "; fi
+  if [[ ${doGitUpdate} -gt 0 ]]; then
+    git stash -q | tee -a ${logfile}
+    git checkout -q -- .; git reset -q HEAD . | tee -a ${logfile}
+    git rebase --abort >/dev/null 2>&1
+    git pull -q origin ${ghb} | tee -a ${logfile}
+    git checkout -q ${ghb} | tee -a ${logfile}
+    git pull -q origin ${ghb} | tee -a ${logfile}
   fi
 }
 
-jobsToCheck=""
-reposToCheck=""
 checkProjects () {
+  logfile=${WORKSPACE1}/${logfileprefix}.log.txt
+  chgfile=${WORKSPACE1}/${logfileprefix}.chg.txt
+  errfile=${WORKSPACE1}/${logfileprefix}.err.txt
+
+  rm -f ${logfile} ${errfile} ${chgfile}
+
   workspace="$1" # absolure path to the root folder where git projects are checked out
   prefix="$2" # jbosstools- or jbdevstudio-
   projects="$3" # list of projects to check
-  pomfile="$4" # path to pomfile to check, eg., pom.xml or aggregate/pom.xml
+  pomfileroot="$4" # path to pomfile to check, eg., pom.xml or aggregate/pom.xml
   jobname_prefix="$5" # jbosstools- or devstudio.
   g_project_prefix="$6" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
   stream="$7" # ${stream_jbt} or ${stream_ds}
   mkdir -p ${workspace}
   for j in ${projects}; do
+    if [[ ${quiet} != "-q" ]]; then echo "[INFO] == ${g_project_prefix}${j} =="; fi
+    branchDoesNotExist="$(curl -s -I https://github.com/${g_project_prefix}${j}/tree/${github_branch} | egrep "404 Not Found")"
     if [[ ! -d ${workspace}/${prefix}${j} ]]; then
       # fetch the project to the workspace as it's not already here!
       pushd ${workspace} >/dev/null
-      git clone --depth 1 -b ${github_branch} -q https://github.com/${g_project_prefix}${j}.git # shallow clone just the branch we want
+      if [[ ${branchDoesNotExist} ]]; then # branch does not exist yet
+        git clone --depth 1 -b ${github_branch_fallback} ${quiet} git@github.com:${g_project_prefix}${j}.git | tee -a ${logfile} # shallow clone just the fallback branch
+      else
+        git clone --depth 1 -b ${github_branch} ${quiet} git@github.com:${g_project_prefix}${j}.git | tee -a ${logfile} # shallow clone just the branch we want
+      fi
       popd >/dev/null
     fi
-    if [[ ${doGitUpdate} != "false" ]]; then echo "== ${j} =="; fi
     pushd ${workspace}/${prefix}${j} >/dev/null
-    gitUpdate ${github_branch}
-    thisparent=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<"` # contains actual version
-    isCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep $version_parent` # empty string if wrong version
-    #echo "thisparent = [$thisparent]"
-    #echo "isCorrectVersion = [$isCorrectVersion]"
-    if [[ ! $isCorrectVersion ]]; then
-      echo -n "$j :: " >> $errfile
-      # https://github.com/jbosstools/jbosstools-aerogear/commits/jbosstools-4.2.x
-      reposToCheck="${reposToCheck} https://github.com/${g_project_prefix}${j}/commits/${github_branch}"
-      jobsToCheck="${jobsToCheck} https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/${jobname_prefix}${j}_${stream}/build"
-      echo $thisparent | grep version >> $errfile
+    if [[ ${branchDoesNotExist} ]]; then # branch does not exist yet
+      gitUpdate ${github_branch_fallback}
     else
-      echo $j :: $isCorrectVersion >> ${logfile}
+      gitUpdate ${github_branch}
     fi
 
-    #if [[ $thisparent ]]
+        echo "# >>> ${prefix}${j} <<<
+" >> ${tskfile}
+
+    pomfiles=${pomfileroot}
+    for z in all-tests aggregate parent; do
+      if [[ -d ${workspace}/${prefix}${j}/${z} ]] && [[ -f ${workspace}/${prefix}${j}/${z}/pom.xml ]]; then pomfiles="${pomfiles} ${z}/pom.xml"; fi
+    done
+    for pomfile in ${pomfiles}; do
+      if [[ -f ${pomfile} ]]; then # echo "$j $pomfile..."
+
+        thisparent=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<"` # contains actual version
+        wasCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep $version_parent` # empty string if wrong version
+        # echo "thisparent = [$thisparent]"
+        if [[ ${thisparent} ]]; then
+          if [[ ! $wasCorrectVersion ]]; then
+            if [[ ${doUpdateRootPom} ]]; then
+              perl -0777 -i.orig -pe \
+              's#(<artifactId>parent</artifactId>)[\r\n\ \t]+(<version>)([\d.]+[^<>]+)(</version>)#\1\n\t\t<version>'${version_parent}'\4#igs' \
+              ${pomfile}
+              isCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep $version_parent` # empty string if wrong version
+            fi
+            if [[ ${isCorrectVersion} ]]; then
+              echo $j :: $isCorrectVersion >> ${chgfile}
+              echo "# Commit change to https://github.com/${g_project_prefix}${j}/blob/${github_branch_fallback}/${pomfile}
+pushd ${workspace}/${prefix}${j} >/dev/null && perl -0777 -i.orig -pe \\
+'s#(<artifactId>parent</artifactId>)[\r\n\ \t]+(<version>)([\d.]+[^<>]+)(</version>)#\1\n\t\t<version>'${version_parent}'\4#igs' \\
+${pomfile} && git commit -m \"bump up to parent pom version = ${version_parent}\" . && git push origin ${github_branch_fallback} &&
+popd >/dev/null; echo \">>> https://github.com/${g_project_prefix}${j}/commits/${github_branch_fallback}\"
+" >> ${tskfile}
+            else
+              echo -n "$j :: " >> ${errfile}
+              echo $thisparent | grep version >> ${errfile}
+            fi
+            # echo "isCorrectVersion = [$isCorrectVersion]"
+          else
+        echo "# No change needed: https://github.com/${g_project_prefix}${j}/blob/${github_branch_fallback}/${pomfile} !
+" >> ${tskfile}
+          fi
+        else
+          # no reference to jbosstools >parent< found.
+          continue
+        fi
+        if [[ $wasCorrectVersion ]]; then
+          echo $j :: $wasCorrectVersion >> ${logfile}
+        fi
+      fi
+    done
+    if [[ ${doCreateBranch} ]]; then
+      if [[ ${branchDoesNotExist} ]]; then # branch does not exist yet
+        echo "# Create branch https://github.com/${g_project_prefix}${j}/tree/${github_branch} from ${github_branch_fallback}
+pushd ${workspace}/${prefix}${j} && git checkout ${github_branch_fallback} && git pull origin ${github_branch_fallback}
+git checkout -b ${github_branch} && git push origin ${github_branch}
+popd >/dev/null && echo \">>> https://github.com/${g_project_prefix}${j}/tree/${github_branch}\"
+" >> ${tskfile}
+      else
+        echo "# Branch exists: https://github.com/${g_project_prefix}${j}/tree/${github_branch} !
+" >> ${tskfile}
+      fi
+    fi
+
     popd >/dev/null
-    if [[ ${doGitUpdate} != "false" ]]; then echo ""; fi
+    if [[ ${quiet} != "-q" ]]; then echo ""; fi
   done
+
+  if [[ ${quiet} != "-q" ]] && [[ -f ${logfile} ]] && [[ $(cat ${logfile}) ]] ; then
+    echo "Found these root pom versions   [CORRECT]:"
+    cat ${logfile}
+    echo ""
+  fi
+
+  if [[ ${quiet} != "-q" ]] && [[ -f ${chgfile} ]]; then
+    echo "Found these root pom versions   [TO CHANGE]:"
+    cat ${chgfile}
+    echo ""
+  fi
+
+  if [[ -f ${errfile} ]]; then
+    echo "Found these root pom versions [INCORRECT]:"; echo ""
+    cat ${errfile}
+    echo ""
+    hadError=1
+  fi
 }
 
 mkdir -p ${WORKSPACE1} ${WORKSPACE2}
-echo "Found these root pom versions   [CORRECT]:" > ${logfile}; echo "" >> ${logfile}
-checkProjects ${WORKSPACE1} jbosstools-  "${PROJECTS1}" pom.xml           jbosstools- jbosstools/jbosstools-   "${stream_jbt}"
-checkProjects ${WORKSPACE1} jbosstools-  "${PROJECTS2}" aggregate/pom.xml jbosstools- jbosstools/jbosstools-   "${stream_jbt}"
-checkProjects ${WORKSPACE2} jbdevstudio- "${PROJECTS3}" pom.xml           devstudio.  jbdevstudio/jbdevstudio- "${stream_ds}"
+tskfile=${WORKSPACE1}/${logfileprefix}.tsk.txt
+if [[ -f ${tskfile} ]]; then rm -f ${tskfile}; fi
 
-cat $logfile
-echo ""
+if [[ "${PROJECTS1}" ]]; then checkProjects ${WORKSPACE1} jbosstools-  "${PROJECTS1}" pom.xml jbosstools- jbosstools/jbosstools-   "${stream_jbt}"; fi
+if [[ "${PROJECTS2}" ]]; then checkProjects ${WORKSPACE1} jbosstools-  "${PROJECTS2}" pom.xml jbosstools- jbosstools/jbosstools-   "${stream_jbt}"; fi
+if [[ "${PROJECTS3}" ]]; then checkProjects ${WORKSPACE2} jbdevstudio- "${PROJECTS3}" pom.xml devstudio.  jbdevstudio/jbdevstudio- "${stream_ds}" ; fi
 
-if [[ ${reposToCheck} ]]; then
-  echo "Run the following to check Github for new commits on the ${github_branch} github_branch:"
+
+if [[ ${doUpdateRootPom} -gt 0 ]] || [[ ${doCreateBranch} -gt 0 ]]; then
   echo ""
-  echo "firefox${reposToCheck}"
+  echo "Steps to perform can be found in:"
+  echo "${tskfile}"
   echo ""
 fi
-if [[ ${jobsToCheck} ]]; then
-  echo "Run the following to build incomplete jobs:"
-  echo ""
-  echo "firefox${jobsToCheck}"
-  echo ""
-fi
-
-if [[ -f $errfile ]]; then 
-  echo "Found these root pom versions [INCORRECT]:"; echo ""
-  cat $errfile
-  echo ""
+if [[ ${hadError} -gt 0 ]]; then
   exit 1
 fi
