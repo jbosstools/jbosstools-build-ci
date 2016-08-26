@@ -1,0 +1,99 @@
+cd ~/truu/jbdevstudio-ci/bin
+python createTaskJIRAs.py --jbide 4.4.1.Alpha1 --jbds 10.1.0.Alpha1 \
+--task "Prepare for 4.4.1.Alpha1" --taskfull "Please perform the following tasks:
+
+1. Check out your existing *{color:orange}master{color}* branch:
+
+{code}
+git checkout master
+{code}
+
+2. Update your *{color:orange}master{color}* root pom to use the latest parent pom version, *{color:orange}4.4.1.Alpha1-SNAPSHOT{color}*:
+
+{code}
+  <parent>
+    <groupId>org.jboss.tools</groupId>
+    <artifactId>parent</artifactId>
+    <version>4.4.1.Alpha1-SNAPSHOT</version>
+  </parent>
+{code}
+
+Now, your root pom will use parent pom version:
+
+* *{color:orange}4.4.1.Alpha1-SNAPSHOT{color}* in your *{color:orange}master{color}* branch
+
+3. Ensure that component features/plugins have been [properly upversioned|http://wiki.eclipse.org/Version_Numbering#Overall_example], eg., from 1.0.0 to 1.0.1. 
+
+{code}
+mvn -Dtycho.mode=maven org.eclipse.tycho:tycho-versions-plugin:0.25.0:set-version -DnewVersion=1.0.1-SNAPSHOT
+{code}
+
+4. Ensure you've *built & run tests* using the latest target platform version 4.60.0.Final-SNAPSHOT (4.60 = Eclipse Neon.0)
+
+{code}
+mvn clean verify -Dtpc.version=4.60.0.Final-SNAPSHOT
+{code}
+
+4. Close (do not resolve) this JIRA when done.
+
+" \
+-s https://issues.jboss.org \
+-u nickboldt \
+-p \
+
+PASSWORD 
+
+############################################################################################################
+
+cd ~/truu/jbdevstudio-ci/bin
+python createTaskJIRAs.py --jbide 4.4.0.Final --jbds 10.0.0.GA \
+--task "Prepare for Final/GA" --taskfull "Please perform the following tasks:
+
+0. Make sure your component has no remaining unresolved JIRAs set for fixVersion = 4.4.0.Final or 10.0.0.GA
+
+[Unresolved JIRAs with fixVersion = 4.4.0.Final, 10.0.0.GA|https://issues.jboss.org/issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%284.4.0.Final%2C4.4.0.Final%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%2810.0.0.GA%2C10.0.0.GA%29%29%29%20and%20resolution%20%3D%20Unresolved]
+
+1. Check out your existing *{color:blue}jbosstools-4.4.x{color}* branch:
+
+{code}
+git checkout jbosstools-4.4.x
+{code}
+
+2. Update your *{color:blue}jbosstools-4.4.x branch{color}* root pom to use the latest parent pom version, *{color:blue}4.4.0.Final-SNAPSHOT{color}*:
+
+{code}
+  <parent>
+    <groupId>org.jboss.tools</groupId>
+    <artifactId>parent</artifactId>
+    <version>4.4.0.Final-SNAPSHOT</version>
+  </parent>
+{code}
+
+Now, your root pom will use parent pom version:
+
+* *{color:blue}4.4.0.Final-SNAPSHOT{color}* in your *{color:blue}jbosstools-4.4.x{color}* branch
+
+3a. Ensure you've *built your code* using the latest *minimum* target platform version 4.60.0.Final-SNAPSHOT (4.60 = Eclipse Neon.0)
+
+{code}
+mvn clean verify -Dtpc.version=4.60.0.Final-SNAPSHOT
+{code}
+
+3b. Ensure you've *run your tests* using the latest *maximum* target platform version 4.60.0.Final-SNAPSHOT (4.60 = Eclipse Neon.0)
+
+{code}
+mvn clean verify -Dtpc.version=4.60.0.Final-SNAPSHOT
+{code}
+
+4. Close (do not resolve) this JIRA when done.
+
+5. If you have any outstanding [New + Noteworthy JIRAs|https://issues.jboss.org/issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%284.4.0.Final%2C4.4.0.Final%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%2810.0.0.GA%2C10.0.0.GA%29%29%29%20AND%20resolution%20is%20null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next.
+" \
+-s https://issues.jboss.org \
+-u nickboldt \
+-p \
+
+PASSWORD 
+
+############################################################################################################
+
