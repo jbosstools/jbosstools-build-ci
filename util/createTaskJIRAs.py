@@ -27,7 +27,9 @@ parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., h
 parser.add_option("-i", "--jbide", dest="jbidefixversion", help="JBIDE Fix Version, eg., 4.1.0.qualifier")
 parser.add_option("-d", "--jbds", dest="jbdsfixversion", help="JBDS Fix Version, eg., 7.0.0.qualifier")
 parser.add_option("-t", "--task", dest="taskdescription", help="Task Summary, eg., \"Code Freeze + Branch\"")
-parser.add_option("-f", "--taskfull", dest="taskdescriptionfull", help="Task Description, eg., \"Please perform the following tasks...\"");
+parser.add_option("-f", "--taskfull", dest="taskdescriptionfull", help="Task Description, eg., \"Please perform the following tasks...\"")
+parser.add_option("-A", "--auto-accept", dest="autoaccept", action="store_true", help="if set, automatically accept created issues")
+
 # see createTaskJIRAs.py.examples.txt for examples of taskdescriptionfull
 
 (options, args) = parser.parse_args()
@@ -132,10 +134,10 @@ for name, comps in JBT_components.iteritems():
     child = jira.create_issue(fields=rootJBIDE_dict)
     print(name +  ": " + jiraserver + '/browse/' + child.key)
 
-accept = raw_input("Accept created JIRAs? [Y/n] ")
-
-if accept.capitalize() in ["N"]:
-    rootJBIDE.delete(deleteSubtasks=True)
-    rootJBDS.delete(deleteSubtasks=True)
+if (not options.autoaccept):
+    accept = raw_input("Accept created JIRAs? [Y/n] ")
+    if accept.capitalize() in ["N"]:
+        rootJBIDE.delete(deleteSubtasks=True)
+        rootJBDS.delete(deleteSubtasks=True)
 
 # For sample usage, see createTaskJIRAs.py.examples.txt
