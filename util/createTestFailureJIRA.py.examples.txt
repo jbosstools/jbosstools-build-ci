@@ -1,67 +1,67 @@
-cd ~/truu/jbdevstudio-ci/bin
+cd ~/tru/jbosstools-build-ci/util
 python createTestFailureJIRA.py --affected 4.2.0.Beta2 --component hibernate \
 --jira "https://issues.jboss.org" --jirauser nickboldt --testuser nboldt \
 --test https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-hibernate_master/481/testReport/ \
 --jirapwd \
 JIRAPWD --testpwd KERBPWD
 
-cd ~/truu/jbdevstudio-ci/bin
+cd ~/tru/jbosstools-build-ci/util
 python createTestFailureJIRA.py --affected 4.2.0.Beta2 --component browsersim \
 --jira "https://issues.jboss.org" --jirauser nickboldt --testuser nboldt \
 --test https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-browsersim_master/12/testReport/ \
 --jirapwd \
 JIRAPWD --testpwd KERBPWD
 
-cd ~/truu/jbdevstudio-ci/bin
+cd ~/tru/jbosstools-build-ci/util
 python createTestFailureJIRA.py --affected 4.2.0.Beta2 --component server \
 --jira "https://issues.jboss.org" --jirauser nickboldt --testuser nboldt \
 --test https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-server_master/496/testReport/ \
 --jirapwd \
 JIRAPWD --testpwd KERBPWD
 
-cd ~/truu/jbdevstudio-ci/bin
+cd ~/tru/jbosstools-build-ci/util
 python createTestFailureJIRA.py --affected 4.2.0.Beta2 --component jsf \
 --jira "https://issues.jboss.org" --jirauser nickboldt --testuser nboldt \
 --test https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-javaee_master/587/testReport/ \
 --jirapwd \
 JIRAPWD --testpwd KERBPWD
 
-cd ~/truu/jbdevstudio-ci/bin
+cd ~/tru/jbosstools-build-ci/util
 python createTestFailureJIRA.py --affected 4.3.0.Beta2 --component visual-page-editor-core \
 --jira "https://issues.jboss.org" --jirauser nickboldt --testuser nboldt \
 --test https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-vpe_master/737/testReport/ \
 --jirapwd \
 JIRAPWD --testpwd KERBPWD
 
-cd ~/truu/jbdevstudio-ci/bin
+cd ~/tru/jbosstools-build-ci/util
 python createTestFailureJIRA.py --affected 4.3.0.CR1 --component common/jst/core \
 --jira "https://issues.jboss.org" --jirauser nickboldt --testuser nboldt \
 --test https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-base_master/786/testReport/ \
 --jirapwd \
 JIRAPWD --testpwd KERBPWD
 
-cd ~/truu/jbdevstudio-ci/bin
+cd ~/tru/jbosstools-build-ci/util
 python createTestFailureJIRA.py --affected 4.3.0.CR1 --component visual-page-editor-core \
 --jira "https://issues.jboss.org" --jirauser nickboldt --testuser nboldt \
 --test https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-vpe_master/754/testReport/ \
 --jirapwd \
 JIRAPWD --testpwd KERBPWD
 
-cd ~/truu/jbdevstudio-ci/bin
+cd ~/tru/jbosstools-build-ci/util
 python createTestFailureJIRA.py --affected 4.3.0.CR1 --component seam2 \
 --jira "https://issues.jboss.org" --jirauser nickboldt --testuser nboldt \
 --test https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-javaee_master/838/testReport/ \
 --jirapwd \
 JIRAPWD --testpwd KERBPWD
 
-cd ~/truu/jbdevstudio-ci/bin
+cd ~/tru/jbosstools-build-ci/util
 python createTestFailureJIRA.py --affected 4.3.0.CR1 --component hibernate \
 --jira "https://issues.jboss.org" --jirauser nickboldt --testuser nboldt \
 --test https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-hibernate_master/1060/testReport/ \
 --jirapwd \
 JIRAPWD --testpwd KERBPWD
 
-cd ~/truu/jbdevstudio-ci/bin
+cd ~/tru/jbosstools-build-ci/util
 python createTestFailureJIRA.py --affected 4.3.1.Beta1 --component "common/jst/core" \
 --jira "https://issues.jboss.org" --jirauser nickboldt --testuser nboldt \
 --test https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-jst_4.3.mars/68/testReport/ \
@@ -77,5 +77,11 @@ JIRAPWD --testpwd KERBPWD
 python createTestFailureJIRA.py --affected 4.3.1.Beta1 --component "seam2" \
 --jira "https://issues.jboss.org" --jirauser nickboldt --testuser nboldt \
 --test http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-javaee_4.3.mars/56/testReport/ \
+--jirapwd \
+JIRAPWD --testpwd KERBPWD
+
+python createTestFailureJIRA.py --affected 4.4.1.Final --component "hibernate" \
+--jira "https://issues.jboss.org" --jirauser nickboldt --testuser nboldt \
+--test http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-hibernate_master/1453/testReport/ \
 --jirapwd \
 JIRAPWD --testpwd KERBPWD
