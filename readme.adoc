@@ -7,6 +7,19 @@ toc::[]
 
 ---
 
+== Usage
+
+The python scripts might need a few extra libs installed. Run these commands first to be sure you have the right dependencies.
+
+```
+pip install PyGithub
+pip install requests
+```
+
+If you are on Ubuntu you might be affected by this http://stackoverflow.com/questions/27341064/how-do-i-fix-importerror-cannot-import-name-incompleteread[bug]. Solution is to do what is the top answer about doing `apt-get remove python-pip & easy_install pip`
+
+---
+
 == Publishing
 
 [cols="1a,4,4"]
