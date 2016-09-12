@@ -126,7 +126,8 @@ for site in ${sites}; do
       echo -e "[INFO] [$site] In ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} found ID = ${green}${ID}${norm}" | egrep "${JOB_NAME}|${site}|${ID}|ERROR"
     else
       log "[ERROR] [$site] No latest build found for ${red}${JOB_NAME}${norm} :: ${red}${site}${norm} :: ${red}${ID}${norm}" | egrep "${grepstring}"
-      log "[DEBUG] $(sftp ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1)"
+      log "[DEBUG] echo \"ls 20*\" | sftp ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1 ... "
+      log "[DEBUG] $(echo "ls 20*" | sftp ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1)"
     fi
   fi
   grepstring="${JOB_NAME}|${site}|${ID}|ERROR|${versionWithRespin}|${SRC_DIR}|${DESTDIR}|${SRC_TYPE}|${DESTTYPE}|exclude"
