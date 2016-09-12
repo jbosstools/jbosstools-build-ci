@@ -27,7 +27,7 @@ red="\033[1;31m"
 
 log ()
 {
-  if [[ $quiet == 0 ]]; then echo $1; fi
+  if [[ $quiet == 0 ]]; then echo -e $1; fi
 }
 
 # can be used to publish a build (including installers, site zips, MD5s, build log) or just an update site folder
