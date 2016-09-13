@@ -162,8 +162,15 @@ if [[ ${versionWithRespin_ds} ]]; then
       devstudio-${versionWithRespin_ds_latest_INT}-src.zip devstudio-${versionWithRespin_ds_latest_INT}-updatesite-central.zip \
       devstudio-${versionWithRespin_ds_latest_INT}-updatesite-core.zip; do
       for ff in $f ${f}.sha256; do
-        logn "${u}/${ff}: "; stat=$(curl -I -s ${u}/${ff} | egrep "404")
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${ff}: " "${red}NO${norm}"; let notOK+=1; fi
+        a=${u}/${ff}
+        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+        if [[ $stat ]]; then # try backup URL (.latest or .GA)
+          #logerr "${a}: " "${red}NO${norm}"
+          log ""
+          a=${u}/${ff/.latest/.GA}
+          logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+        fi
+        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
       done
     done
   done
