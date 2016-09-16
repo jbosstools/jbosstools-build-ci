@@ -1,7 +1,7 @@
 = Utility Scripts for JBoss Tools Build
 :toc: preamble
 
-This folder contains various utility scripts related to the continuous integration building of JBoss Tools. 
+This folder contains various utility scripts related to the continuous integration building of JBoss Tools.
 
 toc::[]
 
@@ -21,9 +21,17 @@ toc::[]
 |Script to promote a previously published staging build to some other location, eg., for releasing m2e-wtp, IS projects, etc. Requires link:util/cleanup/jbosstools-cleanup.sh[jbosstools cleanup.sh]
 |Used to publish non-JBoss Tools project such as m2e-wtp and IS projects from staging to a more stable path
 
+|link:publish/stage.sh[stage.sh]
+|Script to stage a CI build to staging or a staging build to developement or stable.
+|Used to publish JBoss Tools and Red Hat JBoss Developer Studio to a stable path for testing or release.
+
+|link:publish/checkStagingURLs.sh[checkStagingURLs.sh]
+|Script to verify a run of stage.sh was successful and that all expected artifacts have been created.
+|Used to verify JBoss Tools and Red Hat JBoss Developer Studio exists in a stable path for testing or release.
+
 |_link:publish/publish.sh[publish.sh]_
 |_Script to publish and generate build-time metadata for JBoss Tools projects, JBoss Tools aggregates, and JBDS. Requires link:util/cleanup/jbosstools-cleanup.sh[jbosstools cleanup.sh]_
-|_Deprecated. Used to publish up to JBoss Tools 4.2 and JBDS 8.x_
+|_DEPRECATED in favour of rsync.sh. Used to publish up to JBoss Tools 4.2 and JBDS 8.x_
 
 |===
 
@@ -106,7 +114,7 @@ toc::[]
 |Used in https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-cleanup/[jbosstools cleanup], link:publish/rsync.sh[rsync.sh], link:publish/promote.sh[promote.sh], link:publish/publish.sh[publish.sh]
 
 |link:util/cleanup/devstudio-product-cleanup.sh[devstudio-product cleanup.sh]
-|Cleanup script for JBDS builds 
+|Cleanup script for JBDS builds
 |Used in https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/devstudio-cleanup/[devstudio cleanup]
 
 |_link:util/purgeRemoteFiles.sh[purgeRemoteFiles.sh]_
@@ -118,6 +126,27 @@ toc::[]
 |_Deprecated_
 
 |===
+
+== JIRA Creation
+
+[cols="1a,4,4"]
+|===
+|Name | Description | Usage
+
+|link:util/createnewandnoteworthy.py[createnewandnoteworthy.py]
+|Script to generate JIRAs for New and Noteworthy.
+|Run script to produce set of new JIRAs for all components which need to document New and Noteworthy features.
+
+|link:util/createTaskJIRAs.py[createTaskJIRAs.py]
+|Script to generate JIRAs for some task, eg., branching, fixing root poms, upversioning in manifests/feature.xml and poms.
+|See link:util/createTaskJIRAs.py.examples_44x.txt[examples].
+
+|link:util/createTestFailureJIRA.py[createTestFailureJIRA.py]
+|Script to generate a single JIRAs for some build's failing tests, scraping Jenkins for test failure details and placing that information into the generated JIRA.
+|See link:util/createTestFailureJIRA.py.examples.txt[examples].
+
+|===
+
 
 == Metadata Generation & Project Initiation
 
