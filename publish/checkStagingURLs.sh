@@ -13,12 +13,30 @@ qual=staging # or development or stable
 static=""
 quiet=0
 
+logn ()
+{
+  if [[ $quiet == 0 ]]; then echo -n -e "$1"; fi
+}
+
+log ()
+{
+  if [[ $quiet == 0 ]]; then echo -e "$1"; fi
+}
+logerr ()
+{
+  if [[ $quiet == 0 ]]; then 
+    echo -e "$2"
+  else
+    echo -e "$1$2"
+  fi
+}
+
 usage ()
 {
-  echo "Usage  : $0 -vrjbt [versionWithRespin_jbt] -vrds [versionWithRespin_ds] -dsrv [devstudioReleaseVersion] -ern [eclipseReleaseName]"
-  echo "Example: $0 -vrjbt 4.4.1.Final -ern  neon -qual development"
-  echo "Example: $0 -vrds    10.1.0.GA -dsrv 10.0 -qual stable"
-  echo "Example: $0 -vrjbt 4.4.1.Final -vrds 10.1.0.GA -dsrv 10.0 -ern neon -qual development"
+  log "Usage  : $0 -vrjbt [versionWithRespin_jbt] -vrds [versionWithRespin_ds] -dsrv [devstudioReleaseVersion] -ern [eclipseReleaseName]"
+  log "Example: $0 -vrjbt 4.4.1.Final -ern  neon -qual development"
+  log "Example: $0 -vrds    10.1.0.GA -dsrv 10.0 -qual stable"
+  log "Example: $0 -vrjbt 4.4.1.Final -vrds 10.1.0.GA -dsrv 10.0 -ern neon -qual development"
   log ""
   exit 1
 }
@@ -44,24 +62,6 @@ red="\033[1;31m"
 OK=0
 notOK=0
 versionWithRespin_ds_latest=${versionWithRespin_ds%.*}.latest
-
-logn ()
-{
-  if [[ $quiet == 0 ]]; then echo -n -e "$1"; fi
-}
-
-log ()
-{
-  if [[ $quiet == 0 ]]; then echo -e "$1"; fi
-}
-logerr ()
-{
-  if [[ $quiet == 0 ]]; then 
-    echo -e "$2"
-  else
-    echo -e "$1$2"
-  fi
-}
 
 # when not staging, check for static/ URLs and don't check for .latest symlinks but actual files
 if [[ ${qual} != "staging" ]]; then 
