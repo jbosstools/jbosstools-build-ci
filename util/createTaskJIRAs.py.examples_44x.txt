@@ -97,3 +97,9 @@ PASSWORD
 
 ############################################################################################################
 
+As of jbosstools 4.4.1.Final / 4.4.2.AM1, you can use these jobs to perform the above steps, including sending emails to project leads to speed up the branching and root pom repairs:
+
+https://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/jbosstools-releng/job/jbosstools-releng-parent-pom-update-and-branch-task-jiras/
+
+https://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/jbosstools-releng/job/jbosstools-releng-parent-pom-update-task-jiras/
+
