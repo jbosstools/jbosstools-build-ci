@@ -92,7 +92,10 @@ fi
 # return PARENT_PATH=neon/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master
 # given  TARGET_PATH=10.0/snapshots/builds/devstudio.product_master/2015-07-16_00-00-00-B69/all
 # return PARENT_PATH=10.0/snapshots/builds/devstudio.product_master
-PARENT_PATH=$(echo $TARGET_PATH | sed -e "s#/\?downloads_htdocs/tools/##" -e "s#/\?www_htdocs/devstudio/##" -e "s#/\?qa/services/http/binaries/RHDS/##" -e "s#/\?all/repo/\?##" -e "s#/\?all/\?##" -e "s#/\$##" -e "s#^/##" -e "s#\(.\+\)/[^/]\+#\1#")
+# given  TARGET_PATH=10.0/snapshots/builds/devstudio.rpm_10.0.neon/2016-09-21_05-50-B28/x86_64
+# return PARENT_PATH=10.0/snapshots/builds/devstudio.rpm_10.0.neon
+PARENT_PATH=$(echo $TARGET_PATH | sed -e "s#/\?downloads_htdocs/tools/##" -e "s#/\?www_htdocs/devstudio/##" -e "s#/\?qa/services/http/binaries/RHDS/##" \
+-e "s#/\?all/repo/\?##" -e "s#/\?all/\?##" -e "s#/\$##" -e "s#^/##" -e "s#\(.\+\)/[^/]\+#\1#" -e "s#/\?${BUILD_TIMESTAMP}-B${BUILD_NUMBER}/\?##")
 # if TARGET_PATH contains a BUILD_TIMESTAMP-B# folder (or, previously / deprecated, a BUILD_ID-B# folder),
 # create symlink: jbosstools-build-sites.aggregate.earlyaccess-site_master/latest -> jbosstools-build-sites.aggregate.earlyaccess-site_master/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}
 if [[ ${BUILD_NUMBER} ]]; then
