@@ -151,14 +151,18 @@ clean ()
 				all=$(cat $tmp | sort -r) # check these
 				rm -f $tmp
 				for dd in $all; do
-					keep=0;
-					# OLD WAY: convert buildID (folder) - ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} - to timestamp, then to # seconds since 2009-01-01 00:00:00 (1230786000)
-					# sec=$(date -d "$(echo $dd | perl -pe "s/(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})-(H|B)(\d+)(_PR\d+)?/\1-\2-\3\ \4:\5:\6/")" +%s); (( sec = sec - 1230786000 ))
-					# NEW WAY: JBIDE-22757 instead of the $dd path defining its create date / age, use the last modification time of the $dd folder (date -r)
-					sec=$(date -r $dd +%s); (( sec = sec - 1230786000 ))
-					now=$(date +%s); (( now = now - 1230786000 ))
-					(( day = now - sec )) 
-					(( day = day / 3600 / 24 ))
+					keep=0
+					age=0
+					if [[ -d $dd ]]; then
+						# NEW WAY: JBIDE-22757 instead of the $dd path defining its create date / age, use the last modification time of the $dd folder (date -r)
+						sec=$(date -u +%s -r $dd)
+					else
+						# OLD WAY: convert buildID (folder) - ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} - to timestamp, then to # seconds since 2009-01-01 00:00:00 (1230786000)
+						sec=$(date -u +%s -d "$(echo $dd | perl -pe "s/(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})-(H|B)(\d+)(_PR\d+)?/\1-\2-\3T\4:\5:\6Z/")")
+					fi
+					now=$(date -u +%s)
+					(( age = now - sec ))
+					(( day = age / 3600 / 24 ))
 					for n in $newest; do
 						if [[ $dd == $n ]] || [[ $day -le $threshholdwhendelete ]]; then
 							keep=1
