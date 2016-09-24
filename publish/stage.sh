@@ -109,28 +109,6 @@ fi
 
 if [[ ! ${WORKSPACE} ]]; then WORKSPACE=${tmpdir}; fi
 
-RSYNC="time rsync -arz --rsh=ssh --protocol=28"
-EXCLUDESTRING="--exclude=\"repo\"" # exclude mirroring the update site repo/ folder for all builds
-SSHFS=$(which sshfs 2>/dev/null)
-
-# mount an sshfs drive for the destination path
-mount_sshfs ()
-{
-  log "[DEBUG] Use SSHFS in ${SSHFS} instead of RSYNC to stage files"
-  if [[ ! -d ${HOME}/DEST-ssh/${SRC_DIR} ]]; then
-    fusermount -u ${HOME}/DEST-ssh
-    /bin/mkdir -p ${HOME}/DEST-ssh
-    sshfs ${DESTINATION} ${HOME}/DEST-ssh
-  fi
-  if [[ ! -d ${HOME}/DEST-ssh/${SRC_DIR} ]]; then
-    echo "[WARN] Could not mount ${DESTINATION}/${SRC_DIR} at ${HOME}/DEST-ssh/${SRC_DIR} - fall back to '${RSYNC}'"; SSHFS=""
-  fi
-}
-
-# if sshfs is installed and executable, mount an sshfs drive for $DESTINATION
-# but don't mount for DESTINATION=/qa/services/http/binaries/RHDS (local copy)
-if [[ ${SSHFS} ]] && [[ -x ${SSHFS} ]] && [[ ${DESTINATION##*@*} == "" ]]; then mount_sshfs; fi
-
 for site in ${sites}; do
   # evaluate site or stream variables embedded in JOB_NAME
   if [[ ${rawJOB_NAME/\$\{site\}} != ${rawJOB_NAME} ]] || [[ ${rawJOB_NAME/\$\{stream\}} != ${rawJOB_NAME} ]]; then JOB_NAME=$(eval echo ${rawJOB_NAME}); fi
@@ -155,6 +133,8 @@ for site in ${sites}; do
   grepstring="${JOB_NAME}|${site}|${ID}|ERROR|${versionWithRespin}|${SRC_DIR}|${DESTDIR}|${SRC_TYPE}|${DESTTYPE}|exclude"
   DEST_URLs=""
 
+  RSYNC="rsync -arz --rsh=ssh --protocol=28"
+  EXCLUDESTRING="--exclude=\"repo\"" # exclude mirroring the update site repo/ folder for all builds
   if [[ "${site/discovery}" == "${site}" ]]; then # don't exclude the repo folder when publishing a discovery site build
     EXCLUDESTRING=""
   fi
@@ -165,12 +145,7 @@ for site in ${sites}; do
     # use ${HOME}/temp-stage/ instead of /tmp because insufficient space
     tmpdir=`mkdir -p ${HOME}/temp-stage/ && mktemp -d -t -p ${HOME}/temp-stage/` && mkdir -p $tmpdir && pushd $tmpdir >/dev/null
       # echo "+ ${RSYNC} ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/" | egrep "${grepstring}"
-      if [[ ! -d ${HOME}/DEST-ssh/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/ ]]; then
-        echo "[WARN] Could not read ${HOME}/DEST-ssh/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID} - fall back to '${RSYNC}'"; SSHFS="";
-      fi
-      if [[ ! ${SSHFS} ]]; then
-        ${RSYNC} ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
-      fi
+      ${RSYNC} ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
       # copy build folder
       if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
         log "[DEBUG] [$site] + mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}" | egrep "${grepstring}"
@@ -182,34 +157,17 @@ for site in ${sites}; do
         echo "mkdir builds" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
         echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/ &>${consoleDest}
       fi
-      if [[ ${SSHFS} ]] && [[ -d ${HOME}/DEST-ssh/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/ ]]; then
-        log "[DEBUG] [$site] + ${RSYNC} ${HOME}/DEST-ssh/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* \\" | egrep "${grepstring}"
-        log "                  ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING}" | egrep "${grepstring}"
-        ${RSYNC} ${HOME}/DEST-ssh/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* \
-          ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING}
-      else
-        log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/* \\" | egrep "${grepstring}"
-        log "                  ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING}" | egrep "${grepstring}"
-        ${RSYNC} ${tmpdir}/* \
-          ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING}
-      fi
+      log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING}" | egrep "${grepstring}"
+      ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING}
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/"
       # symlink latest build
       ln -s ${ID} latest; ${RSYNC} ${tmpdir}/latest ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/ &>${consoleDest}
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/latest/"
       # copy update site zip
       suffix=-updatesite-${sitename}
-
-      if [[ ${SSHFS} ]]; then
-        y=${HOME}/DEST-ssh/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/all/repository.zip
-        if [[ ! -f $y ]]; then
-          y=$(find ${HOME}/DEST-ssh/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/all/ -name "${ZIPPREFIX}*${suffix}.zip" -a -not -name "*latest*")
-        fi
-      else
-        y=${tmpdir}/all/repository.zip
-        if [[ ! -f $y ]]; then
-          y=$(find ${tmpdir}/all/ -name "${ZIPPREFIX}*${suffix}.zip" -a -not -name "*latest*")
-        fi
+      y=${tmpdir}/all/repository.zip
+      if [[ ! -f $y ]]; then
+        y=$(find ${tmpdir}/all/ -name "${ZIPPREFIX}*${suffix}.zip" -a -not -name "*latest*")
       fi
       if [[ -f $y ]]; then
         echo "mkdir ${DESTDIR}" | sftp ${DESTINATION}/ &>${consoleDest}
@@ -223,7 +181,7 @@ for site in ${sites}; do
         echo "[WARN] [$site] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
       fi
       # if we have a zip but no repo folder, unpack the zip into update site folder
-      if [[ -f $y ]] && [[ ! -d ${tmpdir}/all/repo/ ]]; then mkdir -p ${tmpdir}/all/repo; unzip -q $y -d ${tmpdir}/all/repo/; fi
+      if [[ -f $y ]] && [[ ! -d ${tmpdir}/all/repo/ ]]; then unzip -q $y -d ${tmpdir}/all/repo/; fi
       # copy update site
       if [[ -d ${tmpdir}/all/repo/ ]]; then
         if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
@@ -236,18 +194,8 @@ for site in ${sites}; do
           echo "mkdir updates" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
           echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/ &>${consoleDest}
         fi
-
-        if [[ ${SSHFS} ]] && [[ -d ${HOME}/DEST-ssh/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/all/repo/ ]]; then
-          log "[DEBUG] [$site] + ${RSYNC} ${HOME}/DEST-ssh/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/all/repo/* \\" | egrep "${grepstring}"
-          log "                  ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
-          ${RSYNC} ${HOME}/DEST-ssh/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/all/repo/* \
-            ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/ &>${consoleDest}
-        else
-          log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/all/repo/* \\" | egrep "${grepstring}"
-          log "                  ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
-          ${RSYNC} ${tmpdir}/all/repo/* \
-            ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/ &>${consoleDest}
-        fi
+        log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
+        ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/ &>${consoleDest}
         DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/"
       else
         # don't warn for discovery sites since they don't have update sites
