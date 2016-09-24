@@ -4,7 +4,7 @@
 
 usage ()
 {
-	echo "Usage: $0 [job] [task] [jenkinsUser] [jenkinsPass] [jenkinsURL]"
+	echo "Usage: $0 [job] [task] [jenkinsUser] [jenkinsPass] [jenkinsURL] [querystring data foo=bar&baz=foo&...]"
 	echo "Example:    export userpass=\"KERBUSER:KERBPWD\" && $0 jbosstools-base_master buildWithParameters"
 	echo "Example:    $0 jbosstools-build.parent_master build nboldt PASSWORD jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job"
 	exit 1
@@ -18,7 +18,8 @@ job="$1"
 task="$2"
 if [[ $3 ]]; then jenkinsUser="$3"; fi
 if [[ $4 ]]; then jenkinsPass="$4"; fi
-if [[ $5 ]]; then jenkinsURL="$4"; fi
+if [[ $5 ]]; then jenkinsURL="$5"; fi
+if [[ $6 ]]; then data="--data \"$6\""; fi # to pass in --data to the buildWithParameters POST
 
 if [[ ! ${userpass} ]]; then 
 	userpass="${jenkinsUser}:${jenkinsPass}"
@@ -28,8 +29,8 @@ if [[ ${userpass} = ":" ]]; then usage; fi
 
 echo -n "["
 prevJob=$(curl -s http://${jenkinsURL}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
-echo "${prevJob}] POST: https://${jenkinsURL}/${job}/${task}"
-curl -k -X POST -u ${userpass} https://${jenkinsURL}/${job}/${task}
+echo "${prevJob}] POST: https://${jenkinsURL}/${job}/${task} $data"
+curl -k -X POST -u ${userpass} ${data} https://${jenkinsURL}/${job}/${task}
 sleep 10s
 
 browser=/usr/bin/google-chrome; if [[ ! -x ${browser} ]]; then browser=/usr/bin/firefox; fi
