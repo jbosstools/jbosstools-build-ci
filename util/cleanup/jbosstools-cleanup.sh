@@ -158,7 +158,7 @@ clean ()
 						sec=$(date -u +%s -r $dd)
 					else
 						# OLD WAY: convert buildID (folder) - ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} - to timestamp, then to # seconds since 2009-01-01 00:00:00 (1230786000)
-						sec=$(date -u +%s -d "$(echo $dd | perl -pe "s/(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})-(H|B)(\d+)(_PR\d+)?/\1-\2-\3T\4:\5:\6Z/")")
+						sec=$(date -u +%s -d "$(echo $dd | perl -pe "s/(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})-(H|B)(\d+)(_PR\d+)?/\1-\2-\3 \4:\5:\6Z/")")
 					fi
 					now=$(date -u +%s)
 					(( age = now - sec ))
