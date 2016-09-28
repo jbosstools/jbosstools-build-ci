@@ -1,4 +1,4 @@
-cd ~/truu/jbdevstudio-ci/bin
+cd ~/tru/jbosstools-build-ci/util
 python createTaskJIRAs.py --jbide 4.4.1.Alpha1 --jbds 10.1.0.Alpha1 \
 --task "Prepare for 4.4.1.Alpha1" --taskfull "Please perform the following tasks:
 
@@ -45,7 +45,7 @@ PASSWORD
 
 ############################################################################################################
 
-cd ~/truu/jbdevstudio-ci/bin
+cd ~/tru/jbosstools-build-ci/util
 python createTaskJIRAs.py --jbide 4.4.0.Final --jbds 10.0.0.GA \
 --task "Prepare for Final/GA" --taskfull "Please perform the following tasks:
 

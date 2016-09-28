@@ -34,7 +34,7 @@ python createTestFailureJIRA.py --affected 4.3.0.Beta2 --component visual-page-e
 JIRAPWD --testpwd KERBPWD
 
 cd ~/tru/jbosstools-build-ci/util
-python createTestFailureJIRA.py --affected 4.3.0.CR1 --component common/jst/core \
+python createTestFailureJIRA.py --affected 4.3.0.CR1 --component common \
 --jira "https://issues.jboss.org" --jirauser nickboldt --testuser nboldt \
 --test https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-base_master/786/testReport/ \
 --jirapwd \
@@ -62,7 +62,7 @@ python createTestFailureJIRA.py --affected 4.3.0.CR1 --component hibernate \
 JIRAPWD --testpwd KERBPWD
 
 cd ~/tru/jbosstools-build-ci/util
-python createTestFailureJIRA.py --affected 4.3.1.Beta1 --component "common/jst/core" \
+python createTestFailureJIRA.py --affected 4.3.1.Beta1 --component "jst" \
 --jira "https://issues.jboss.org" --jirauser nickboldt --testuser nboldt \
 --test https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-jst_4.3.mars/68/testReport/ \
 --jirapwd \

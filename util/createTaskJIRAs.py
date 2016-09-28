@@ -23,7 +23,7 @@ then create \nsub-tasks of the JBIDE JIRA for each of the JBIDE components with 
 parser = OptionParser(usage)
 parser.add_option("-u", "--user", dest="username", help="JIRA Username")
 parser.add_option("-p", "--pwd", dest="password", help="JIRA Password")
-parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues-stg.jboss.org or https://issues.jboss.org")
+parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.org")
 parser.add_option("-i", "--jbide", dest="jbidefixversion", help="JBIDE Fix Version, eg., 4.1.0.qualifier")
 parser.add_option("-d", "--jbds", dest="jbdsfixversion", help="JBDS Fix Version, eg., 7.0.0.qualifier")
 parser.add_option("-t", "--task", dest="taskdescription", help="Task Summary, eg., \"Code Freeze + Branch\"")
@@ -81,41 +81,20 @@ rootJBIDE_dict = {
 rootJBIDE = jira.create_issue(fields=rootJBIDE_dict)
 print("JBoss Tools       : " + jiraserver + '/browse/' + rootJBIDE.key)
 
-## map from descriptive name to list of JBIDE and/or JBDS components.
-JBT_components = {
-
-# active projects
-    "Aerogear          ": { "aerogear-hybrid", "cordovasim" },
-    "Base              ": { "common/jst/core", "usage" },
-    "Forge             ": { "forge" },
-    "Server            ": { "server" },
-    "Webservices       ": { "webservices" },
-    "Hibernate         ": { "hibernate"}, 
-    "VPE               ": { "visual-page-editor-core" },
-    "BrowserSim        ": { "browsersim" },
-    "JST               ": { "common/jst/core" },
-    "JavaEE            ": { "jsf", "seam2", "cdi", "cdi-extensions" },
-    "Central           ": { "central", "maven", "project-examples" },
-    "Arquillian        ": { "arquillian" }, # Note: s/testing-tools/arquillian/
-    "LiveReload        ": { "livereload" },
-    "OpenShift         ": { "openshift", "cdk" },
-    "Freemarker        ": { "freemarker" },
-
-    "Integration Tests ": { "qa" },
-    "Central Discovery ": { "central-update" },
-    "build, build-sites, build-ci, maven-plugins, dl.jb.org, devdoc, versionwatch": { "build" }
-    }
-
 def nametuple(x):
     return { "name" : x }
 
 def quote(x):
     return '"' + x + '"'
 
-for name, comps in JBT_components.iteritems():
+# see JIRA_components listing in components.py
+# from jira.client import JIRA
+from components import JIRA_components
+
+for name, comps in JIRA_components.iteritems():
     
     cms = map(nametuple, comps)    
-    #print name + "->" + str(cms)
+    print name + "->" + str(cms)
 
     comptasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery + " and component in (" + ",".join(map(quote,comps)) + ")")
     

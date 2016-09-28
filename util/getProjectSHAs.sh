@@ -20,8 +20,8 @@ usage ()
     echo ""
     # for a list of projects, find any unbuilt commits
     echo "Example 2: $0 -branch jbosstools-4.4.x -jbtstream 4.4.neon -jbdsstream 10.0.neon -ju nboldt -jp j_pwd \\"
-    echo "            -gu nickboldt@gmail.com -gp g_pwd -jbds product -jbt aerogear,arquillian,base,birt,browsersim,central,discovery,\\"
-    echo "forge,freemarker,hibernate,javaee,jst,livereload,openshift,portlet,server,vpe,webservices"
+    echo "            -gu nickboldt@gmail.com -gp g_pwd -jbds product -jbt aerogear,arquillian,base,browsersim,central,discovery,\\"
+    echo "forge,freemarker,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices"
     exit 1;
 }
 
@@ -31,7 +31,7 @@ fi
 
 #defaults
 toggleJenkinsJobs=~/truu/jbdevstudio-ci/bin/toggleJenkinsJobs.py
-#JBTPROJECT="aerogear,arquillian,base,birt,browsersim,central,discovery,forge,freemarker,hibernate,javaee,jst,livereload,openshift,portlet,server,vpe,webservices"
+#JBTPROJECT="aerogear,arquillian,base,browsersim,central,discovery,forge,freemarker,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices"
 JBTPROJECT=""
 #JBDSPROJECT="product"
 JBDSPROJECT=""
@@ -125,28 +125,27 @@ if [[ ${jbtm} ]]; then
   if [[ $components ]]; then
     projects=""
     # define mapping between JIRA components and jenkins project names
-    # if not listed then mapping between component and project are 1:1,eg., for forge, server, livereload, openshift, webservices, hibernate, birt, freemarker, browsersim, discovery
+    # if not listed then mapping between component and project are 1:1,eg., for forge, server, livereload, openshift, webservices, hibernate, freemarker, browsersim
     declare -A projectMap=( 
-      ["qa"]="versionwatch"
       ["aerogear-hybrid"]="aerogear"
-      ["cordovasim"]="aerogear"
       ["arquillian"]="arquillian" 
-      ["usage"]="base"
-      ["updatesite"]="build-sites"
-      ["central"]="central"
-      ["maven"]="central"
-      ["project-examples"]="central"
-      ["common/jst/core"]="jst"
-      ["jsp/jsf/xml/html-source-editing"]="jst"
-      ["jsf"]="javaee"
-      ["seam2"]="javaee"
+      ["build"]="build.parent"
       ["cdi"]="javaee"
       ["cdi-extensions"]="javaee"
-      ["portal-gatein"]="portlet"
-      ["visual-page-editor-core"]="vpe"
-      ["build"]="build.parent"
-      ["easymport"]="playground"
+      ["central"]="central"
+      ["central-update"]="discovery"
+      ["common"]="base"
+      ["cordovasim"]="aerogear"
+      ["foundation"]="base"
       ["integration-tests"]="integration-tests.aggregate"
+      ["jsf"]="javaee"
+      ["maven"]="central"
+      ["project-examples"]="central"
+      ["qa"]="versionwatch"
+      ["seam2"]="javaee"
+      ["updatesite"]="build-sites"
+      ["usage"]="base"
+      ["visual-page-editor-core"]="vpe"
     )
 
     # load list of projects from component::project mapping, adding only if unique

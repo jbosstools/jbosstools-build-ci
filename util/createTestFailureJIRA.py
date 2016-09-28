@@ -23,7 +23,7 @@ parser = OptionParser(usage)
 parser.add_option("-a", "--affected", dest="jbideversion", help="JBIDE Affected Version, eg., 4.1.1.Alpha1")
 parser.add_option("-c", "--component", dest="component", help="JBIDE component, eg., server, seam2, openshift")
 
-parser.add_option("-j", "--jira", dest="jiraserver", help="JIRA server, eg., https://issues-stg.jboss.org or https://issues.jboss.org")
+parser.add_option("-j", "--jira", dest="jiraserver", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.org")
 parser.add_option("-k", "--jirauser", dest="usernameJIRA", help="JIRA Username")
 parser.add_option("-l", "--jirapwd", dest="passwordJIRA", help="JIRA Password")
 
@@ -73,8 +73,9 @@ def getText(nodelist):
 print "\n" + testfailuresearchlabel + ":\n\n * " + testfailuresearch + "\n"
 
 # query JIRA for existing issues, or else find "No issues were found to match your search"
-#  https://issues-stg.jboss.org/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?jqlQuery=labels+%3D+testfailure&tempMax=1000
+#  https://issues.stage.jboss.org/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?jqlQuery=labels+%3D+testfailure&tempMax=1000
 q = requests.get(jiraserver + '/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?tempMax=1000&jqlQuery=' + urllib.quote_plus(testfailuresearchquery), auth=HTTPBasicAuth(options.usernameJIRA, options.passwordJIRA), verify=False)
+#print q.text
 xml = minidom.parseString(q.text)
 issuelist = xml.getElementsByTagName('item')
 numExistingIssues = len(issuelist)
@@ -127,32 +128,6 @@ if accept.capitalize() not in ["N"] :
     if accept.capitalize() in ["N"] :
         rootJBIDE.delete()
 
-# for reference, here are some valid component values to pass in to the script:
-JBT_components = {
-    "Aerogear          ": { "aerogear-hybrid", "cordovasim" },
-    "Base              ": { "usage" },
-    "Forge             ": { "forge" },
-    "Server            ": { "server" },
-    "LiveReload        ": { "livereload" },
-
-    "OpenShift         ": { "openshift" },
-    "Webservices       ": { "webservices" },
-#    "GWT             " : { "gwt"},
-    "Hibernate         ": { "hibernate"}, 
-    "Birt              ": { "birt" } ,
-
-    "Freemarker        ": { "freemarker" },
-#    "XULRunner         ": { "xulrunner" },
-    "VPE               ": { "visual-page-editor-core" },
-    "BrowserSim        ": { "browsersim" },
-    "JST               ": { "common/jst/core" },
-    "JavaEE            ": { "jsf", "seam2", "cdi", "cdi-extensions" },
-
-    "Portlet           ": { "portal-gatein"},
-    "Central           ": { "central", "maven", "project-examples" },
-    "Arquillian        ": { "testing-tools" },
-    "JBT Update Sites  ": { "updatesite" },
-    "Central Discovery ": { "discovery" }
-    }
+# see JIRA_components listing in components.py
 
 # Sample usage: see createTestFailureJIRA.py.examples.txt

@@ -20,13 +20,13 @@ pp = pprint.PrettyPrinter(indent=4)
 # 
 # ref: http://stackoverflow.com/questions/12609402/init-got-an-unexpected-keyword-argument-mime-in-python-django
 
-usage = "Usage: %prog -u <user> -p <password> -s <JIRA server> --jbide <jbideversion> --jbds <jbdsversion> \
+usage = "Usage: %prog -u <user> -p <password> -s <JIRA server> --jbide <jbideversion> --jbds <jbdsversion> -b <branch> \
 -t <short task summary> -f <full detailed task description>\n\nThis script will create 1 JBDS and 1 JBIDE JIRA with the specified task summary + description, \
 then create \nsub-tasks of the JBIDE JIRA for each of the JBIDE components with matching Github jbosstools-* repos"
 parser = OptionParser(usage)
 parser.add_option("-u", "--user", dest="username", help="JIRA Username")
 parser.add_option("-p", "--pwd", dest="password", help="JIRA Password")
-parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues-stg.jboss.org or https://issues.jboss.org")
+parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.org")
 parser.add_option("-b", "--branch", dest="frombranch", help="The branch containing commits that should be in master (ie, our maintenance branch, jbosstools-4.3.x")
 parser.add_option("-i", "--jbide", dest="jbidefixversion", help="JBIDE Fix Version, eg., 4.1.0.qualifier")
 parser.add_option("-d", "--jbds", dest="jbdsfixversion", help="JBDS Fix Version, eg., 7.0.0.qualifier")
@@ -84,30 +84,6 @@ rootJBIDE_dict = {
 rootJBIDE = jira.create_issue(fields=rootJBIDE_dict)
 print("JBoss Tools       : " + jiraserver + '/browse/' + rootJBIDE.key)
 
-## map from descriptive name to list of JBIDE and/or JBDS components.
-JBT_components = {
-
-# active projects
-    "Aerogear          ": { "aerogear-hybrid", "cordovasim" },
-    "Base              ": { "common/jst/core", "usage" },
-    "Forge             ": { "forge" },
-    "Server            ": { "server" },
-    "Webservices       ": { "webservices" },
-    "Hibernate         ": { "hibernate"}, 
-    "VPE               ": { "visual-page-editor-core" },
-    "BrowserSim        ": { "browsersim" },
-    "JST               ": { "common/jst/core" },
-    "JavaEE            ": { "jsf", "seam2", "cdi", "cdi-extensions" },
-    "Central           ": { "central", "maven", "project-examples" },
-    "Arquillian        ": { "arquillian" }, # Note: s/testing-tools/arquillian/
-    "LiveReload        ": { "livereload" },
-    "OpenShift         ": { "openshift", "cdk" },
-    "Freemarker        ": { "freemarker" },
-
-    "Integration Tests ": { "qa" },
-    "Central Discovery ": { "central-update" },
-    "build, build-sites, build-ci, maven-plugins, dl.jb.org, devdoc, versionwatch": { "build" }
-    }
 
 # Currently, the repo url (for printing links to the missing commits)
 # is calculated as  "https://github.com/jbosstools/jbosstools-$key.git"
@@ -131,37 +107,42 @@ except:
 
 os.chdir(tmpsubdir)
 
-for name, comps in JBT_components.iteritems():
+# see JIRA_components listing in components.py
+from components import JIRA_components
+
+for name, comps in JIRA_components.iteritems():
     
     cms = map(nametuple, comps)    
     #print name + "->" + str(cms)
     workingdir = os.getcwd()
-    subfoldername="jbosstools-" + name.lower()
-    githubrepo = "https://github.com/jbosstools/" + subfoldername.strip() + ".git"
-    print githubrepo;
-    os.system("git clone " + githubrepo)
-    os.chdir(workingdir + "/" + subfoldername.strip())
-    #  TODO externalize the branch here
-    p = Popen(['bash', '../../findlostpatchesonerepository.sh', frombranch], stdout=PIPE, stderr=PIPE, stdin=PIPE)
-    output = p.stdout.read()
-    print output
-    comptasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery + " and component in (" + ",".join(map(quote,comps)) + ")")
-    
-    rootJBIDE_dict = {
-        'project' : { 'key': 'JBIDE' },
-        'summary' :     'For JBIDE ' + jbide_fixversion + ': ' + taskdescription + ' [' + name.strip() + ']',
-        'description' : 'For JBIDE ' + jbide_fixversion + ' [' + name.strip() + ']: ' + taskdescriptionfull + "\n\n" + output + 
-            '\n\n[Search for all task JIRA|' + tasksearch + '], or [Search for ' + name.strip() + ' task JIRA|' + comptasksearch + ']',
-        'issuetype' : { 'name' : 'Sub-task' },
-        'parent' : { 'id' : rootJBIDE.key},
-        'priority' : { 'name': 'Blocker'},
-        'components' : cms,
-        'labels' : [ "task" ]
-    }
-    os.chdir(workingdir)
+    # skip if name contains spaces in components.py
+    if " " not in name.rstrip():
+        subfoldername="jbosstools-" + name.lower()
+        githubrepo = "https://github.com/jbosstools/" + subfoldername.strip() + ".git"
+        print githubrepo;
+        # use shallow clone for faster checkout
+        os.system("git clone --depth 1 " + githubrepo)
+        os.chdir(workingdir + "/" + subfoldername.strip())
+        p = Popen(['bash', '../../findlostpatchesonerepository.sh', frombranch], stdout=PIPE, stderr=PIPE, stdin=PIPE)
+        output = p.stdout.read()
+        print output
+        comptasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery + " and component in (" + ",".join(map(quote,comps)) + ")")
+        
+        rootJBIDE_dict = {
+            'project' : { 'key': 'JBIDE' },
+            'summary' :     'For JBIDE ' + jbide_fixversion + ': ' + taskdescription + ' [' + name.strip() + ']',
+            'description' : 'For JBIDE ' + jbide_fixversion + ' [' + name.strip() + ']: ' + taskdescriptionfull + "\n\n" + output + 
+                '\n\n[Search for all task JIRA|' + tasksearch + '], or [Search for ' + name.strip() + ' task JIRA|' + comptasksearch + ']',
+            'issuetype' : { 'name' : 'Sub-task' },
+            'parent' : { 'id' : rootJBIDE.key},
+            'priority' : { 'name': 'Blocker'},
+            'components' : cms,
+            'labels' : [ "task" ]
+        }
+        os.chdir(workingdir)
 
-    child = jira.create_issue(fields=rootJBIDE_dict)
-    print(name +  ": " + jiraserver + '/browse/' + child.key)
+        child = jira.create_issue(fields=rootJBIDE_dict)
+        print(name +  ": " + jiraserver + '/browse/' + child.key)
 
 accept = raw_input("Accept created JIRAs? [Y/n] ")
 

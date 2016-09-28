@@ -13,13 +13,15 @@ parser.add_option("-u", "--user", dest="username", help="jira username")
 parser.add_option("-p", "--pwd", dest="password", help="jira password")
 parser.add_option("-i", "--jbide", dest="jbidefixversion", help="JBIDE fix version")
 parser.add_option("-d", "--jbds", dest="jbdsfixversion", help="JBDS fix version")
+parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.org")
 
 (options, args) = parser.parse_args()
 
 if not options.username or not options.password or not options.jbidefixversion or not options.jbdsfixversion:
     parser.error("Need to specify all")
     
-jira = JIRA(options={'server':'https://issues.jboss.org'}, basic_auth=(options.username, options.password))
+jiraserver = options.jiraserver
+jira = JIRA(options={'server':jiraserver}, basic_auth=(options.username, options.password))
 
 jbide_fixversion = options.jbidefixversion
 jbds_fixversion = options.jbdsfixversion
@@ -27,7 +29,7 @@ jbds_fixversion = options.jbdsfixversion
 ## The jql query across for all N&N
 nnsearchquery = '((project in (JBDS) and fixVersion = "' + jbds_fixversion + '") or (project in (JBIDE) and fixVersion = "' + jbide_fixversion + '")) AND resolution = Done AND labels = new_and_noteworthy'
 
-nnsearch = 'https://issues.jboss.org/issues/?jql=' + urllib.quote_plus(nnsearchquery)
+nnsearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(nnsearchquery)
 
 rootnn_description_milestone = 'This [query|' + nnsearch + '] contains the search for all N&N'
 rootnn_description_final = 'This [query|' + nnsearch + '] contains the search for all N&N'
@@ -50,38 +52,7 @@ rootnn_dict = {
     #pp.pprint(rootnn_dict)
 rootnn = jira.create_issue(fields=rootnn_dict)
 
-print("created " + rootnn.key)
-
-## map from descriptive name to list of JBIDE and/or JBDS components.
-## it is assumed if the component name is the same, they are the same across the two jiras
-components = {
-    "BrowserSim" : { "browsersim"},
-    "Live Reload" : { "livereload" },
-    "Usage Analytics" : { "usage"},
-    "Automatic Error reporting" : {"aeri"},
-   ## Outdated?    "GWT" : { "gwt"},
-    "CDI" : { "cdi"},
-    "Batch": { "batch"},
-    "Freemarker": {"freemarker"},
-    "hibernate" : { "hibernate"}, 
-   ## not needed anymore "JBoss ESB" : { "esb"},
-    "server" : {  "server", "archives", "jmx" },
-    "jst/jsf": { "jsp/jsf/xml/html-source-editing", "jsf"},
-    "javascript": { "javascript", "nodejs"},
-    "Visual Editor": { "visual-page-editor-core", "visual-page-editor-templates"},
-    "Webservices and Rest": { "webservices"},
-    "Project Examples": { "project-examples"},
-    "Maven": { "maven"},
-    "Forge": { "forge"},
-    "OpenShift": { "openshift"},
-    "Docker": { "docker"},
-    "JBoss Central": { "central"},
-    "Core/General": { "common/jst/core"},
-    "Easy import": { "easymport"},
-    "Arquillian": { "arquillian" },
-    "Aerogear": { "aerogear-hybrid" }
-    }
-
+print("JBoss Tools       : " + jiraserver + '/browse/' + rootnn.key)
 
 def nametuple(x):
     return { "name" : x }
@@ -89,12 +60,15 @@ def nametuple(x):
 def quote(x):
     return '"' + x + '"'
 
-for name, comps in components.iteritems():
+# see JIRA_components listing in components.py
+from components import NN_components
+
+for name, comps in NN_components.iteritems():
     
     cms = map(nametuple, comps)    
     #print name + "->" + str(cms)
 
-    compnnsearch = 'https://issues.jboss.org/issues/?jql=' + urllib.quote_plus(nnsearchquery + " and component in (" + ",".join(map(quote,comps)) + ")")
+    compnnsearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(nnsearchquery + " and component in (" + ",".join(map(quote,comps)) + ")")
     
     rootnn_description_milestone = 'This [query|' + compnnsearch + '] contains the search for the specific component(s), to see all, use this [query|' + nnsearch + '].\n\n If ' + name + ' is not listed here check if there are issues that should be added and add them.\n\n Document the ones relevant for ' + name + ' by adding to [whatsnew|https://github.com/jbosstools/jbosstools-website/tree/master/documentation/whatsnew] and submit a pull request.\n\n If no news for this component please reject and close this issue.'
 
@@ -117,9 +91,8 @@ for name, comps in components.iteritems():
 
     #pp.pprint(cms)
     child = jira.create_issue(fields=rootnn_dict)
-    print("created child for " + name +  "->" + child.key)
+    print(name +  ": " + jiraserver + '/browse/' + child.key)
 
-raw_input("Press Enter to delete...or ctrl+c to be ok with the created content")
-
-rootnn.delete(deleteSubtasks=True)
-
+accept = raw_input("Accept created JIRAs? [Y/n] ")
+if accept.capitalize() in ["N"]:
+    rootnn.delete(deleteSubtasks=True)
