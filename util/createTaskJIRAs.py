@@ -28,11 +28,10 @@ parser.add_option("-i", "--jbide", dest="jbidefixversion", help="JBIDE Fix Versi
 parser.add_option("-d", "--jbds", dest="jbdsfixversion", help="JBDS Fix Version, eg., 7.0.0.qualifier")
 parser.add_option("-t", "--task", dest="taskdescription", help="Task Summary, eg., \"Code Freeze + Branch\"")
 parser.add_option("-f", "--taskfull", dest="taskdescriptionfull", help="Task Description, eg., \"Please perform the following tasks...\"")
-parser.add_option("-A", "--auto-accept", dest="autoaccept", action="store_true", help="if set, automatically accept created issues")
-parser.add_option("-c", "--component", dest="component", help="JBIDE component, eg., server, seam2, openshift, or ALL")
-
 # see createTaskJIRAs.py.examples.txt for examples of taskdescriptionfull
-
+parser.add_option("-c", "--component", dest="component", help="JBIDE component, eg., server, seam2, openshift, or ALL")
+parser.add_option("-A", "--auto-accept", dest="autoaccept", action="store_true", help="if set, automatically accept created issues")
+parser.add_option("-J", "--jiraonly", dest="jiraonly", action="store_true", help="if set, only return the JIRA ID; implies --auto-accept")
 (options, args) = parser.parse_args()
 
 if not options.username or not options.password or not options.jiraserver or not options.jbidefixversion or not options.jbdsfixversion or not options.taskdescription:
@@ -113,7 +112,6 @@ for name, comps in componentList.iteritems():
         'description' : 'For JBIDE ' + jbide_fixversion + ' [' + name.strip() + ']: ' + taskdescriptionfull + 
             '\n\n[Search for all task JIRA|' + tasksearch + '], or [Search for ' + name.strip() + ' task JIRA|' + comptasksearch + ']',
         'issuetype' : { 'name' : issuetype },
-        #'parent' : { 'id' : rootJBIDE.key},
         'priority' : { 'name': 'Blocker'},
         'components' : cms,
         'labels' : [ "task" ]
@@ -126,9 +124,12 @@ for name, comps in componentList.iteritems():
         rootJBIDE_dict['fixVersions'] =[{ "name" : jbide_fixversion }]
 
     child = jira.create_issue(fields=rootJBIDE_dict)
-    print(name +  ": " + jiraserver + '/browse/' + child.key)
+    if (options.jiraonly):
+        print(child.key)
+    else:
+        print(name +  ": " + jiraserver + '/browse/' + child.key)
 
-if (not options.autoaccept):
+if (not options.autoaccept and not options.jiraonly):
     accept = raw_input("Accept created JIRAs? [Y/n] ")
     if accept.capitalize() in ["N"]:
         try:
