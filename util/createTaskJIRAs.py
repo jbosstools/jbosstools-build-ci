@@ -17,9 +17,24 @@ pp = pprint.PrettyPrinter(indent=4)
 # 
 # ref: http://stackoverflow.com/questions/12609402/init-got-an-unexpected-keyword-argument-mime-in-python-django
 
-usage = "Usage: %prog -u <user> -p <password> -s <JIRA server> --jbide <jbideversion> --jbds <jbdsversion> \
--t <short task summary> -f <full detailed task description>\n\nThis script will create 1 JBDS and 1 JBIDE JIRA with the specified task summary + description, \
-then create \nsub-tasks of the JBIDE JIRA for each of the JBIDE components with matching Github jbosstools-* repos"
+usage = "\n\
+\n\
+Usage 1: %prog -u <user> -p <password> -s <JIRA server> --i <jbideversion> --d <jbdsversion>\n\
+-t <short task summary> -f <full detailed task description>\n\
+\n\
+This script will create 1 JBDS and 1 JBIDE JIRA with the specified task summary + description, then create \n\
+sub-tasks of the JBIDE JIRA for each of the JBIDE components with matching Github jbosstools-* repos\n\
+\n\
+Usage 2: as above but use -c <jbide component> or -C <JBDS Component> to specify which single component's\n\
+JIRA to create. If both are set only JBDS JIRA will be created\n\
+\n\
+Optional flags:\n\
+\n\
+-c, --componentjbide - if set, create only 1 JBIDE JIRA for specified component, eg., openshift\n\
+-C, --componentjbds  - if set, create only 1 JBDS  JIRA for specified component, eg., installer\n\
+-A, --auto-accept    - if set, automatically accept created issues\n\
+-J, --jiraonly       - if set, only return JIRA ID instead of component + JIRA URL; implies --auto-accept"
+
 parser = OptionParser(usage)
 parser.add_option("-u", "--user", dest="username", help="JIRA Username")
 parser.add_option("-p", "--pwd", dest="password", help="JIRA Password")
@@ -29,14 +44,17 @@ parser.add_option("-d", "--jbds", dest="jbdsfixversion", help="JBDS Fix Version,
 parser.add_option("-t", "--task", dest="taskdescription", help="Task Summary, eg., \"Code Freeze + Branch\"")
 parser.add_option("-f", "--taskfull", dest="taskdescriptionfull", help="Task Description, eg., \"Please perform the following tasks...\"")
 # see createTaskJIRAs.py.examples.txt for examples of taskdescriptionfull
-parser.add_option("-c", "--component", dest="component", help="JBIDE component, eg., server, seam2, openshift, or ALL")
+parser.add_option("-c", "--componentjbide", dest="componentjbide", help="JBIDE component, eg., server, seam2, openshift; if omitted, create issues for all values in JIRA_components, plus one parent task and one for JBDS")
+parser.add_option("-C", "--componentjbds", dest="componentjbds", help="JBDS component, eg., installer")
 parser.add_option("-A", "--auto-accept", dest="autoaccept", action="store_true", help="if set, automatically accept created issues")
 parser.add_option("-J", "--jiraonly", dest="jiraonly", action="store_true", help="if set, only return the JIRA ID; implies --auto-accept")
 (options, args) = parser.parse_args()
 
 if not options.username or not options.password or not options.jiraserver or not options.jbidefixversion or not options.jbdsfixversion or not options.taskdescription:
     parser.error("Must to specify ALL commandline flags")
-    
+
+# TODO fail if -J set but no -C or -c set
+
 jiraserver = options.jiraserver
 jira = JIRA(options={'server':jiraserver}, basic_auth=(options.username, options.password))
 
@@ -47,15 +65,22 @@ taskdescriptionfull = options.taskdescriptionfull
 if not options.taskdescriptionfull:
     taskdescriptionfull = options.taskdescription
 
-if not options.component or options.component == "ALL":
+projectname = 'JBIDE'
+fixversion = jbide_fixversion
+if not options.componentjbide and not options.componentjbds:
     # see JIRA_components listing in components.py
     from components import JIRA_components
     componentList = JIRA_components
     issuetype = 'Sub-task'
 else:
     # just one task at a time
-    componentList = { options.component: {options.component} }
     issuetype = 'Task'
+    if options.componentjbds:
+        projectname = 'JBDS'
+        fixversion = jbds_fixversion
+        componentList = { options.componentjbds: {options.componentjbds} }
+    else:
+        componentList = { options.componentjbide: {options.componentjbide} }
 
 ## The jql query across for all task issues
 tasksearchquery = '((project in (JBDS) and fixVersion = "' + jbds_fixversion + '") or (project in (JBIDE) and fixVersion = "' + jbide_fixversion + '")) AND labels = task'
@@ -68,7 +93,7 @@ def nametuple(x):
 def quote(x):
     return '"' + x + '"'
 
-if not options.component or options.component == "ALL":
+if not options.componentjbide and not options.componentjbds:
     rootJBDS_dict = {
         'project' : { 'key': 'JBDS' },
         'summary' :     'For JBDS ' + jbds_fixversion + ': ' + taskdescription,
@@ -80,10 +105,13 @@ if not options.component or options.component == "ALL":
         'labels' : [ "task" ],
         }
     rootJBDS = jira.create_issue(fields=rootJBDS_dict)
-    print("Task JIRA created for this milestone include:")
-    print("")
 
-    print("JBDS              : " + jiraserver + '/browse/' + rootJBDS.key)
+    if (options.jiraonly):
+        print(rootJBDS.key)
+    else:
+        print("Task JIRA created for this milestone include:")
+        print("")
+        print("JBDS              : " + jiraserver + '/browse/' + rootJBDS.key)
 
     rootJBIDE_dict = {
         'project' : { 'key': 'JBIDE' },
@@ -97,7 +125,10 @@ if not options.component or options.component == "ALL":
         'labels' : [ "task" ]
         }
     rootJBIDE = jira.create_issue(fields=rootJBIDE_dict)
-    print("JBoss Tools       : " + jiraserver + '/browse/' + rootJBIDE.key)
+    if (options.jiraonly):
+        print(rootJBIDE.key)
+    else:
+        print("JBoss Tools       : " + jiraserver + '/browse/' + rootJBIDE.key)
 
 for name, comps in componentList.iteritems():
     
@@ -106,10 +137,10 @@ for name, comps in componentList.iteritems():
 
     comptasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery + " and component in (" + ",".join(map(quote,comps)) + ")")
     
-    rootJBIDE_dict = {
-        'project' : { 'key': 'JBIDE' },
-        'summary' :     'For JBIDE ' + jbide_fixversion + ': ' + taskdescription + ' [' + name.strip() + ']',
-        'description' : 'For JBIDE ' + jbide_fixversion + ' [' + name.strip() + ']: ' + taskdescriptionfull + 
+    singleJIRA_dict = {
+        'project' : { 'key': projectname },
+        'summary' :     'For ' + projectname + ' ' + fixversion + ': ' + taskdescription + ' [' + name.strip() + ']',
+        'description' : 'For ' + projectname + ' ' + fixversion + ' [' + name.strip() + ']: ' + taskdescriptionfull + 
             '\n\n[Search for all task JIRA|' + tasksearch + '], or [Search for ' + name.strip() + ' task JIRA|' + comptasksearch + ']',
         'issuetype' : { 'name' : issuetype },
         'priority' : { 'name': 'Blocker'},
@@ -117,17 +148,17 @@ for name, comps in componentList.iteritems():
         'labels' : [ "task" ]
     }
     # if subtask, set parent
-    if issuetype == 'Sub-task' and rootJBIDE.key:
-        rootJBIDE_dict['parent'] = { 'id' : rootJBIDE.key }
+    if issuetype == 'Sub-task' and rootJBIDE and rootJBIDE.key:
+        singleJIRA_dict['parent'] = { 'id' : rootJBIDE.key }
     else:
         # if task, set fixversion
-        rootJBIDE_dict['fixVersions'] =[{ "name" : jbide_fixversion }]
+        singleJIRA_dict['fixVersions'] =[{ "name" : fixversion }]
 
-    child = jira.create_issue(fields=rootJBIDE_dict)
+    singleJIRA = jira.create_issue(fields=singleJIRA_dict)
     if (options.jiraonly):
-        print(child.key)
+        print(singleJIRA.key)
     else:
-        print(name +  ": " + jiraserver + '/browse/' + child.key)
+        print(name +  ": " + jiraserver + '/browse/' + singleJIRA.key)
 
 if (not options.autoaccept and not options.jiraonly):
     accept = raw_input("Accept created JIRAs? [Y/n] ")
@@ -135,7 +166,7 @@ if (not options.autoaccept and not options.jiraonly):
         try:
             rootJBIDE
         except NameError:
-            child.delete()
+            singleJIRA.delete()
         else:
             rootJBIDE.delete(deleteSubtasks=True)
         try:
