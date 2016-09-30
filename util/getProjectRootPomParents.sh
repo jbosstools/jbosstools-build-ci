@@ -38,10 +38,15 @@ doGitUpdate=1 # perform a git update to ensure we're current; default true
 doUpdateRootPom=0 # if the wrong parent pom is referenced from the root pom (and all-tests/pom.xml) update it locally and push to master
 doCreateBranch=0 # if the required branch doesn't exist, fetch from master instead, and create a new branch after pushing root pom update to master
 logfileprefix=${0##*/}; logfileprefix=${logfileprefix%.sh}
-version_parent=4.4.1.Final-SNAPSHOT
+version_jbt=4.4.2.AM1
+version_ds=10.2.0.AM1
+version_parent=4.4.2.AM1-SNAPSHOT
+#TODO support branching from somewhere other than master
 github_branch=jbosstools-4.4.1.x # or master
 github_branch_fallback=master # if required branch doesn't exist, fall back to fetching sources from this branch instead; default: master
-
+TARGET_PLATFORM_VERSION_MIN=4.60.1.Final
+TARGET_PLATFORM_VERSION_MAX=4.61.0.AM1-SNAPSHOT
+JIRA_HOST="https://issues.stage.jboss.org" # or https://issues.jboss.org
 WORKSPACE1=/tmp
 PROJECTS1="" # or "aerogear arquillian base browsersim central discovery forge freemarker hibernate javaee jst livereload openshift server vpe webservices"
 PROJECTS2="" # or "build-sites"
@@ -61,6 +66,13 @@ while [[ "$#" -gt 0 ]]; do
     '-p3') PROJECTS3="$2"; shift 1;; # jbdevstudio-* projects
     '-sj') stream_jbt="$2"; shift 1;;
     '-sd') stream_ds="$2"; shift 1;;
+    '-vjbt') version_jbt
+    '-vds') version_ds="$2"; shift 1;;
+    '-tpmin') TARGET_PLATFORM_VERSION_MIN="$2"; shift 1;;
+    '-tpmax') TARGET_PLATFORM_VERSION_MAX="$2"; shift 1;;
+    '-jirahost') JIRA_HOST="$2"; shift 1;;
+    '-jirauser') JIRA_USER="$2"; shift 1;;
+    '-jirapwd') JIRA_PWD="$2"; shift 1;;
     '-updateRootPom') doUpdateRootPom=1; shift 0;;
     '-createBranch') doCreateBranch=1; shift 0;;
     '-q') quiet="-q"; shift 0;;
@@ -109,6 +121,12 @@ checkProjects () {
   jobname_prefix="$5" # jbosstools- or devstudio.
   g_project_prefix="$6" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
   stream="$7" # ${stream_jbt} or ${stream_ds}
+  if [[ ${g_project_prefix/jbdevstudio/} != ${g_project_prefix} ]]; then
+    componentFlag="--componentjbds"
+  else
+    componentFlag="--componentjbide"
+  fi
+
   mkdir -p ${workspace}
   for j in ${projects}; do
     if [[ ${quiet} != "-q" ]]; then echo "[INFO] == ${g_project_prefix}${j} =="; fi
@@ -153,10 +171,73 @@ checkProjects () {
             fi
             if [[ ${isCorrectVersion} ]]; then
               echo $j :: $isCorrectVersion >> ${chgfile}
+              # create new JIRA using createTaskJIRAs.py, then pass that into the commit comment below
+              # if component does not exist, JIRA will be nullstring
+              JIRA=$(python -W ignore ./util/createTaskJIRAs.py --jbide ${version_jbt} --jbds ${version_ds} \
+--task "Prepare for ${version_jbt} / ${version_ds}" --taskfull "Please perform the following tasks:
+
+0. Make sure your component has no remaining unresolved JIRAs set for fixVersion = ${version_jbt} or ${version_ds}
+
+[Unresolved JIRAs with fixVersion = ${version_jbt}, ${version_ds}|https://issues.jboss.org/issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and\
+%20fixVersion%20in%20%28${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28\
+${version_ds}%29%29%29%20and%20resolution%20%3D%20Unresolved]
+
+1. Check out your existing *{color:orange}master{color}* branch:
+
+{code}
+git checkout master
+{code}
+
+2. Update your *{color:orange}master branch{color}* root pom to use the latest parent pom version, *{color:orange}${version_parent}{color}*:
+
+{code}
+  <parent>
+    <groupId>org.jboss.tools</groupId>
+    <artifactId>parent</artifactId>
+    <version>${version_parent}</version>
+  </parent>
+{code}
+
+Now, your root pom will use parent pom version:
+
+* *{color:orange}${version_parent}{color}* in your *{color:orange}master{color}* branch
+
+3. Branch from your existing master branch into a new *{color:blue}${github_branch}{color}* branch:
+
+{code}
+git checkout master
+git pull origin master
+git checkout -b ${github_branch}
+git push origin ${github_branch}
+{code}
+
+Now, your root pom will use parent pom version:
+
+* *{color:blue}${version_parent}{color}* in your *{color:blue}${github_branch}{color}* branch, too.
+
+4a. Ensure you've *built your code* using the latest *minimum* target platform version ${TARGET_PLATFORM_VERSION_MIN}
+
+{code}
+mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MIN}
+{code}
+
+4b. Ensure you've *run your tests* using the latest *maximum* target platform version ${TARGET_PLATFORM_VERSION_MAX}
+
+{code}
+mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MAX}
+{code}
+
+5. Close (do not resolve) this JIRA when done.
+
+6. If you have any outstanding [New + Noteworthy JIRAs|https://issues.jboss.org/issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28\
+${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28${version_ds}%29%29%29%20AND%20resolution%20is%20\
+null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next.
+" \
+-s ${JIRA_HOST} -u ${JIRA_USER} -p ${JIRA_PWD} -J ${componentFlag} ${j})
               echo "# Commit change to https://github.com/${g_project_prefix}${j}/blob/${github_branch_fallback}/${pomfile}
 pushd ${workspace}/${prefix}${j} >/dev/null && perl -0777 -i.orig -pe \\
 's#(<artifactId>parent</artifactId>)[\r\n\ \t]+(<version>)([\d.]+[^<>]+)(</version>)#\1\n\t\t<version>'${version_parent}'\4#igs' \\
-${pomfile} && git commit -m \"bump up to parent pom version = ${version_parent}\" . && git push origin ${github_branch_fallback} &&
+${pomfile} && git commit -m \"${JIRA} #comment bump up to parent pom version = ${version_parent} #close\" . && git push origin ${github_branch_fallback} &&
 popd >/dev/null; echo \">>> https://github.com/${g_project_prefix}${j}/commits/${github_branch_fallback}\"
 " >> ${tskfile}
             else
