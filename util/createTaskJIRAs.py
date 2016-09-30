@@ -53,8 +53,6 @@ parser.add_option("-J", "--jiraonly", dest="jiraonly", action="store_true", help
 if not options.username or not options.password or not options.jiraserver or not options.jbidefixversion or not options.jbdsfixversion or not options.taskdescription:
     parser.error("Must to specify ALL commandline flags")
 
-# TODO fail if -J set but no -C or -c set
-
 jiraserver = options.jiraserver
 jira = JIRA(options={'server':jiraserver}, basic_auth=(options.username, options.password))
 
