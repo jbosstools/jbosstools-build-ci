@@ -66,7 +66,7 @@ while [[ "$#" -gt 0 ]]; do
     '-p3') PROJECTS3="$2"; shift 1;; # jbdevstudio-* projects
     '-sj') stream_jbt="$2"; shift 1;;
     '-sd') stream_ds="$2"; shift 1;;
-    '-vjbt') version_jbt
+    '-vjbt') version_jbt="$2"; shift 1;;
     '-vds') version_ds="$2"; shift 1;;
     '-tpmin') TARGET_PLATFORM_VERSION_MIN="$2"; shift 1;;
     '-tpmax') TARGET_PLATFORM_VERSION_MAX="$2"; shift 1;;
@@ -173,7 +173,7 @@ checkProjects () {
               echo $j :: $isCorrectVersion >> ${chgfile}
               # create new JIRA using createTaskJIRAs.py, then pass that into the commit comment below
               # if component does not exist, JIRA will be nullstring
-              JIRA=$(python -W ignore ./util/createTaskJIRAs.py --jbide ${version_jbt} --jbds ${version_ds} \
+              JIRA=$(python -W ignore ../jbosstools-build-ci/util/createTaskJIRAs.py --jbide ${version_jbt} --jbds ${version_ds} \
 --task "Prepare for ${version_jbt} / ${version_ds}" --taskfull "Please perform the following tasks:
 
 0. Make sure your component has no remaining unresolved JIRAs set for fixVersion = ${version_jbt} or ${version_ds}

@@ -76,8 +76,10 @@ else:
     if options.componentjbds:
         projectname = 'JBDS'
         fixversion = jbds_fixversion
+        #TODO do lookup for mismatched jbosstools-foo => JIRA component bar: aerogear, base, javaee, vpe, integration-tests, discovery, build-sites
         componentList = { options.componentjbds: {options.componentjbds} }
     else:
+        #TODO do lookup for mismatched jbosstools-foo => JIRA component bar: product
         componentList = { options.componentjbide: {options.componentjbide} }
 
 ## The jql query across for all task issues
