@@ -184,7 +184,8 @@ checkProjects () {
             if [[ ${isCorrectVersion} ]]; then
               # create new JIRA using createTaskJIRAs.py, then pass that into the commit comment below
               # if component does not exist, JIRA will be nullstring
-              JIRA=$(python -W ignore ../jbosstools-build-ci/util/createTaskJIRAs.py --jbide ${version_jbt} --jbds ${version_ds} \
+              if [[ ${doCreateBranch} -gt 0 ]]; then # update root poms then branch
+                JIRA=$(python -W ignore ../jbosstools-build-ci/util/createTaskJIRAs.py --jbide ${version_jbt} --jbds ${version_ds} \
 --task "Prepare for ${version_jbt} / ${version_ds}" --taskfull "Please perform the following tasks:
 
 0. Make sure your component has no remaining unresolved JIRAs set for fixVersion = ${version_jbt} or ${version_ds}
@@ -245,6 +246,57 @@ ${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20i
 null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next.
 " \
 -s ${JIRA_HOST} -u ${JIRA_USER} -p ${JIRA_PWD} -J ${componentFlag} ${k}) # $JIRA
+              else # no branching - just update root poms
+                JIRA=$(python -W ignore ../jbosstools-build-ci/util/createTaskJIRAs.py --jbide ${version_jbt} --jbds ${version_ds} \
+--task "Prepare for ${version_jbt} / ${version_ds}" --taskfull "Please perform the following tasks:
+
+1. Check out your existing *{color:orange}${github_branch}{color}* branch:
+
+{code}
+git checkout ${github_branch}
+{code}
+
+2. Update your *{color:orange}${github_branch} branch{color}* root pom to use the latest parent pom version, *{color:orange}${version_parent}{color}*:
+
+{code}
+  <parent>
+    <groupId>org.jboss.tools</groupId>
+    <artifactId>parent</artifactId>
+    <version>${version_parent}</version>
+  </parent>
+{code}
+
+Now, your root pom will use parent pom version:
+
+* *{color:orange}${version_parent}{color}* in your *{color:orange}${github_branch}{color}* branch
+
+3. Ensure that component features/plugins have been [properly upversioned|http://wiki.eclipse.org/Version_Numbering#Overall_example], eg., from 1.0.0 to 1.0.1. 
+
+{code}
+mvn -Dtycho.mode=maven org.eclipse.tycho:tycho-versions-plugin:0.26.0:set-version -DnewVersion=1.0.1-SNAPSHOT
+{code}
+
+
+4a. Ensure you've *built your code* using the latest *minimum* target platform version ${TARGET_PLATFORM_VERSION_MIN}
+
+{code}
+mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MIN}
+{code}
+
+4b. Ensure you've *run your tests* using the latest *maximum* target platform version ${TARGET_PLATFORM_VERSION_MAX}
+
+{code}
+mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MAX}
+{code}
+
+5. Close (do not resolve) this JIRA when done.
+
+6. If you have any outstanding [New + Noteworthy JIRAs|https://issues.jboss.org/issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28\
+${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28${version_ds}%29%29%29%20AND%20resolution%20is%20\
+null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next.
+" \
+-s ${JIRA_HOST} -u ${JIRA_USER} -p ${JIRA_PWD} -J ${componentFlag} ${k}) # JIRA
+              fi
               if [[ ${j} == ${k} ]]; then
                 echo -n "$j :: " >> ${chgfile}
               else
@@ -282,7 +334,7 @@ popd >/dev/null; echo \">>> https://github.com/${g_project_prefix}${j}/commits/$
         fi
       fi
     done
-    if [[ ${doCreateBranch} ]]; then
+    if [[ ${doCreateBranch} -gt 0 ]]; then
       if [[ ${branchDoesNotExist} ]]; then # branch does not exist yet
         echo "# Create branch https://github.com/${g_project_prefix}${j}/tree/${github_branch} from ${github_branch_fallback}
 pushd ${workspace}/${prefix}${j} && git checkout ${github_branch_fallback} && git pull origin ${github_branch_fallback}
