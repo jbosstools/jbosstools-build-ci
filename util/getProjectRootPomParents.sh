@@ -22,9 +22,10 @@ usage ()
     echo"               -p1 openshift -p2 build-sites -p3 product"
     echo ""
     echo "Example 4: $0 -updateRootPom -createBranch -b jbosstools-4.4.1.x -b2 master -pv 4.4.1.Final-SNAPSHOT \\"
-    echo "              -w1 /tmp/jbosstools.github -p1 \"aerogear arquillian base browsersim central discovery \\"
-    echo "               forge freemarker hibernate javaee jst livereload openshift server vpe webservices\" \\"
-    echo "              -p2 \"build build-sites\" -p3 \"devdoc product\" -q"
+    echo "              -w1 /tmp/jbosstools.github -p1 \"aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge freemarker hibernate \\"
+    echo "               javaee::jsf jst livereload openshift server vpe::visual-page-editor-core webservices webservices integration-tests\" \\"
+    echo "              -p2 \"build build-sites::updatesite discovery::central-update devdoc download.jboss.org maven-plugins:build versionwatch\" \\"
+    echo "              -p3 \"artwork ci::build devdoc product::installer qa website\" -q"
     echo ""
     exit 1;
 }
@@ -48,9 +49,10 @@ TARGET_PLATFORM_VERSION_MIN=4.60.1.Final
 TARGET_PLATFORM_VERSION_MAX=4.61.0.AM1-SNAPSHOT
 JIRA_HOST="https://issues.stage.jboss.org" # or https://issues.jboss.org
 WORKSPACE1=/tmp
-PROJECTS1="" # or "aerogear arquillian base browsersim central discovery forge freemarker hibernate javaee jst livereload openshift server vpe webservices"
-PROJECTS2="" # or "build-sites"
-PROJECTS3="" # or "product"
+PROJECTS1="" # or "aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge freemarker hibernate  \
+                # javaee::jsf jst livereload openshift server vpe::visual-page-editor-core webservices webservices integration-tests"
+PROJECTS2="" # or "build build-sites::updatesite discovery::central-update devdoc download.jboss.org maven-plugins:build versionwatch"
+PROJECTS3="" # or "artwork ci::build devdoc product::installer qa website
 hadError=0
 
 while [[ "$#" -gt 0 ]]; do
@@ -129,7 +131,13 @@ checkProjects () {
 
   mkdir -p ${workspace}
   for j in ${projects}; do
-    if [[ ${quiet} != "-q" ]]; then echo "[INFO] == ${g_project_prefix}${j} =="; fi
+    if [[ ${j/:/} != ${j} ]]; then # split pair into git project : jira component
+      k=${j##*:} # jira component
+      j=${j%%:*} # git project
+    else
+      k=${j} # jira component
+    fi
+    if [[ ${quiet} != "-q" ]]; then echo "[INFO] == ${g_project_prefix}${j} (${k}) =="; fi
     branchDoesNotExist="$(curl -s -I https://github.com/${g_project_prefix}${j}/tree/${github_branch} | egrep "404 Not Found")"
     if [[ ! -d ${workspace}/${prefix}${j} ]]; then
       # fetch the project to the workspace as it's not already here!
@@ -140,6 +148,10 @@ checkProjects () {
         git clone --depth 1 -b ${github_branch} ${quiet} git@github.com:${g_project_prefix}${j}.git | tee -a ${logfile} # shallow clone just the branch we want
       fi
       popd >/dev/null
+    fi
+    if [[ ! -d ${workspace}/${prefix}${j} ]]; then 
+      echo "Error! Cannot enter ${workspace}/${prefix}${j}"
+      exit 1
     fi
     pushd ${workspace}/${prefix}${j} >/dev/null
     if [[ ${branchDoesNotExist} ]]; then # branch does not exist yet
@@ -170,7 +182,6 @@ checkProjects () {
               isCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep $version_parent` # empty string if wrong version
             fi
             if [[ ${isCorrectVersion} ]]; then
-              echo $j :: $isCorrectVersion >> ${chgfile}
               # create new JIRA using createTaskJIRAs.py, then pass that into the commit comment below
               # if component does not exist, JIRA will be nullstring
               JIRA=$(python -W ignore ../jbosstools-build-ci/util/createTaskJIRAs.py --jbide ${version_jbt} --jbds ${version_ds} \
@@ -233,7 +244,16 @@ mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MAX}
 ${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28${version_ds}%29%29%29%20AND%20resolution%20is%20\
 null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next.
 " \
--s ${JIRA_HOST} -u ${JIRA_USER} -p ${JIRA_PWD} -J ${componentFlag} ${j})
+-s ${JIRA_HOST} -u ${JIRA_USER} -p ${JIRA_PWD} -J ${componentFlag} ${k}) # $JIRA
+              if [[ ${j} == ${k} ]]; then
+                echo -n "$j :: " >> ${chgfile}
+              else
+                echo -n "$j ($k) :: " >> ${chgfile}
+              fi
+              if [[ ${JIRA} ]]; then
+                echo -n "${JIRA} :: " >> ${chgfile}
+              fi
+              echo $isCorrectVersion >> ${chgfile}
               echo "# Commit change to https://github.com/${g_project_prefix}${j}/blob/${github_branch_fallback}/${pomfile}
 pushd ${workspace}/${prefix}${j} >/dev/null && perl -0777 -i.orig -pe \\
 's#(<artifactId>parent</artifactId>)[\r\n\ \t]+(<version>)([\d.]+[^<>]+)(</version>)#\1\n\t\t<version>'${version_parent}'\4#igs' \\
@@ -241,7 +261,11 @@ ${pomfile} && git commit -m \"${JIRA} #comment bump up to parent pom version = $
 popd >/dev/null; echo \">>> https://github.com/${g_project_prefix}${j}/commits/${github_branch_fallback}\"
 " >> ${tskfile}
             else
-              echo -n "$j :: " >> ${errfile}
+              if [[ ${j} == ${k} ]]; then
+                echo -n "$j :: " >> ${errfile}
+              else
+                echo -n "$j ($k) :: " >> ${errfile}
+              fi
               echo $thisparent | grep version >> ${errfile}
             fi
             # echo "isCorrectVersion = [$isCorrectVersion]"

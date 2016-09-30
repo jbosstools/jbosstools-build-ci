@@ -76,10 +76,12 @@ else:
     if options.componentjbds:
         projectname = 'JBDS'
         fixversion = jbds_fixversion
-        #TODO do lookup for mismatched jbosstools-foo => JIRA component bar: aerogear, base, javaee, vpe, integration-tests, discovery, build-sites
+        # For mismatched jbosstools-project => JBIDE JIRA component mappings, see getProjectRootPomParent.sh and use :: notation to pass in mappings, eg.,
+        # ci::build, product::installer
         componentList = { options.componentjbds: {options.componentjbds} }
     else:
-        #TODO do lookup for mismatched jbosstools-foo => JIRA component bar: product
+        # For mismatched jbdevstudio-project => JBDS JIRA component mappings, see getProjectRootPomParent.sh and use :: notation to pass in mappings, eg.,
+        # aerogear::aerogear-hybrid, base::foundation, javaee::jsf, vpe::visual-page-editor-core, build-sites::updatesite, discovery::central-update
         componentList = { options.componentjbide: {options.componentjbide} }
 
 ## The jql query across for all task issues
