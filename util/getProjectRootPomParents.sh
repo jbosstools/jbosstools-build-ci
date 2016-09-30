@@ -23,7 +23,7 @@ usage ()
     echo ""
     echo "Example 4: $0 -updateRootPom -createBranch -b jbosstools-4.4.1.x -b2 master -pv 4.4.1.Final-SNAPSHOT \\"
     echo "              -w1 /tmp/jbosstools.github -p1 \"aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge freemarker hibernate \\"
-    echo "               javaee::jsf jst livereload openshift server vpe::visual-page-editor-core webservices webservices integration-tests\" \\"
+    echo "               javaee::jsf jst livereload openshift server vpe::visual-page-editor-core webservices integration-tests\" \\"
     echo "              -p2 \"build build-sites::updatesite discovery::central-update devdoc download.jboss.org maven-plugins:build versionwatch\" \\"
     echo "              -p3 \"artwork ci::build devdoc product::installer qa website\" -q"
     echo ""
@@ -50,7 +50,7 @@ TARGET_PLATFORM_VERSION_MAX=4.61.0.AM1-SNAPSHOT
 JIRA_HOST="https://issues.stage.jboss.org" # or https://issues.jboss.org
 WORKSPACE1=/tmp
 PROJECTS1="" # or "aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge freemarker hibernate  \
-                # javaee::jsf jst livereload openshift server vpe::visual-page-editor-core webservices webservices integration-tests"
+                # javaee::jsf jst livereload openshift server vpe::visual-page-editor-core webservices integration-tests"
 PROJECTS2="" # or "build build-sites::updatesite discovery::central-update devdoc download.jboss.org maven-plugins:build versionwatch"
 PROJECTS3="" # or "artwork ci::build devdoc product::installer qa website
 hadError=0
