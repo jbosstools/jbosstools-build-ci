@@ -58,124 +58,129 @@ jira = JIRA(options={'server':jiraserver}, basic_auth=(options.username, options
 
 jbide_fixversion = options.jbidefixversion
 jbds_fixversion = options.jbdsfixversion
-taskdescription = options.taskdescription
-taskdescriptionfull = options.taskdescriptionfull
-if not options.taskdescriptionfull:
-    taskdescriptionfull = options.taskdescription
 
-projectname = 'JBIDE'
-fixversion = jbide_fixversion
-if not options.componentjbide and not options.componentjbds:
-    # see JIRA_components listing in components.py
-    from components import JIRA_components
-    componentList = JIRA_components
-    issuetype = 'Sub-task'
-else:
-    # just one task at a time
-    issuetype = 'Task'
-    if options.componentjbds:
-        projectname = 'JBDS'
-        fixversion = jbds_fixversion
-        # For mismatched jbosstools-project => JBIDE JIRA component mappings, see getProjectRootPomParent.sh and use :: notation to pass in mappings, eg.,
-        # ci::build, product::installer
-        componentList = { options.componentjbds: {options.componentjbds} }
+from components import checkFixVersionsExist
+
+if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.username, options.password) == True:
+
+    taskdescription = options.taskdescription
+    taskdescriptionfull = options.taskdescriptionfull
+    if not options.taskdescriptionfull:
+        taskdescriptionfull = options.taskdescription
+
+    projectname = 'JBIDE'
+    fixversion = jbide_fixversion
+    if not options.componentjbide and not options.componentjbds:
+        # see JIRA_components listing in components.py
+        from components import JIRA_components
+        componentList = JIRA_components
+        issuetype = 'Sub-task'
     else:
-        # For mismatched jbdevstudio-project => JBDS JIRA component mappings, see getProjectRootPomParent.sh and use :: notation to pass in mappings, eg.,
-        # aerogear::aerogear-hybrid, base::foundation, javaee::jsf, vpe::visual-page-editor-core, build-sites::updatesite, discovery::central-update
-        componentList = { options.componentjbide: {options.componentjbide} }
-
-## The jql query across for all task issues
-tasksearchquery = '((project in (JBDS) and fixVersion = "' + jbds_fixversion + '") or (project in (JBIDE) and fixVersion = "' + jbide_fixversion + '")) AND labels = task'
-
-tasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery)
-
-def nametuple(x):
-    return { "name" : x }
-
-def quote(x):
-    return '"' + x + '"'
-
-if not options.componentjbide and not options.componentjbds:
-    rootJBDS_dict = {
-        'project' : { 'key': 'JBDS' },
-        'summary' :     'For JBDS ' + jbds_fixversion + ': ' + taskdescription,
-        'description' : 'For JBDS ' + jbds_fixversion + ': ' + taskdescriptionfull + '\n\n[Search for all task JIRA|' + tasksearch + ']',
-        'issuetype' : { 'name' : 'Task' },
-        'priority' : { 'name' :'Blocker'},
-        'fixVersions' : [{ "name" : jbds_fixversion }],
-        'components' : [{ "name" : "installer" }],
-        'labels' : [ "task" ],
-        }
-    rootJBDS = jira.create_issue(fields=rootJBDS_dict)
-
-    if (options.jiraonly):
-        print(rootJBDS.key)
-    else:
-        print("Task JIRA created for this milestone include:")
-        print("")
-        print("JBDS              : " + jiraserver + '/browse/' + rootJBDS.key)
-
-    rootJBIDE_dict = {
-        'project' : { 'key': 'JBIDE' },
-        'summary' :     'For JBIDE ' + jbide_fixversion + ': ' + taskdescription,
-        'description' : 'For JBIDE ' + jbide_fixversion + ': ' + taskdescriptionfull + 
-            '\n\n[Search for all task JIRA|' + tasksearch + ']\n\nSee also: ' + rootJBDS.key,
-        'issuetype' : { 'name' : 'Task' },
-        'priority' : { 'name' :'Blocker'},
-        'fixVersions' : [{ "name" : jbide_fixversion }],
-        'components' : [{ "name" : "build" }],
-        'labels' : [ "task" ]
-        }
-    rootJBIDE = jira.create_issue(fields=rootJBIDE_dict)
-    if (options.jiraonly):
-        print(rootJBIDE.key)
-    else:
-        print("JBoss Tools       : " + jiraserver + '/browse/' + rootJBIDE.key)
-
-for name, comps in componentList.iteritems():
-    
-    cms = map(nametuple, comps)    
-    # print name + "->" + str(cms)
-
-    comptasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery + " and component in (" + ",".join(map(quote,comps)) + ")")
-    
-    singleJIRA_dict = {
-        'project' : { 'key': projectname },
-        'summary' :     'For ' + projectname + ' ' + fixversion + ': ' + taskdescription + ' [' + name.strip() + ']',
-        'description' : 'For ' + projectname + ' ' + fixversion + ' [' + name.strip() + ']: ' + taskdescriptionfull + 
-            '\n\n[Search for all task JIRA|' + tasksearch + '], or [Search for ' + name.strip() + ' task JIRA|' + comptasksearch + ']',
-        'issuetype' : { 'name' : issuetype },
-        'priority' : { 'name': 'Blocker'},
-        'components' : cms,
-        'labels' : [ "task" ]
-    }
-    # if subtask, set parent
-    if issuetype == 'Sub-task' and rootJBIDE and rootJBIDE.key:
-        singleJIRA_dict['parent'] = { 'id' : rootJBIDE.key }
-    else:
-        # if task, set fixversion
-        singleJIRA_dict['fixVersions'] =[{ "name" : fixversion }]
-
-    singleJIRA = jira.create_issue(fields=singleJIRA_dict)
-    if (options.jiraonly):
-        print(singleJIRA.key)
-    else:
-        print(name +  ": " + jiraserver + '/browse/' + singleJIRA.key)
-
-if (not options.autoaccept and not options.jiraonly):
-    accept = raw_input("Accept created JIRAs? [Y/n] ")
-    if accept.capitalize() in ["N"]:
-        try:
-            rootJBIDE
-        except NameError:
-            singleJIRA.delete()
+        # just one task at a time
+        issuetype = 'Task'
+        if options.componentjbds:
+            projectname = 'JBDS'
+            fixversion = jbds_fixversion
+            # For mismatched jbosstools-project => JBIDE JIRA component mappings, see getProjectRootPomParent.sh and use :: notation to pass in mappings, eg.,
+            # ci::build, product::installer
+            componentList = { options.componentjbds: {options.componentjbds} }
         else:
-            rootJBIDE.delete(deleteSubtasks=True)
-        try:
-            rootJBDS
-        except NameError:
-            True
-        else:
-            rootJBDS.delete(deleteSubtasks=True)
+            # For mismatched jbdevstudio-project => JBDS JIRA component mappings, see getProjectRootPomParent.sh and use :: notation to pass in mappings, eg.,
+            # aerogear::aerogear-hybrid, base::foundation, javaee::jsf, vpe::visual-page-editor-core, build-sites::updatesite, discovery::central-update
+            componentList = { options.componentjbide: {options.componentjbide} }
 
-# For sample usage, see createTaskJIRAs.py.examples.txt
+    ## The jql query across for all task issues
+    tasksearchquery = '((project in (JBDS) and fixVersion = "' + jbds_fixversion + '") or (project in (JBIDE) and fixVersion = "' + jbide_fixversion + '")) AND labels = task'
+
+    tasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery)
+
+    def nametuple(x):
+        return { "name" : x }
+
+    def quote(x):
+        return '"' + x + '"'
+
+    if not options.componentjbide and not options.componentjbds:
+        rootJBDS_dict = {
+            'project' : { 'key': 'JBDS' },
+            'summary' :     'For JBDS ' + jbds_fixversion + ': ' + taskdescription,
+            'description' : 'For JBDS ' + jbds_fixversion + ': ' + taskdescriptionfull + '\n\n[Search for all task JIRA|' + tasksearch + ']',
+            'issuetype' : { 'name' : 'Task' },
+            'priority' : { 'name' :'Blocker'},
+            'fixVersions' : [{ "name" : jbds_fixversion }],
+            'components' : [{ "name" : "installer" }],
+            'labels' : [ "task" ],
+            }
+        rootJBDS = jira.create_issue(fields=rootJBDS_dict)
+
+        if (options.jiraonly):
+            print(rootJBDS.key)
+        else:
+            print("Task JIRA created for this milestone include:")
+            print("")
+            print("JBDS              : " + jiraserver + '/browse/' + rootJBDS.key)
+
+        rootJBIDE_dict = {
+            'project' : { 'key': 'JBIDE' },
+            'summary' :     'For JBIDE ' + jbide_fixversion + ': ' + taskdescription,
+            'description' : 'For JBIDE ' + jbide_fixversion + ': ' + taskdescriptionfull + 
+                '\n\n[Search for all task JIRA|' + tasksearch + ']\n\nSee also: ' + rootJBDS.key,
+            'issuetype' : { 'name' : 'Task' },
+            'priority' : { 'name' :'Blocker'},
+            'fixVersions' : [{ "name" : jbide_fixversion }],
+            'components' : [{ "name" : "build" }],
+            'labels' : [ "task" ]
+            }
+        rootJBIDE = jira.create_issue(fields=rootJBIDE_dict)
+        if (options.jiraonly):
+            print(rootJBIDE.key)
+        else:
+            print("JBoss Tools       : " + jiraserver + '/browse/' + rootJBIDE.key)
+
+    for name, comps in componentList.iteritems():
+        
+        cms = map(nametuple, comps)    
+        # print name + "->" + str(cms)
+
+        comptasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery + " and component in (" + ",".join(map(quote,comps)) + ")")
+        
+        singleJIRA_dict = {
+            'project' : { 'key': projectname },
+            'summary' :     'For ' + projectname + ' ' + fixversion + ': ' + taskdescription + ' [' + name.strip() + ']',
+            'description' : 'For ' + projectname + ' ' + fixversion + ' [' + name.strip() + ']: ' + taskdescriptionfull + 
+                '\n\n[Search for all task JIRA|' + tasksearch + '], or [Search for ' + name.strip() + ' task JIRA|' + comptasksearch + ']',
+            'issuetype' : { 'name' : issuetype },
+            'priority' : { 'name': 'Blocker'},
+            'components' : cms,
+            'labels' : [ "task" ]
+        }
+        # if subtask, set parent
+        if issuetype == 'Sub-task' and rootJBIDE and rootJBIDE.key:
+            singleJIRA_dict['parent'] = { 'id' : rootJBIDE.key }
+        else:
+            # if task, set fixversion
+            singleJIRA_dict['fixVersions'] =[{ "name" : fixversion }]
+
+        singleJIRA = jira.create_issue(fields=singleJIRA_dict)
+        if (options.jiraonly):
+            print(singleJIRA.key)
+        else:
+            print(name +  ": " + jiraserver + '/browse/' + singleJIRA.key)
+
+    if (not options.autoaccept and not options.jiraonly):
+        accept = raw_input("Accept created JIRAs? [Y/n] ")
+        if accept.capitalize() in ["N"]:
+            try:
+                rootJBIDE
+            except NameError:
+                singleJIRA.delete()
+            else:
+                rootJBIDE.delete(deleteSubtasks=True)
+            try:
+                rootJBDS
+            except NameError:
+                True
+            else:
+                rootJBDS.delete(deleteSubtasks=True)
+
+    # For sample usage, see createTaskJIRAs.py.examples.txt

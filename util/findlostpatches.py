@@ -40,114 +40,119 @@ if not options.username or not options.password or not options.jiraserver or not
     parser.error("Must to specify ALL commandline flags")
     
 jiraserver = options.jiraserver
-frombranch = options.frombranch
-jira = JIRA(options={'server':jiraserver}, basic_auth=(options.username, options.password))
-
 jbide_fixversion = options.jbidefixversion
 jbds_fixversion = options.jbdsfixversion
-taskdescription = options.taskdescription
-taskdescriptionfull = options.taskdescriptionfull
-if not options.taskdescriptionfull:
-    taskdescriptionfull = options.taskdescription
 
-## The jql query across for all task issues
-tasksearchquery = '((project in (JBDS) and fixVersion = "' + jbds_fixversion + '") or (project in (JBIDE) and fixVersion = "' + jbide_fixversion + '")) AND labels = task'
+from components import checkFixVersionsExist
 
-tasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery)
+if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.username, options.password) == True:
 
-rootJBDS_dict = {
-    'project' : { 'key': 'JBDS' },
-    'summary' :     'For JBDS ' + jbds_fixversion + ': ' + taskdescription,
-    'description' : 'For JBDS ' + jbds_fixversion + ': ' + taskdescriptionfull + '\n\n[Search for all task JIRA|' + tasksearch + ']',
-    'issuetype' : { 'name' : 'Task' },
-    'priority' : { 'name' :'Blocker'},
-    'fixVersions' : [{ "name" : jbds_fixversion }],
-    'components' : [{ "name" : "installer" }],
-    'labels' : [ "task" ],
-    }
-rootJBDS = jira.create_issue(fields=rootJBDS_dict)
-print("Task JIRA created for this milestone include:")
-print("")
+    frombranch = options.frombranch
+    jira = JIRA(options={'server':jiraserver}, basic_auth=(options.username, options.password))
 
-print("JBDS              : " + jiraserver + '/browse/' + rootJBDS.key)
+    taskdescription = options.taskdescription
+    taskdescriptionfull = options.taskdescriptionfull
+    if not options.taskdescriptionfull:
+        taskdescriptionfull = options.taskdescription
 
-rootJBIDE_dict = {
-    'project' : { 'key': 'JBIDE' },
-    'summary' :     'For JBIDE ' + jbide_fixversion + ': ' + taskdescription,
-    'description' : 'For JBIDE ' + jbide_fixversion + ': ' + taskdescriptionfull + '\n\n[Search for all task JIRA|' + tasksearch + ']\n\nSee also: ' + rootJBDS.key,
-    'issuetype' : { 'name' : 'Task' },
-    'priority' : { 'name' :'Blocker'},
-    'fixVersions' : [{ "name" : jbide_fixversion }],
-    'components' : [{ "name" : "build" }],
-    'labels' : [ "task" ]
-    }
-rootJBIDE = jira.create_issue(fields=rootJBIDE_dict)
-print("JBoss Tools       : " + jiraserver + '/browse/' + rootJBIDE.key)
+    ## The jql query across for all task issues
+    tasksearchquery = '((project in (JBDS) and fixVersion = "' + jbds_fixversion + '") or (project in (JBIDE) and fixVersion = "' + jbide_fixversion + '")) AND labels = task'
 
+    tasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery)
 
-# Currently, the repo url (for printing links to the missing commits)
-# is calculated as  "https://github.com/jbosstools/jbosstools-$key.git"
-# If this is wrong, it will need to be refactored.
-
-def nametuple(x):
-    return { "name" : x }
-
-def quote(x):
-    return '"' + x + '"'
-
-# We've made the first parent jira. 
-# To avoid cloning all repos here in this folder,
-# lets make a sub-directory to do our work in
-workingdir = os.getcwd();
-tmpsubdir = workingdir + "/tmplostpatches"
-try:
-   os.stat(tmpsubdir)
-except:
-   os.mkdir(tmpsubdir)
-
-os.chdir(tmpsubdir)
-
-# see JIRA_components listing in components.py
-from components import JIRA_components
-
-for name, comps in JIRA_components.iteritems():
-    
-    cms = map(nametuple, comps)    
-    #print name + "->" + str(cms)
-    workingdir = os.getcwd()
-    # skip if name contains spaces in components.py
-    if " " not in name.rstrip():
-        subfoldername="jbosstools-" + name.lower()
-        githubrepo = "https://github.com/jbosstools/" + subfoldername.strip() + ".git"
-        print githubrepo;
-        # use shallow clone for faster checkout
-        os.system("git clone --depth 1 " + githubrepo)
-        os.chdir(workingdir + "/" + subfoldername.strip())
-        p = Popen(['bash', '../../findlostpatchesonerepository.sh', frombranch], stdout=PIPE, stderr=PIPE, stdin=PIPE)
-        output = p.stdout.read()
-        print output
-        comptasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery + " and component in (" + ",".join(map(quote,comps)) + ")")
-        
-        rootJBIDE_dict = {
-            'project' : { 'key': 'JBIDE' },
-            'summary' :     'For JBIDE ' + jbide_fixversion + ': ' + taskdescription + ' [' + name.strip() + ']',
-            'description' : 'For JBIDE ' + jbide_fixversion + ' [' + name.strip() + ']: ' + taskdescriptionfull + "\n\n" + output + 
-                '\n\n[Search for all task JIRA|' + tasksearch + '], or [Search for ' + name.strip() + ' task JIRA|' + comptasksearch + ']',
-            'issuetype' : { 'name' : 'Sub-task' },
-            'parent' : { 'id' : rootJBIDE.key},
-            'priority' : { 'name': 'Blocker'},
-            'components' : cms,
-            'labels' : [ "task" ]
+    rootJBDS_dict = {
+        'project' : { 'key': 'JBDS' },
+        'summary' :     'For JBDS ' + jbds_fixversion + ': ' + taskdescription,
+        'description' : 'For JBDS ' + jbds_fixversion + ': ' + taskdescriptionfull + '\n\n[Search for all task JIRA|' + tasksearch + ']',
+        'issuetype' : { 'name' : 'Task' },
+        'priority' : { 'name' :'Blocker'},
+        'fixVersions' : [{ "name" : jbds_fixversion }],
+        'components' : [{ "name" : "installer" }],
+        'labels' : [ "task" ],
         }
-        os.chdir(workingdir)
+    rootJBDS = jira.create_issue(fields=rootJBDS_dict)
+    print("Task JIRA created for this milestone include:")
+    print("")
 
-        child = jira.create_issue(fields=rootJBIDE_dict)
-        print(name +  ": " + jiraserver + '/browse/' + child.key)
+    print("JBDS              : " + jiraserver + '/browse/' + rootJBDS.key)
 
-accept = raw_input("Accept created JIRAs? [Y/n] ")
+    rootJBIDE_dict = {
+        'project' : { 'key': 'JBIDE' },
+        'summary' :     'For JBIDE ' + jbide_fixversion + ': ' + taskdescription,
+        'description' : 'For JBIDE ' + jbide_fixversion + ': ' + taskdescriptionfull + '\n\n[Search for all task JIRA|' + tasksearch + ']\n\nSee also: ' + rootJBDS.key,
+        'issuetype' : { 'name' : 'Task' },
+        'priority' : { 'name' :'Blocker'},
+        'fixVersions' : [{ "name" : jbide_fixversion }],
+        'components' : [{ "name" : "build" }],
+        'labels' : [ "task" ]
+        }
+    rootJBIDE = jira.create_issue(fields=rootJBIDE_dict)
+    print("JBoss Tools       : " + jiraserver + '/browse/' + rootJBIDE.key)
 
-if accept.capitalize() in ["N"]:
-    rootJBIDE.delete(deleteSubtasks=True)
-    rootJBDS.delete(deleteSubtasks=True)
 
-# For sample usage, see findlostpatches.py.examples.txt
+    # Currently, the repo url (for printing links to the missing commits)
+    # is calculated as  "https://github.com/jbosstools/jbosstools-$key.git"
+    # If this is wrong, it will need to be refactored.
+
+    def nametuple(x):
+        return { "name" : x }
+
+    def quote(x):
+        return '"' + x + '"'
+
+    # We've made the first parent jira. 
+    # To avoid cloning all repos here in this folder,
+    # lets make a sub-directory to do our work in
+    workingdir = os.getcwd();
+    tmpsubdir = workingdir + "/tmplostpatches"
+    try:
+       os.stat(tmpsubdir)
+    except:
+       os.mkdir(tmpsubdir)
+
+    os.chdir(tmpsubdir)
+
+    # see JIRA_components listing in components.py
+    from components import JIRA_components
+
+    for name, comps in JIRA_components.iteritems():
+        
+        cms = map(nametuple, comps)    
+        #print name + "->" + str(cms)
+        workingdir = os.getcwd()
+        # skip if name contains spaces in components.py
+        if " " not in name.rstrip():
+            subfoldername="jbosstools-" + name.lower()
+            githubrepo = "https://github.com/jbosstools/" + subfoldername.strip() + ".git"
+            print githubrepo;
+            # use shallow clone for faster checkout
+            os.system("git clone --depth 1 " + githubrepo)
+            os.chdir(workingdir + "/" + subfoldername.strip())
+            p = Popen(['bash', '../../findlostpatchesonerepository.sh', frombranch], stdout=PIPE, stderr=PIPE, stdin=PIPE)
+            output = p.stdout.read()
+            print output
+            comptasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery + " and component in (" + ",".join(map(quote,comps)) + ")")
+            
+            rootJBIDE_dict = {
+                'project' : { 'key': 'JBIDE' },
+                'summary' :     'For JBIDE ' + jbide_fixversion + ': ' + taskdescription + ' [' + name.strip() + ']',
+                'description' : 'For JBIDE ' + jbide_fixversion + ' [' + name.strip() + ']: ' + taskdescriptionfull + "\n\n" + output + 
+                    '\n\n[Search for all task JIRA|' + tasksearch + '], or [Search for ' + name.strip() + ' task JIRA|' + comptasksearch + ']',
+                'issuetype' : { 'name' : 'Sub-task' },
+                'parent' : { 'id' : rootJBIDE.key},
+                'priority' : { 'name': 'Blocker'},
+                'components' : cms,
+                'labels' : [ "task" ]
+            }
+            os.chdir(workingdir)
+
+            child = jira.create_issue(fields=rootJBIDE_dict)
+            print(name +  ": " + jiraserver + '/browse/' + child.key)
+
+    accept = raw_input("Accept created JIRAs? [Y/n] ")
+
+    if accept.capitalize() in ["N"]:
+        rootJBIDE.delete(deleteSubtasks=True)
+        rootJBDS.delete(deleteSubtasks=True)
+
+    # For sample usage, see findlostpatches.py.examples.txt

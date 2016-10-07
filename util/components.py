@@ -66,3 +66,34 @@ NN_components = {
     "Visual Editor     ": { "visual-page-editor-core", "visual-page-editor-templates"},
     "Webservices / Rest": { "webservices"}
     }
+
+def checkFixVersionsExist (jbide_fixversion, jbds_fixversion, jiraserver, username, password):
+    import requests, re, urllib
+    from requests.auth import HTTPBasicAuth
+
+    # should never happen
+    if jbide_fixversion is None:
+        print "\n[ERROR] JBIDE fixversion " + jbide_fixversion + " can not be None\n"
+        return False
+
+    # verify that fixversions are valid and exist on the target jira server
+    if jbds_fixversion is not None:
+        testFixVersionsExistQuery = '((project IN (JBIDE) AND fixVersion = "' + jbide_fixversion + '") AND (project IN (JBDS) AND fixVersion = "' + jbds_fixversion + '"))'
+    else:
+        testFixVersionsExistQuery = 'project IN (JBIDE) AND fixVersion = "' + jbide_fixversion + '"'
+    # print "\n" + 'Search for JIRAs in JBIDE ' + jbide_fixversion + ' and JBDS ' + jbds_fixversion + ":\n\n * " + jiraserver + \
+    #   '/issues/?jql=' + urllib.quote_plus(testFixVersionExistsSearchquery) + \
+    #   " * https://issues.stage.jboss.org/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?tempMax=1000&jqlQuery=" + \
+    #   urllib.quote_plus(testFixVersionExistsSearchquery)
+    q = requests.get(jiraserver + '/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?tempMax=1000&jqlQuery=' + \
+        urllib.quote_plus(testFixVersionsExistQuery), \
+        auth=HTTPBasicAuth(username, password), verify=False)
+    # check for string: The value '4.4.7.foo' does not exist for the field 'fixVersion'
+    if re.search("The value '" + jbide_fixversion + "' does not exist for the field 'fixVersion'", q.text):
+       print "\n[ERROR] JBIDE fixversion " + jbide_fixversion + " does not exist on " + jiraserver + "\n"
+       return False
+    elif jbds_fixversion is not None and re.search("The value '" + jbds_fixversion + "' does not exist for the field 'fixVersion'", q.text):
+       print "\n[ERROR] JBDS fixversion " + jbds_fixversion + " does not exist on " + jiraserver + "\n"
+       return False
+    else:
+        return True
