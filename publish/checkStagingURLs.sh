@@ -70,6 +70,9 @@ fi
 
 if [[ ${versionWithRespin_jbt} ]]; then
 
+  # if versionWithRespin_jbt ends with any of abcdxyz, trim tht character off to get version_jbt without the respin-suffix
+  version_jbt=$(echo ${versionWithRespin_jbt} | sed -e '/[abcdxyz]$/ s/\(^.*\)\(.$\)/\1/')
+
   # check build folders
   for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
     for f in core coretests central earlyaccess; do
@@ -105,7 +108,7 @@ if [[ ${versionWithRespin_jbt} ]]; then
   # browsersim-standalone.zip
   for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
     for f in browsersim-standalone; do
-      for ff in jbosstools-${versionWithRespin_jbt}-${f}.zip jbosstools-${versionWithRespin_jbt}-${f}.zip.sha256; do
+      for ff in jbosstools-${version_jbt}-${f}.zip jbosstools-${version_jbt}-${f}.zip.sha256; do
         a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/${ff}
         logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
         if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
@@ -159,8 +162,7 @@ if [[ ${versionWithRespin_ds} ]]; then
   fi
   for u in http://www.qa.jboss.com/binaries/devstudio/${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
     for f in devstudio-${versionWithRespin_ds_latest_INT}-installer-eap.jar devstudio-${versionWithRespin_ds_latest_INT}-installer-standalone.jar \
-      devstudio-${versionWithRespin_ds_latest_INT}-src.zip devstudio-${versionWithRespin_ds_latest_INT}-updatesite-central.zip \
-      devstudio-${versionWithRespin_ds_latest_INT}-updatesite-core.zip; do
+      devstudio-${versionWithRespin_ds_latest_INT}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest_INT}-updatesite-core.zip; do
       for ff in $f ${f}.sha256; do
         a=${u}/${ff}
         logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
@@ -179,8 +181,7 @@ if [[ ${versionWithRespin_ds} ]]; then
   # check installer build folder [EXTERNAL]
   for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
     for f in devstudio-${versionWithRespin_ds_latest}-installer-standalone.jar \
-      devstudio-${versionWithRespin_ds_latest}-src.zip devstudio-${versionWithRespin_ds_latest}-updatesite-central.zip \
-      devstudio-${versionWithRespin_ds_latest}-updatesite-core.zip; do
+      devstudio-${versionWithRespin_ds_latest}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest}-updatesite-core.zip; do
       for ff in $f ${f}.sha256; do
         logn "${u}/${ff}: "; stat=$(curl -I -s ${u}/${ff} | egrep "404")
         if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${ff}: " "${red}NO${norm}"; let notOK+=1; fi
