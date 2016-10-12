@@ -88,12 +88,7 @@ while [[ "$#" -gt 0 ]]; do
   shift 1
 done
 
-if [[ $quiet == 1 ]]; then consoleDest=/dev/null; else
-  if [[ -w $(tty) ]]; then consoleDest=$(tty);
-  elif [[ -w /dev/tty ]]; then consoleDest=/dev/tty;
-  elif [[ -w /dev/tty0 ]]; then consoleDest=/dev/tty0;
-  elif [[ -w /dev/console ]]; then consoleDest=/dev/console; fi
-fi
+if [[ $quiet == 1 ]]; then consoleDest=/dev/null; else consoleDest=/dev/stdout; fi
 
 # set mars, 9.0, etc.
 if [[ ! ${DESTDIR} ]] && [[ ! ${SRC_DIR} ]]; then echo "ERROR: DESTDIR and SRC_DIR not set. Please set at least one."; echo ""; usage; fi
