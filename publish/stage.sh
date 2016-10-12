@@ -165,10 +165,15 @@ for site in ${sites}; do
         y=$(find ${tmpdir}/all/ -name "${ZIPPREFIX}*${suffix}.zip" -a -not -name "*latest*")
       fi
       if [[ -f $y ]]; then
-        echo "mkdir ${DESTDIR}" | sftp ${DESTINATION}/ &>${consoleDest}
-        echo "mkdir ${DESTTYPE}" | sftp ${DESTINATION}/${DESTDIR}/ &>${consoleDest}
-        echo "mkdir updates" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
-        echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/ &>${consoleDest}
+        if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local
+          log "[DEBUG] [$site] + mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
+          mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename} &>${consoleDest}
+        else
+          echo "mkdir ${DESTDIR}" | sftp ${DESTINATION}/ &>${consoleDest}
+          echo "mkdir ${DESTTYPE}" | sftp ${DESTINATION}/${DESTDIR}/ &>${consoleDest}
+          echo "mkdir updates" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
+          echo "mkdir ${sitename}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/ &>${consoleDest}
+        fi
         ${RSYNC} ${y} ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip &>${consoleDest}
         ${RSYNC} ${y}.sha256 ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256 &>${consoleDest}
       elif [[ "${site/discovery}" == "${site}" ]]; then
