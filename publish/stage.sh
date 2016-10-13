@@ -21,6 +21,13 @@ rawJOB_NAME="\${PRODUCT}-\${site}_\${stream}"
 sites=""
 quiet=0
 
+# override to skip checking for an update site or zip
+skipUpdateZip=0
+skipUpdateSite=0
+# force checking for an update site or zip
+requireUpdateZip=0
+requireUpdateSite=0
+
 norm="\033[0;39m"
 green="\033[1;32m"
 red="\033[1;31m"
@@ -83,6 +90,14 @@ while [[ "$#" -gt 0 ]]; do
     '-DWORKSPACE'|'-WORKSPACE') WORKSPACE="$2"; shift 1;; # optional
     '-DID'|'-ID') whichID="$2"; shift 1;; # optionally, set a specific build ID such as 2015-10-02_18-28-18-B124; if not set, pull latest
     '-q') quiet=1; shift 0;; # suppress extra console output
+
+	# override to skip checking for an update site or zip
+	'-skipUpdateZip'|'-suz')   skipUpdateZip=1; shift 0;;
+	'-skipUpdateSite'|'-sus') skipUpdateSite=1; shift 0;;
+	# force checking for an update site or zip
+	'-requireUpdateZip'|'-ruz') requireUpdateZip=1; shift 0;;
+	'-requireUpdateSite'|'-rus') requireUpdateSite=1; shift 0;;
+
     *) OTHERFLAGS="${OTHERFLAGS} $1"; shift 0;;
   esac
   shift 1
@@ -176,9 +191,11 @@ for site in ${sites}; do
         fi
         ${RSYNC} ${y} ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip &>${consoleDest}
         ${RSYNC} ${y}.sha256 ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256 &>${consoleDest}
-      elif [[ "${site/discovery}" == "${site}" ]]; then
-        # don't warn for discovery sites since they don't have update sites
+      elif [[ "${site/discovery}" == "${site}" ]] || [[ "${site/browsersim-standalone}" == "${site}" ]] || [[ ${skipUpdateZip} -gt 0 ]]; then
+        # don't warn for discovery sites and browsersim standalone since they don't have update sites
         echo "[WARN] [$site] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
+      elif [[ ${requireUpdateZip} -gt 0 ]]
+        echo "[ERROR] [$site] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
       fi
       # if we have a zip but no repo folder, unpack the zip into update site folder
       if [[ -f $y ]] && [[ ! -d ${tmpdir}/all/repo/ ]]; then unzip -q $y -d ${tmpdir}/all/repo/; fi
@@ -198,9 +215,11 @@ for site in ${sites}; do
         ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/ &>${consoleDest}
         DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/"
       else
-        # don't warn for discovery sites since they don't have update sites
-        if [[ "${site/discovery}" == "${site}" ]]; then
+        # don't warn for discovery sites and browsersim standalone since they don't have update sites
+        if [[ "${site/discovery}" == "${site}" ]] || [[ "${site/browsersim-standalone}" == "${site}" ]] || [[ ${skipUpdateSite} -gt 0 ]]; then
           echo "[WARN] [$site] No update site found to publish in ${tmpdir}/all/repo/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
+        elif [[ ${requireUpdateSite} -gt 0 ]]
+          echo "[ERROR] [$site] No update site found to publish in ${tmpdir}/all/repo/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
         fi
       fi
     popd >/dev/null
