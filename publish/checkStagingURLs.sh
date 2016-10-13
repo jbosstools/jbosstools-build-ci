@@ -75,18 +75,6 @@ if [[ ${versionWithRespin_jbt} ]]; then
   # if versionWithRespin_jbt ends with any of abcdxyz, trim tht character off to get version_jbt without the respin-suffix
   version_jbt=$(echo ${versionWithRespin_jbt} | sed -e '/[abcdxyz]$/ s/\(^.*\)\(.$\)/\1/')
 
-  # check build folders
-  for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
-    for f in core coretests central earlyaccess; do
-      for ff in repo/artifacts.xml.xz repo/content.xml.xz repository.zip repository.zip.sha256; do
-        a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
-        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
-      done
-      log ""
-    done
-  done
-
   # discovery sites
   if [[ ${skipdiscovery} -lt 1 ]]; then 
     for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
@@ -107,34 +95,7 @@ if [[ ${versionWithRespin_jbt} ]]; then
       done
     done
     log ""
-  fi
 
-  # browsersim-standalone.zip
-  for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
-    for f in browsersim-standalone; do
-      for ff in jbosstools-${version_jbt}-${f}.zip jbosstools-${version_jbt}-${f}.zip.sha256; do
-        a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/${ff}
-        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
-      done
-    done
-  done
-  log ""
-
-  # check update sites
-  for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
-    for f in core coretests central earlyaccess; do
-      for ff in artifacts.xml.xz content.xml.xz; do
-        a=${u}/${f}/${versionWithRespin_jbt}/${ff}
-        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
-      done
-      log ""
-    done
-  done
-
-  # check discovery sites
-  if [[ ${skipdiscovery} -lt 1 ]]; then 
     for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
       for f in discovery.central; do
         for ff in compositeContent.xml compositeArtifacts.xml jbosstools-directory.xml plugins/; do
@@ -155,6 +116,42 @@ if [[ ${versionWithRespin_jbt} ]]; then
     log ""
   fi
 
+  # build folders
+  for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
+    for f in core coretests central earlyaccess; do
+      for ff in repo/artifacts.xml.xz repo/content.xml.xz repository.zip repository.zip.sha256; do
+        a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
+        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+      done
+      log ""
+    done
+  done
+
+  # browsersim-standalone.zip
+  for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
+    for f in browsersim-standalone; do
+      for ff in jbosstools-${version_jbt}-${f}.zip jbosstools-${version_jbt}-${f}.zip.sha256; do
+        a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/${ff}
+        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+      done
+    done
+  done
+  log ""
+
+  # update sites
+  for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
+    for f in core coretests central earlyaccess; do
+      for ff in artifacts.xml.xz content.xml.xz; do
+        a=${u}/${f}/${versionWithRespin_jbt}/${ff}
+        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+      done
+      log ""
+    done
+  done
+
 fi
 
 ##################################
@@ -169,47 +166,6 @@ if [[ ${versionWithRespin_ds} ]]; then
   if [[ ${qual} == "stable" ]]; then 
     versionWithRespin_ds_latest_INT=${versionWithRespin_ds} # but for stable, look for .GA
   fi
-  for u in http://www.qa.jboss.com/binaries/devstudio/${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
-    for f in devstudio-${versionWithRespin_ds_latest_INT}-installer-eap.jar devstudio-${versionWithRespin_ds_latest_INT}-installer-standalone.jar \
-      devstudio-${versionWithRespin_ds_latest_INT}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest_INT}-updatesite-core.zip; do
-      for ff in $f ${f}.sha256; do
-        a=${u}/${ff}
-        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-        if [[ $stat ]]; then # try backup URL (.latest or .GA)
-          #logerr "${a}: " "${red}NO${norm}"
-          log ""
-          a=${u}/${ff/.latest/.GA}
-          logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-        fi
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
-      done
-    done
-  done
-  log ""
-
-  # check installer build folder [EXTERNAL]
-  for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
-    for f in devstudio-${versionWithRespin_ds_latest}-installer-standalone.jar \
-      devstudio-${versionWithRespin_ds_latest}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest}-updatesite-core.zip; do
-      for ff in $f ${f}.sha256; do
-        logn "${u}/${ff}: "; stat=$(curl -I -s ${u}/${ff} | egrep "404")
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${ff}: " "${red}NO${norm}"; let notOK+=1; fi
-      done
-    done
-  done
-  log ""
-
-  # check build folders
-  for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds; do
-    for f in central earlyaccess; do
-      for ff in repo/artifacts.xml.xz repo/content.xml.xz repository.zip repository.zip.sha256; do
-        a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/${ff}
-        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
-      done
-  	log ""
-    done
-  done
 
   # discovery sites
   if [[ ${skipdiscovery} -lt 1 ]]; then 
@@ -231,9 +187,69 @@ if [[ ${versionWithRespin_ds} ]]; then
       done
     done
     log ""
+
+    for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
+      for f in discovery.central; do
+        for ff in compositeContent.xml compositeArtifacts.xml devstudio-directory.xml plugins/; do
+          logn "${u}/${f}/${versionWithRespin_ds}/${ff}: "; stat=$(curl -I -s ${u}/${f}/${versionWithRespin_ds}/${ff} | egrep "404"); 
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${f}/${versionWithRespin_ds}/${ff}: " "${red}NO${norm}"; let notOK+=1; fi
+        done
+      done
+      log ""
+      for f in discovery.earlyaccess; do
+        for ff in compositeContent.xml compositeArtifacts.xml devstudio-directory.xml devstudio-earlyaccess.properties plugins/; do
+          logn "${u}/${f}/${versionWithRespin_ds}/${ff}: "; stat=$(curl -I -s ${u}/${f}/${versionWithRespin_ds}/${ff} | egrep "404"); 
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${f}/${versionWithRespin_ds}/${ff}: " "${red}NO${norm}"; let notOK+=1; fi
+        done
+      done
+    done
+    log ""
   fi
 
-  # check zips
+  # zips
+  for u in http://www.qa.jboss.com/binaries/devstudio/${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
+    for f in devstudio-${versionWithRespin_ds_latest_INT}-installer-eap.jar devstudio-${versionWithRespin_ds_latest_INT}-installer-standalone.jar \
+      devstudio-${versionWithRespin_ds_latest_INT}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest_INT}-updatesite-core.zip; do
+      for ff in $f ${f}.sha256; do
+        a=${u}/${ff}
+        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+        if [[ $stat ]]; then # try backup URL (.latest or .GA)
+          #logerr "${a}: " "${red}NO${norm}"
+          log ""
+          a=${u}/${ff/.latest/.GA}
+          logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+        fi
+        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+      done
+    done
+  done
+  log ""
+
+  # installer build folder [EXTERNAL]
+  for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
+    for f in devstudio-${versionWithRespin_ds_latest}-installer-standalone.jar \
+      devstudio-${versionWithRespin_ds_latest}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest}-updatesite-core.zip; do
+      for ff in $f ${f}.sha256; do
+        logn "${u}/${ff}: "; stat=$(curl -I -s ${u}/${ff} | egrep "404")
+        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${ff}: " "${red}NO${norm}"; let notOK+=1; fi
+      done
+    done
+  done
+  log ""
+
+  # build folders
+  for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds; do
+    for f in central earlyaccess; do
+      for ff in repo/artifacts.xml.xz repo/content.xml.xz repository.zip repository.zip.sha256; do
+        a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/${ff}
+        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+      done
+  	log ""
+    done
+  done
+
+  # zips
   for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
     for f in core/devstudio-${versionWithRespin_ds}-updatesite-core.zip          core/devstudio-${versionWithRespin_ds}-target-platform.zip \
         central/devstudio-${versionWithRespin_ds}-updatesite-central.zip         core/devstudio-${versionWithRespin_ds}-target-platform-central.zip \
@@ -256,26 +272,6 @@ if [[ ${versionWithRespin_ds} ]]; then
   	log ""
     done
   done
-
-  # check discovery sites
-  if [[ ${skipdiscovery} -lt 1 ]]; then 
-    for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
-      for f in discovery.central; do
-        for ff in compositeContent.xml compositeArtifacts.xml devstudio-directory.xml plugins/; do
-          logn "${u}/${f}/${versionWithRespin_ds}/${ff}: "; stat=$(curl -I -s ${u}/${f}/${versionWithRespin_ds}/${ff} | egrep "404"); 
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${f}/${versionWithRespin_ds}/${ff}: " "${red}NO${norm}"; let notOK+=1; fi
-        done
-      done
-      log ""
-      for f in discovery.earlyaccess; do
-        for ff in compositeContent.xml compositeArtifacts.xml devstudio-directory.xml devstudio-earlyaccess.properties plugins/; do
-          logn "${u}/${f}/${versionWithRespin_ds}/${ff}: "; stat=$(curl -I -s ${u}/${f}/${versionWithRespin_ds}/${ff} | egrep "404"); 
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${f}/${versionWithRespin_ds}/${ff}: " "${red}NO${norm}"; let notOK+=1; fi
-        done
-      done
-    done
-    log ""
-  fi
 
 fi
 
