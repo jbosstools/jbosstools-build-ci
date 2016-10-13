@@ -12,6 +12,7 @@ eclipseReleaseName=neon
 qual=staging # or development or stable
 static=""
 quiet=0
+skipdiscovery=0; # flag to skip checking discovery sites
 
 logn ()
 {
@@ -52,6 +53,7 @@ while [[ "$#" -gt 0 ]]; do
     '-ern') eclipseReleaseName="$2"; shift 1;;
     '-qual') qual="$2"; shift 1;;
     '-q') quiet="1"; shift 0;;
+    '-skipdiscovery') skipdiscovery=1; shift 0;;
   esac
   shift 1
 done
@@ -86,24 +88,26 @@ if [[ ${versionWithRespin_jbt} ]]; then
   done
 
   # discovery sites
-  for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
-    for f in discovery.central; do
-      for ff in compositeContent.xml compositeArtifacts.xml jbosstools-directory.xml plugins/; do
-        a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/repo/${ff}
-        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+  if [[ ${skipdiscovery} -lt 1 ]]; then 
+    for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
+      for f in discovery.central; do
+        for ff in compositeContent.xml compositeArtifacts.xml jbosstools-directory.xml plugins/; do
+          a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/repo/${ff}
+          logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+        done
+      done
+      log ""
+      for f in discovery.earlyaccess; do
+        for ff in compositeContent.xml compositeArtifacts.xml jbosstools-directory.xml jbosstools-earlyaccess.properties plugins/; do
+          a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/repo/${ff}
+          logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+        done
       done
     done
     log ""
-    for f in discovery.earlyaccess; do
-      for ff in compositeContent.xml compositeArtifacts.xml jbosstools-directory.xml jbosstools-earlyaccess.properties plugins/; do
-        a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/repo/${ff}
-        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
-      done
-    done
-  done
-  log ""
+  fi
 
   # browsersim-standalone.zip
   for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
@@ -130,30 +134,35 @@ if [[ ${versionWithRespin_jbt} ]]; then
   done
 
   # check discovery sites
-  for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
-    for f in discovery.central; do
-      for ff in jbosstools-directory.xml plugins/; do
-        a=${u}/${f}/${versionWithRespin_jbt}/${ff}
-        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+  if [[ ${skipdiscovery} -lt 1 ]]; then 
+    for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
+      for f in discovery.central; do
+        for ff in compositeContent.xml compositeArtifacts.xml jbosstools-directory.xml plugins/; do
+          a=${u}/${f}/${versionWithRespin_jbt}/${ff}
+          logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+        done
+      done
+      log ""
+      for f in discovery.earlyaccess; do
+        for ff in compositeContent.xml compositeArtifacts.xml jbosstools-directory.xml jbosstools-earlyaccess.properties plugins/; do
+          a=${u}/${f}/${versionWithRespin_jbt}/${ff}
+          logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+        done
       done
     done
     log ""
-    for f in discovery.earlyaccess; do
-      for ff in jbosstools-directory.xml jbosstools-earlyaccess.properties plugins/; do
-        a=${u}/${f}/${versionWithRespin_jbt}/${ff}
-        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
-      done
-    done
-  done
-  log ""
+  fi
 
 fi
 
 ##################################
 
 if [[ ${versionWithRespin_ds} ]]; then
+
+  # if versionWithRespin_jbt ends with any of abcdxyz, trim tht character off to get version_jbt without the respin-suffix
+  version_ds=$(echo ${versionWithRespin_ds} | sed -e '/[abcdxyz]$/ s/\(^.*\)\(.$\)/\1/')
 
   # check installer build folder [INTERNAL]
   versionWithRespin_ds_latest_INT=${versionWithRespin_ds_latest} # normally this is a .latest filename
@@ -203,24 +212,26 @@ if [[ ${versionWithRespin_ds} ]]; then
   done
 
   # discovery sites
-  for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds; do
-    for f in discovery.central; do
-      for ff in compositeContent.xml compositeArtifacts.xml devstudio-directory.xml plugins/; do
-        a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/repo/${ff}
-        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+  if [[ ${skipdiscovery} -lt 1 ]]; then 
+    for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds; do
+      for f in discovery.central; do
+        for ff in compositeContent.xml compositeArtifacts.xml devstudio-directory.xml plugins/; do
+          a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/repo/${ff}
+          logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+        done
+      done
+      log ""
+      for f in discovery.earlyaccess; do
+        for ff in compositeContent.xml compositeArtifacts.xml devstudio-directory.xml devstudio-earlyaccess.properties plugins/; do
+          a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/repo/${ff}
+          logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+        done
       done
     done
     log ""
-    for f in discovery.earlyaccess; do
-      for ff in compositeContent.xml compositeArtifacts.xml devstudio-directory.xml devstudio-earlyaccess.properties plugins/; do
-        a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/repo/${ff}
-        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
-      done
-    done
-  done
-  log ""
+  fi
 
   # check zips
   for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
@@ -247,22 +258,24 @@ if [[ ${versionWithRespin_ds} ]]; then
   done
 
   # check discovery sites
-  for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
-    for f in discovery.central; do
-      for ff in compositeContent.xml compositeArtifacts.xml devstudio-directory.xml plugins/; do
-        logn "${u}/${f}/${versionWithRespin_ds}/${ff}: "; stat=$(curl -I -s ${u}/${f}/${versionWithRespin_ds}/${ff} | egrep "404"); 
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${f}/${versionWithRespin_ds}/${ff}: " "${red}NO${norm}"; let notOK+=1; fi
+  if [[ ${skipdiscovery} -lt 1 ]]; then 
+    for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
+      for f in discovery.central; do
+        for ff in compositeContent.xml compositeArtifacts.xml devstudio-directory.xml plugins/; do
+          logn "${u}/${f}/${versionWithRespin_ds}/${ff}: "; stat=$(curl -I -s ${u}/${f}/${versionWithRespin_ds}/${ff} | egrep "404"); 
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${f}/${versionWithRespin_ds}/${ff}: " "${red}NO${norm}"; let notOK+=1; fi
+        done
+      done
+      log ""
+      for f in discovery.earlyaccess; do
+        for ff in compositeContent.xml compositeArtifacts.xml devstudio-directory.xml devstudio-earlyaccess.properties plugins/; do
+          logn "${u}/${f}/${versionWithRespin_ds}/${ff}: "; stat=$(curl -I -s ${u}/${f}/${versionWithRespin_ds}/${ff} | egrep "404"); 
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${f}/${versionWithRespin_ds}/${ff}: " "${red}NO${norm}"; let notOK+=1; fi
+        done
       done
     done
     log ""
-    for f in discovery.earlyaccess; do
-      for ff in compositeContent.xml compositeArtifacts.xml devstudio-directory.xml devstudio-earlyaccess.properties plugins/; do
-        logn "${u}/${f}/${versionWithRespin_ds}/${ff}: "; stat=$(curl -I -s ${u}/${f}/${versionWithRespin_ds}/${ff} | egrep "404"); 
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${f}/${versionWithRespin_ds}/${ff}: " "${red}NO${norm}"; let notOK+=1; fi
-      done
-    done
-  done
-  log ""
+  fi
 
 fi
 
