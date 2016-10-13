@@ -191,10 +191,10 @@ for site in ${sites}; do
         fi
         ${RSYNC} ${y} ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip &>${consoleDest}
         ${RSYNC} ${y}.sha256 ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256 &>${consoleDest}
-      elif [[ "${site/discovery}" == "${site}" ]] || [[ "${site/browsersim-standalone}" == "${site}" ]] || [[ ${skipUpdateZip} -gt 0 ]]; then
+      elif [[ ${skipUpdateZip} -gt 0 ]] || [[ "${site/discovery}" == "${site}" ]] || [[ "${site/browsersim-standalone}" == "${site}" ]]; then
         # don't warn for discovery sites and browsersim standalone since they don't have update sites
         echo "[WARN] [$site] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
-      elif [[ ${requireUpdateZip} -gt 0 ]]
+      elif [[ ${requireUpdateZip} -gt 0 ]]; then
         echo "[ERROR] [$site] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
       fi
       # if we have a zip but no repo folder, unpack the zip into update site folder
@@ -216,9 +216,9 @@ for site in ${sites}; do
         DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/"
       else
         # don't warn for discovery sites and browsersim standalone since they don't have update sites
-        if [[ "${site/discovery}" == "${site}" ]] || [[ "${site/browsersim-standalone}" == "${site}" ]] || [[ ${skipUpdateSite} -gt 0 ]]; then
+        if [[ ${skipUpdateSite} -gt 0 ]] || [[ "${site/discovery}" == "${site}" ]] || [[ "${site/browsersim-standalone}" == "${site}" ]]; then
           echo "[WARN] [$site] No update site found to publish in ${tmpdir}/all/repo/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
-        elif [[ ${requireUpdateSite} -gt 0 ]]
+        elif [[ ${requireUpdateSite} -gt 0 ]]; then
           echo "[ERROR] [$site] No update site found to publish in ${tmpdir}/all/repo/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
         fi
       fi
