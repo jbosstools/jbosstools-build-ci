@@ -72,8 +72,8 @@ fi
 
 if [[ ${versionWithRespin_jbt} ]]; then
 
-  # if versionWithRespin_jbt ends with any of abcdxyz, trim tht character off to get version_jbt without the respin-suffix
-  version_jbt=$(echo ${versionWithRespin_jbt} | sed -e '/[abcdxyz]$/ s/\(^.*\)\(.$\)/\1/')
+  # if versionWithRespin_jbt ends with any of abcdwxyz, trim tht character off to get version_jbt without the respin-suffix
+  version_jbt=$(echo ${versionWithRespin_jbt} | sed -e '/[abcdwxyz]$/ s/\(^.*\)\(.$\)/\1/')
 
   # discovery sites
   if [[ ${skipdiscovery} -lt 1 ]]; then 
@@ -158,8 +158,8 @@ fi
 
 if [[ ${versionWithRespin_ds} ]]; then
 
-  # if versionWithRespin_jbt ends with any of abcdxyz, trim tht character off to get version_jbt without the respin-suffix
-  version_ds=$(echo ${versionWithRespin_ds} | sed -e '/[abcdxyz]$/ s/\(^.*\)\(.$\)/\1/')
+  # if versionWithRespin_jbt ends with any of abcdwxyz, trim tht character off to get version_jbt without the respin-suffix
+  version_ds=$(echo ${versionWithRespin_ds} | sed -e '/[abcdwxyz]$/ s/\(^.*\)\(.$\)/\1/')
 
   # check installer build folder [INTERNAL]
   versionWithRespin_ds_latest_INT=${versionWithRespin_ds_latest} # normally this is a .latest filename
