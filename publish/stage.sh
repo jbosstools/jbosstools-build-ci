@@ -93,7 +93,7 @@ while [[ "$#" -gt 0 ]]; do
     '-DID'|'-ID') whichID="$2"; shift 1;; # optionally, set a specific build ID such as 2015-10-02_18-28-18-B124; if not set, pull latest
     '-q') quiet=1; shift 0;; # suppress extra console output
 
-    '-EXCLUDE') EXCLUDESTRING2="${EXCLUDESTRING2} --exclude=\"$2\""; shift 1;; # custom excludes, eg., "eap.jar*" to exclude copying EAP bundles to devstudio.redhat.com
+    '-EXCLUDE') EXCLUDESTRING2="${EXCLUDESTRING2} --exclude=$2"; shift 1;; # custom excludes, eg., "eap.jar*" to exclude copying EAP bundles to devstudio.redhat.com
 
     # override to skip checking for an update site or zip
     '-skipUpdateZip'|'-suz')   skipUpdateZip=1; shift 0;;
@@ -155,7 +155,7 @@ for site in ${sites}; do
     if [[ ${site} == "site" ]]; then buildname="core"; else buildname=${site/-site/}; fi
     log "[DEBUG] [$site] Latest build for ${sitename} (${site}): ${ID}" | egrep "${grepstring}"
     if [[ ${SOURCE} != ${DESTINATION} ]] && [[ ${SOURCE/@/} == ${SOURCE} ]]; then # copy from /local/ path to remote
-      tmpdir=${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/
+      tmpdir=${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/ && pushd $tmpdir >/dev/null
     else # copy from filemgmt to filemgmt via tmp folder intermediate
       # use ${HOME}/temp-stage/ instead of /tmp because insufficient space
       tmpdir=`mkdir -p ${HOME}/temp-stage/ && mktemp -d -t -p ${HOME}/temp-stage/` && mkdir -p $tmpdir && pushd $tmpdir >/dev/null
@@ -173,8 +173,8 @@ for site in ${sites}; do
         echo "mkdir builds" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
         echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/ &>${consoleDest}
       fi
-      log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING} ${EXCLUDESTRING2}" | egrep "${grepstring}"
-      ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING} ${EXCLUDESTRING2}
+      log "[DEBUG] [$site] + ${RSYNC} ${EXCLUDESTRING} ${EXCLUDESTRING2} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/" | egrep "${grepstring}"
+      ${RSYNC} ${EXCLUDESTRING} ${EXCLUDESTRING2} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ 
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/"
       # symlink latest build
       ln -s ${ID} latest; ${RSYNC} ${tmpdir}/latest ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/ &>${consoleDest}
