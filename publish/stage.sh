@@ -27,7 +27,7 @@ skipUpdateSite=0
 # force checking for an update site or zip
 requireUpdateZip=0
 requireUpdateSite=0
-# custom excludes, eg., ".*installer-eap.*"
+# custom excludes, eg., "*eap.jar*"
 EXCLUDESTRING2=""
 
 norm="\033[0;39m"
@@ -93,7 +93,7 @@ while [[ "$#" -gt 0 ]]; do
     '-DID'|'-ID') whichID="$2"; shift 1;; # optionally, set a specific build ID such as 2015-10-02_18-28-18-B124; if not set, pull latest
     '-q') quiet=1; shift 0;; # suppress extra console output
 
-    '-EXCLUDE') EXCLUDESTRING2="${EXCLUDESTRING2} --exclude=\"$2\""; shift 1;; # custom excludes, eg., ".*installer-eap.*" to exclude copying EAP bundle to devstudio.redhat.com
+    '-EXCLUDE') EXCLUDESTRING2="${EXCLUDESTRING2} --exclude=\"$2\""; shift 1;; # custom excludes, eg., "eap.jar*" to exclude copying EAP bundles to devstudio.redhat.com
 
     # override to skip checking for an update site or zip
     '-skipUpdateZip'|'-suz')   skipUpdateZip=1; shift 0;;
