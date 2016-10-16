@@ -117,7 +117,7 @@ if [[ ! ${DESTDIR} ]] && [[ ! ${SRC_DIR} ]]; then echo "ERROR: DESTDIR and SRC_D
 if [[ ! ${DESTDIR} ]] && [[ ${SRC_DIR} ]]; then DESTDIR="${SRC_DIR}"; fi
 if [[ ! ${SRC_DIR} ]] && [[ ${DESTDIR} ]]; then SRC_DIR="${DESTDIR}"; fi
 
-if [[ ${SOURCE/devstudio/} != ${SOURCE} ]] || [[ ${SOURCE/RHDS/} != ${SOURCE} ]]; then
+if [[ ${DESTINATION/devstudio/} != ${DESTINATION} ]] || [[ ${DESTINATION/RHDS/} != ${DESTINATION} ]]; then
   PRODUCT="devstudio"
   ZIPPREFIX="devstudio-"
 fi
