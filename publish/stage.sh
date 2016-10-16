@@ -43,7 +43,7 @@ log ()
 usage ()
 {
   echo "Usage  : $0 -sites \"site1 site2 ...\" -stream STREAM -vr versionWithRespin -sd SRC_DIR [-dd DESTDIR] [-st SRC_TYPE] [-dt DESTTYPE] \\"
-  echo "            [-JOB_NAME JOB_NAME] [-DESTINATION user@server:/path] [-DEST_URL http://server.url] [-WORKSPACE WORKSPACE] [-ID ID] [-q]"
+  echo "            [-JOB_NAME JOB_NAME] [-DESTINATION user@server:/path] [-DEST_URL http://server.url] [-ID ID] [-q]"
   echo ""
 
   echo "To stage JBT core, coretests, central & earlyaccess (4 builds)"
@@ -90,7 +90,6 @@ while [[ "$#" -gt 0 ]]; do
     '-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /qa/services/http/binaries/RHDS
     '-DEST_URL')    DEST_URL="$2"; shift 1;; # override for JBDS publishing, eg., https://devstudio.redhat.com or http://www.qa.jboss.com/binaries/RHDS
 
-    '-DWORKSPACE'|'-WORKSPACE') WORKSPACE="$2"; shift 1;; # optional
     '-DID'|'-ID') whichID="$2"; shift 1;; # optionally, set a specific build ID such as 2015-10-02_18-28-18-B124; if not set, pull latest
     '-q') quiet=1; shift 0;; # suppress extra console output
 
@@ -121,8 +120,6 @@ if [[ ${DESTINATION/devstudio/} != ${DESTINATION} ]] || [[ ${DESTINATION/RHDS/} 
   PRODUCT="devstudio"
   ZIPPREFIX="devstudio-"
 fi
-
-if [[ ! ${WORKSPACE} ]]; then WORKSPACE=${tmpdir}; fi
 
 for site in ${sites}; do
   # evaluate site or stream variables embedded in JOB_NAME
@@ -185,7 +182,7 @@ for site in ${sites}; do
       # copy update site zip
       suffix=-updatesite-${sitename}
       y=${tmpdir}/all/repository.zip
-      if [[ ! -f $y ]]; then
+      if [[ ! -f $y ]] && [[ -d ${tmpdir}/all/ ]]; then
         y=$(find ${tmpdir}/all/ -name "${ZIPPREFIX}*${suffix}.zip" -a -not -name "*latest*")
       fi
       if [[ -f $y ]]; then
