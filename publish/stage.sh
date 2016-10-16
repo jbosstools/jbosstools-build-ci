@@ -27,6 +27,8 @@ skipUpdateSite=0
 # force checking for an update site or zip
 requireUpdateZip=0
 requireUpdateSite=0
+# custom excludes, eg., ".*installer-eap.*"
+EXCLUDESTRING2=""
 
 norm="\033[0;39m"
 green="\033[1;32m"
@@ -79,11 +81,12 @@ while [[ "$#" -gt 0 ]]; do
     '-SRC_DIR'|'-sd') SRC_DIR="$2"; shift 1;; # mars or 9.0 or neon or 10.0 (if not set, default to same value as DESTDIR)
     '-DESTDIR'|'-dd') DESTDIR="$2"; shift 1;; # mars or 9.0 or neon or 10.0, or could be static/mars, static/9.0, etc.
 
-    '-SRC_TYPE'|'-st') SRC_TYPE="$2"; shift 1;; # by default, snapshots but could be staging? (TODO: UNTESTED!)
-    '-DESTTYPE'|'-dt') DESTTYPE="$2"; shift 1;; # by default, staging but could be development? (TODO: UNTESTED!)
+    '-SRC_TYPE'|'-st') SRC_TYPE="$2"; shift 1;; # by default, snapshots but could be staging
+    '-DESTTYPE'|'-dt') DESTTYPE="$2"; shift 1;; # by default, staging but could be development
 
     '-DJOB_NAME'|'-JOB_NAME') rawJOB_NAME="$2"; shift 1;;
 
+    '-SOURCE')      SOURCE="$2"; shift 1;; # override for JBDS from /qa/services/http/binaries/RHDS to devstudio@filemgmt.jboss.org:/www_htdocs/devstudio - saves time!
     '-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /qa/services/http/binaries/RHDS
     '-DEST_URL')    DEST_URL="$2"; shift 1;; # override for JBDS publishing, eg., https://devstudio.redhat.com or http://www.qa.jboss.com/binaries/RHDS
 
@@ -91,17 +94,19 @@ while [[ "$#" -gt 0 ]]; do
     '-DID'|'-ID') whichID="$2"; shift 1;; # optionally, set a specific build ID such as 2015-10-02_18-28-18-B124; if not set, pull latest
     '-q') quiet=1; shift 0;; # suppress extra console output
 
-	# override to skip checking for an update site or zip
-	'-skipUpdateZip'|'-suz')   skipUpdateZip=1; shift 0;;
-	'-skipUpdateSite'|'-sus') skipUpdateSite=1; shift 0;;
-	# force checking for an update site or zip
-	'-requireUpdateZip'|'-ruz') requireUpdateZip=1; shift 0;;
-	'-requireUpdateSite'|'-rus') requireUpdateSite=1; shift 0;;
+    '-EXCLUDE') EXCLUDESTRING2="${EXCLUDESTRING2} --exclude=\"$2\""; shift 1;; # custom excludes, eg., ".*installer-eap.*" to exclude copying EAP bundle to devstudio.redhat.com
 
-    *) OTHERFLAGS="${OTHERFLAGS} $1"; shift 0;;
+    # override to skip checking for an update site or zip
+    '-skipUpdateZip'|'-suz')   skipUpdateZip=1; shift 0;;
+    '-skipUpdateSite'|'-sus') skipUpdateSite=1; shift 0;;
+    # force checking for an update site or zip
+    '-requireUpdateZip'|'-ruz') requireUpdateZip=1; shift 0;;
+    '-requireUpdateSite'|'-rus') requireUpdateSite=1; shift 0;;
   esac
   shift 1
 done
+
+if [[ ! ${SOURCE} ]]; then SOURCE=${DESTINATION}; fi
 
 if [[ $quiet == 1 ]]; then consoleDest=/dev/null; else consoleDest=/dev/stdout; fi
 
@@ -112,7 +117,7 @@ if [[ ! ${DESTDIR} ]] && [[ ! ${SRC_DIR} ]]; then echo "ERROR: DESTDIR and SRC_D
 if [[ ! ${DESTDIR} ]] && [[ ${SRC_DIR} ]]; then DESTDIR="${SRC_DIR}"; fi
 if [[ ! ${SRC_DIR} ]] && [[ ${DESTDIR} ]]; then SRC_DIR="${DESTDIR}"; fi
 
-if [[ ${DESTINATION/devstudio/} != ${DESTINATION} ]] || [[ ${DESTINATION/RHDS/} != ${DESTINATION} ]]; then
+if [[ ${SOURCE/devstudio/} != ${SOURCE} ]] || [[ ${SOURCE/RHDS/} != ${SOURCE} ]]; then
   PRODUCT="devstudio"
   ZIPPREFIX="devstudio-"
 fi
@@ -126,18 +131,18 @@ for site in ${sites}; do
   if [[ ${whichID} == "latest" ]]; then
     ID=""
     log "[DEBUG] [$site] + Check ${DEST_URL}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}" | egrep "${grepstring}"
-    if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local
-      ID=$(ls ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} | grep "20.\+" | grep -v sftp | sort | tail -1)
+    if [[ ${SOURCE/@/} == ${SOURCE} ]]; then # local
+      ID=$(ls ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} | grep "20.\+" | grep -v sftp | sort | tail -1)
     else # remote
-      ID=$(echo "ls 20*" | sftp ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1 | grep "20.\+" | grep -v sftp | sort | tail -1)
+      ID=$(echo "ls 20*" | sftp ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1 | grep "20.\+" | grep -v sftp | sort | tail -1)
     fi
     ID=${ID%%/*}
     if [[ ${ID} ]]; then
-      echo -e "[INFO] [$site] In ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} found ID = ${green}${ID}${norm}" | egrep "${JOB_NAME}|${site}|${ID}|ERROR"
+      echo -e "[INFO] [$site] In ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} found ID = ${green}${ID}${norm}" | egrep "${JOB_NAME}|${site}|${ID}|ERROR"
     else
       log "[ERROR] [$site] No latest build found for ${red}${JOB_NAME}${norm} :: ${red}${site}${norm} :: ${red}${ID}${norm}" | egrep "${grepstring}"
-      log "[DEBUG] echo \"ls 20*\" | sftp ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1 ... "
-      log "[DEBUG] $(echo "ls 20*" | sftp ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1)"
+      log "[DEBUG] echo \"ls 20*\" | sftp ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1 ... "
+      log "[DEBUG] $(echo "ls 20*" | sftp ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1)"
     fi
   fi
   grepstring="${JOB_NAME}|${site}|${ID}|ERROR|${versionWithRespin}|${SRC_DIR}|${DESTDIR}|${SRC_TYPE}|${DESTTYPE}|exclude"
@@ -152,10 +157,14 @@ for site in ${sites}; do
     if [[ ${site} == "site" || ${site} == "product" ]]; then sitename="core"; else sitename=${site/-site/}; fi
     if [[ ${site} == "site" ]]; then buildname="core"; else buildname=${site/-site/}; fi
     log "[DEBUG] [$site] Latest build for ${sitename} (${site}): ${ID}" | egrep "${grepstring}"
-    # use ${HOME}/temp-stage/ instead of /tmp because insufficient space
-    tmpdir=`mkdir -p ${HOME}/temp-stage/ && mktemp -d -t -p ${HOME}/temp-stage/` && mkdir -p $tmpdir && pushd $tmpdir >/dev/null
-      # echo "+ ${RSYNC} ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/" | egrep "${grepstring}"
-      ${RSYNC} ${DESTINATION}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
+    if [[ ${SOURCE} != ${DESTINATION} ]] && [[ ${SOURCE/@/} == ${SOURCE} ]]; then # copy from /local/ path to remote
+      tmpdir=${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/
+    else # copy from filemgmt to filemgmt via tmp folder intermediate
+      # use ${HOME}/temp-stage/ instead of /tmp because insufficient space
+      tmpdir=`mkdir -p ${HOME}/temp-stage/ && mktemp -d -t -p ${HOME}/temp-stage/` && mkdir -p $tmpdir && pushd $tmpdir >/dev/null
+      # echo "+ ${RSYNC} ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/" | egrep "${grepstring}"
+      ${RSYNC} ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
+    fi
       # copy build folder
       if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
         log "[DEBUG] [$site] + mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}" | egrep "${grepstring}"
@@ -167,8 +176,8 @@ for site in ${sites}; do
         echo "mkdir builds" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
         echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname}" | sftp ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/ &>${consoleDest}
       fi
-      log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING}" | egrep "${grepstring}"
-      ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING}
+      log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING} ${EXCLUDESTRING2}" | egrep "${grepstring}"
+      ${RSYNC} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ ${EXCLUDESTRING} ${EXCLUDESTRING2}
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/"
       # symlink latest build
       ln -s ${ID} latest; ${RSYNC} ${tmpdir}/latest ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/ &>${consoleDest}
@@ -227,7 +236,9 @@ for site in ${sites}; do
         fi
       fi
     popd >/dev/null
-    rm -fr $tmpdir
+    if [[ ${tmpdir/temp-stage/} != ${tmpdir} ]]; then # remove the temp folder
+      rm -fr $tmpdir
+    fi
     for du in ${DEST_URLs}; do echo -e "[INFO] [$site] ${green}${du}${norm}" | egrep "${grepstring}"; done
     echo -e "[INFO] [$site] ${green}DONE${norm}: ${green}${JOB_NAME}${norm} :: ${green}${site}${norm} :: ${green}${ID}${norm}" | egrep "${grepstring}"
     echo ""
