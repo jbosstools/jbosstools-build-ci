@@ -283,8 +283,8 @@ fi
 
 ##################################
 
-log "[INFO] Found URLs: ${green}${OK}${norm}"
+log "[INFO] Found URLs: ${OK}"
 if [[ ${notOK} -gt 0 ]]; then 
-	logerr "" "[ERROR] Missing URLs: ${red}${notOK}${norm}"
+	logerr "" "[ERROR] Missing URLs: ${notOK}"
 	exit $notOK
 fi
