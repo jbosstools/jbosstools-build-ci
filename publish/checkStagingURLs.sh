@@ -14,6 +14,7 @@ static=""
 quiet=0
 skipdiscovery=0; # flag to skip discovery sites check
 onlydiscovery=0; # flag to only check discovery sites
+OPTIONS="" # container for options so we can dump them into the console for logging
 
 logn ()
 {
@@ -54,8 +55,8 @@ while [[ "$#" -gt 0 ]]; do
     '-ern') eclipseReleaseName="$2"; shift 1;;
     '-qual') qual="$2"; shift 1;;
     '-q') quiet="1"; shift 0;;
-    '-skipdiscovery') skipdiscovery=1; shift 0;;
-    '-onlydiscovery') onlydiscovery=1; shift 0;;
+    '-skipdiscovery') skipdiscovery=1; OPTIONS="${OPTIONS} skipdiscovery"; shift 0;;
+    '-onlydiscovery') onlydiscovery=1; OPTIONS="${OPTIONS} onlydiscovery"; shift 0;;
   esac
   shift 1
 done
@@ -283,8 +284,8 @@ fi
 
 ##################################
 
-log "[INFO] Found URLs: ${OK}"
+log "[INFO] $qual URLs found: ${OK} (${OPTIONS})"
 if [[ ${notOK} -gt 0 ]]; then 
-	logerr "" "[ERROR] Missing URLs: ${notOK}"
+	logerr "" "[ERROR] $qual URLs missing: ${notOK} (${OPTIONS})"
 	exit $notOK
 fi
