@@ -155,8 +155,20 @@ if [[ ${versionWithRespin_jbt} ]]; then
         log ""
       done
     done
-  fi
 
+    # released artifacts linked from tools.jboss.org
+    if [[ $qual != "staging" ]]; then 
+      for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates/core; do
+        for f in browsersim-standalone src updatesite-core; do
+          for ff in jbosstools-${version_jbt}-${f}.zip jbosstools-${version_jbt}-${f}.zip.sha256; do
+            a=${u}/${ff}
+            logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+            if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+          done
+        done
+      done
+    fi
+  fi
 fi
 
 ##################################
@@ -251,7 +263,7 @@ if [[ ${versionWithRespin_ds} ]]; then
           logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
         done
-    	log ""
+      log ""
       done
     done
 
@@ -275,7 +287,7 @@ if [[ ${versionWithRespin_ds} ]]; then
           logn "${u}/${f}/${versionWithRespin_ds}/${ff}: "; stat=$(curl -I -s ${u}/${f}/${versionWithRespin_ds}/${ff} | egrep "404"); 
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${f}/${versionWithRespin_ds}/${ff}: " "${red}NO${norm}"; let notOK+=1; fi
         done
-    	log ""
+      log ""
       done
     done
   fi
@@ -286,6 +298,6 @@ fi
 
 log "[INFO] $qual URLs found: ${OK} (${OPTIONS})"
 if [[ ${notOK} -gt 0 ]]; then 
-	logerr "" "[ERROR] $qual URLs missing: ${notOK} (${OPTIONS})"
-	exit $notOK
+  logerr "" "[ERROR] $qual URLs missing: ${notOK} (${OPTIONS})"
+  exit $notOK
 fi
