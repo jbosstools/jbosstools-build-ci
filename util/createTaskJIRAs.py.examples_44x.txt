@@ -103,3 +103,27 @@ https://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/jbosstools-
 
 https://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/jbosstools-releng/job/jbosstools-releng-parent-pom-update-task-jiras/
 
+############################################################################################################
+
+Create task jiras for ui plugins as deps of core ones:
+
+# create console log summary files
+# run in a given jbosstools-* git checkout folder
+p=$(pwd); p=${p##*/}; mvn clean install -DskipTests | \
+tee ~/Screenshots/${p}-log.txt && cat ~/Screenshots/${p}-log.txt | \
+egrep -B1 "\[CoreUIDependency\]|    > " | grep -v "failed" | \
+tee ~/Screenshots/${p}-log-coreui.txt
+ 
+# rename console log files to match JIRA component names (as required, eg., for vpe => visual-page-editor-core, javaee => cdi, base => common)
+ 
+# create JIRAs
+for c in central common cdi visual-page-editor-core \
+hibernate webservices server; do \
+file="$(cat ~/Screenshots/coreui/jbosstools-${c}-log-coreui.txt)"; \
+python createTaskJIRAs.py -s https://issues.stage.jboss.org -u USER -p PWD \
+-i 4.4.2.AM3 -d 10.2.0.AM3 \
+-t "UI dependencies from Core plugins" \
+-f "The following core plugins depend on UI plugins directly or indirectly. {code}${file}{code}" \
+-c ${c} -A; \
+done
+

@@ -19,7 +19,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 usage = "\n\
 \n\
-Usage 1: %prog -u <user> -p <password> -s <JIRA server> --i <jbideversion> --d <jbdsversion>\n\
+Usage 1: %prog -u <user> -p <password> -s <JIRA server> -i <jbideversion> -d <jbdsversion>\n\
 -t <short task summary> -f <full detailed task description>\n\
 \n\
 This script will create 1 JBDS and 1 JBIDE JIRA with the specified task summary + description, then create \n\
