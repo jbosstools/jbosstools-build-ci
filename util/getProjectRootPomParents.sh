@@ -185,8 +185,8 @@ checkProjects () {
               # create new JIRA using createTaskJIRAs.py, then pass that into the commit comment below
               # if component does not exist, JIRA will be nullstring
               if [[ ${doCreateBranch} -gt 0 ]]; then # update root poms then branch
-                JIRA=$(python -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds} \
---task "Prepare for ${version_jbt} / ${version_ds}" --taskfull "Please perform the following tasks:
+                JIRAcmd="python -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds} \
+--task \"Prepare for ${version_jbt} / ${version_ds}\" --taskfull \"Please perform the following tasks:
 
 0. Make sure your component has no remaining unresolved JIRAs set for fixVersion = ${version_jbt} or ${version_ds}
 
@@ -244,11 +244,13 @@ mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MAX}
 6. If you have any outstanding [New + Noteworthy JIRAs|https://issues.jboss.org/issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28\
 ${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28${version_ds}%29%29%29%20AND%20resolution%20is%20\
 null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next.
-" \
--s ${JIRA_HOST} -u ${JIRA_USER} -p ${JIRA_PWD} -J ${componentFlag} ${k}) # $JIRA
+\" \
+-s ${JIRA_HOST} -u ${JIRA_USER} -p ${JIRA_PWD} -J ${componentFlag} ${k}"
+                echo ${JIRAcmd}
+                JIRA=$(${JIRAcmd})
               else # no branching - just update root poms
-                JIRA=$(python -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds} \
---task "Prepare for ${version_jbt} / ${version_ds}" --taskfull "Please perform the following tasks:
+                JIRAcmd="python -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds} \
+--task \"Prepare for ${version_jbt} / ${version_ds}\" --taskfull \"Please perform the following tasks:
 
 1. Check out your existing *{color:orange}${github_branch}{color}* branch:
 
@@ -294,8 +296,10 @@ mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MAX}
 6. If you have any outstanding [New + Noteworthy JIRAs|https://issues.jboss.org/issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28\
 ${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28${version_ds}%29%29%29%20AND%20resolution%20is%20\
 null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next.
-" \
--s ${JIRA_HOST} -u ${JIRA_USER} -p ${JIRA_PWD} -J ${componentFlag} ${k}) # JIRA
+\" \
+-s ${JIRA_HOST} -u ${JIRA_USER} -p ${JIRA_PWD} -J ${componentFlag} ${k}"
+                echo ${JIRAcmd}
+                JIRA=$(${JIRAcmd})
               fi
               if [[ ${j} == ${k} ]]; then
                 echo -n "$j :: " >> ${chgfile}
