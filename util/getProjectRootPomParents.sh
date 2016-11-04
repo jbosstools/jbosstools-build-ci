@@ -185,7 +185,7 @@ checkProjects () {
               # create new JIRA using createTaskJIRAs.py, then pass that into the commit comment below
               # if component does not exist, JIRA will be nullstring
               if [[ ${doCreateBranch} -gt 0 ]]; then # update root poms then branch
-                JIRA=$(python -W ignore ../jbosstools-build-ci/util/createTaskJIRAs.py --jbide ${version_jbt} --jbds ${version_ds} \
+                JIRA=$(python -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds} \
 --task "Prepare for ${version_jbt} / ${version_ds}" --taskfull "Please perform the following tasks:
 
 0. Make sure your component has no remaining unresolved JIRAs set for fixVersion = ${version_jbt} or ${version_ds}
@@ -247,7 +247,7 @@ null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20
 " \
 -s ${JIRA_HOST} -u ${JIRA_USER} -p ${JIRA_PWD} -J ${componentFlag} ${k}) # $JIRA
               else # no branching - just update root poms
-                JIRA=$(python -W ignore ../jbosstools-build-ci/util/createTaskJIRAs.py --jbide ${version_jbt} --jbds ${version_ds} \
+                JIRA=$(python -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds} \
 --task "Prepare for ${version_jbt} / ${version_ds}" --taskfull "Please perform the following tasks:
 
 1. Check out your existing *{color:orange}${github_branch}{color}* branch:
