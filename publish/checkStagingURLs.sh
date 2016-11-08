@@ -91,16 +91,16 @@ if [[ ${versionWithRespin_jbt} ]]; then
             jars=$(curl -s ${a} | grep ".jar" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
             # check jar 404s
             for j in ${jars}; do
-              logn "${a}: "; stat=$(curl -I -s ${a}${j} | egrep "404")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+              logn "${a}${j}: "; stat=$(curl -I -s ${a}${j} | egrep "404")
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}${j}: " "${red}NO${norm}"; let notOK+=1; fi
             done
           fi
           if [[ ${ff/directory.xml} != ${ff} ]]; then
             jars=$(curl -s ${a} | grep "url" | sed -e "s#.\+url=\"\([^\"]\+\)\".\+#\1#")
             # check jar 404s
             for j in ${jars}; do
-              logn "${a}: "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+              logn "${a/${ff}/${j}}: "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404")
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a/${ff}/${j}}: " "${red}NO${norm}"; let notOK+=1; fi
             done
           fi
         done
@@ -120,16 +120,16 @@ if [[ ${versionWithRespin_jbt} ]]; then
             jars=$(curl -s ${a} | grep ".jar" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
             # check jar 404s
             for j in ${jars}; do
-              logn "${a}: "; stat=$(curl -I -s ${a}${j} | egrep "404")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+              logn "${a}${j}: "; stat=$(curl -I -s ${a}${j} | egrep "404")
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}${j}: " "${red}NO${norm}"; let notOK+=1; fi
             done
           fi
           if [[ ${ff/directory.xml} != ${ff} ]]; then
             jars=$(curl -s ${a} | grep "url" | sed -e "s#.\+url=\"\([^\"]\+\)\".\+#\1#")
             # check jar 404s
             for j in ${jars}; do
-              logn "${a}: "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+              logn "${a/${ff}/${j}}: "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404")
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a/${ff}/${j}}: " "${red}NO${norm}"; let notOK+=1; fi
             done
           fi
         done
@@ -217,16 +217,16 @@ if [[ ${versionWithRespin_ds} ]]; then
             jars=$(curl -s ${a} | grep ".jar" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
             # check jar 404s
             for j in ${jars}; do
-              logn "${a}: "; stat=$(curl -I -s ${a}${j} | egrep "404")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+              logn "${a}${j}: "; stat=$(curl -I -s ${a}${j} | egrep "404")
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}${j}: " "${red}NO${norm}"; let notOK+=1; fi
             done
           fi
           if [[ ${ff/directory.xml} != ${ff} ]]; then
             jars=$(curl -s ${a} | grep "url" | sed -e "s#.\+url=\"\([^\"]\+\)\".\+#\1#")
             # check jar 404s
             for j in ${jars}; do
-              logn "${a}: "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+              logn "${a/${ff}/${j}}: "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404")
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a/${ff}/${j}}: " "${red}NO${norm}"; let notOK+=1; fi
             done
           fi
         done
@@ -246,16 +246,16 @@ if [[ ${versionWithRespin_ds} ]]; then
             jars=$(curl -s ${a} | grep ".jar" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
             # check jar 404s
             for j in ${jars}; do
-              logn "${a}: "; stat=$(curl -I -s ${a}${j} | egrep "404")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+              logn "${a}${j}: "; stat=$(curl -I -s ${a}${j} | egrep "404")
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}${j}: " "${red}NO${norm}"; let notOK+=1; fi
             done
           fi
           if [[ ${ff/directory.xml} != ${ff} ]]; then
             jars=$(curl -s ${a} | grep "url" | sed -e "s#.\+url=\"\([^\"]\+\)\".\+#\1#")
             # check jar 404s
             for j in ${jars}; do
-              logn "${a}: "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+              logn "${a/${ff}/${j}}: "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404")
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a/${ff}/${j}}: " "${red}NO${norm}"; let notOK+=1; fi
             done
           fi
         done
