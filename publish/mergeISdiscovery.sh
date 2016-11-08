@@ -33,9 +33,9 @@ while [[ "$#" -gt 0 ]]; do
     '-v'|'-version') version="$2"; shift 1;;
     '-vr'|'-versionWithRespin') versionWithRespin="$2"; shift 1;;
     '-is') ISsite="$2"; shift 1;;
-    '-q') qualities="$qualities $2"; shift 1;;
+    '-qual') qualities="$qualities $2"; shift 1;;
     '-r'|'-rootFolder') rootFolder="$2"; shift 1;;
-    '-quiet') quiet="-q"; shift 0;;
+    '-q') quiet="-q"; shift 0;;
     *) OTHERFLAGS="${OTHERFLAGS} $1"; shift 0;;
   esac
   shift 1
