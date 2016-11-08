@@ -80,39 +80,16 @@ if [[ ${versionWithRespin_jbt} ]]; then
 
   # discovery sites
   if [[ ${skipdiscovery} -lt 1 ]] || [[ ${onlydiscovery} -gt 0 ]]; then 
-    for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
+    for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds \
+             http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
       for f in discovery.central discovery.earlyaccess; do
         for ff in compositeContent.xml compositeArtifacts.xml jbosstools-earlyaccess.properties jbosstools-directory.xml plugins/; do
           if [[ ${f} == "discovery.central" ]] && [[ ${ff/earlyaccess.properties/} != ${ff} ]]; then continue; fi # skip check for central + earlyaccess.properties
-          a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/repo/${ff}
-          logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
-          if [[ ${ff} == "plugins/" ]]; then
-            jars=$(curl -s ${a} | grep ".jar" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
-            # check jar 404s
-            for j in ${jars}; do
-              logn " + ${j}: "; stat=$(curl -I -s ${a}${j} | egrep "404")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j}: " "${red}NO${norm}"; let notOK+=1; fi
-            done
-          elif [[ ${ff/directory.xml} != ${ff} ]]; then
-            jars=$(curl -s ${a} | grep "url" | sed -e "s#.\+url=\"\([^\"]\+\)\".\+#\1#")
-            # check jar 404s
-            for j in ${jars}; do
-              logn " + ${j}: "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j}: " "${red}NO${norm}"; let notOK+=1; fi
-            done
+          if [[ ${u/builds/} != ${u} ]]; then
+            a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/repo/${ff} # builds
+          else
+            a=${u}/${f}/${versionWithRespin_jbt}/${ff} # updates
           fi
-        done
-      done
-      log ""
-    done
-    log ""
-
-    for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
-      for f in discovery.central discovery.earlyaccess; do
-        for ff in compositeContent.xml compositeArtifacts.xml jbosstools-earlyaccess.properties jbosstools-directory.xml plugins/; do
-          if [[ ${f} == "discovery.central" ]] && [[ ${ff/earlyaccess.properties/} != ${ff} ]]; then continue; fi # skip check for central + earlyaccess.properties
-          a=${u}/${f}/${versionWithRespin_jbt}/${ff}
           logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
           if [[ ${ff} == "plugins/" ]]; then
@@ -204,11 +181,16 @@ if [[ ${versionWithRespin_ds} ]]; then
 
   # discovery sites
   if [[ ${skipdiscovery} -lt 1 ]] || [[ ${onlydiscovery} -gt 0 ]]; then 
-    for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds; do
+    for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds \
+             https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
       for f in discovery.central discovery.earlyaccess; do
         for ff in compositeContent.xml compositeArtifacts.xml devstudio-earlyaccess.properties devstudio-directory.xml plugins/; do
           if [[ ${f} == "discovery.central" ]] && [[ ${ff/earlyaccess.properties/} != ${ff} ]]; then continue; fi # skip check for central + earlyaccess.properties
-          a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/repo/${ff}
+          if [[ ${u/builds/} != ${u} ]]; then
+            a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/repo/${ff} # builds
+          else
+            a=${u}/${f}/${versionWithRespin_ds}/${ff} # updates
+          fi
           logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
           if [[ ${ff} == "plugins/" ]]; then
@@ -218,37 +200,7 @@ if [[ ${versionWithRespin_ds} ]]; then
               logn " + ${j}: "; stat=$(curl -I -s ${a}${j} | egrep "404")
               if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j}: " "${red}NO${norm}"; let notOK+=1; fi
             done
-          fi
-          if [[ ${ff/directory.xml} != ${ff} ]]; then
-            jars=$(curl -s ${a} | grep "url" | sed -e "s#.\+url=\"\([^\"]\+\)\".\+#\1#")
-            # check jar 404s
-            for j in ${jars}; do
-              logn " + ${j}: "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j}: " "${red}NO${norm}"; let notOK+=1; fi
-            done
-          fi
-        done
-      done
-      log ""
-    done
-    log ""
-
-    for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
-      for f in discovery.central discovery.earlyaccess; do
-        for ff in compositeContent.xml compositeArtifacts.xml devstudio-earlyaccess.properties devstudio-directory.xml plugins/; do
-          if [[ ${f} == "discovery.central" ]] && [[ ${ff/earlyaccess.properties/} != ${ff} ]]; then continue; fi # skip check for central + earlyaccess.properties
-          a=${u}/${f}/${versionWithRespin_ds}/${ff}
-          logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
-          if [[ ${ff} == "plugins/" ]]; then
-            jars=$(curl -s ${a} | grep ".jar" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
-            # check jar 404s
-            for j in ${jars}; do
-              logn " + ${j}: "; stat=$(curl -I -s ${a}${j} | egrep "404")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j}: " "${red}NO${norm}"; let notOK+=1; fi
-            done
-          fi
-          if [[ ${ff/directory.xml} != ${ff} ]]; then
+          elif [[ ${ff/directory.xml} != ${ff} ]]; then
             jars=$(curl -s ${a} | grep "url" | sed -e "s#.\+url=\"\([^\"]\+\)\".\+#\1#")
             # check jar 404s
             for j in ${jars}; do
