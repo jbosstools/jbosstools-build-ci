@@ -111,7 +111,6 @@ if [[ ${versionWithRespin_jbt} ]]; then
       done
       log ""
     done
-    log ""
   fi
 
   if [[ ${onlydiscovery} -lt 1 ]]; then 
@@ -212,7 +211,6 @@ if [[ ${versionWithRespin_ds} ]]; then
       done
       log ""
     done
-    log ""
   fi
 
   if [[ ${onlydiscovery} -lt 1 ]]; then 
