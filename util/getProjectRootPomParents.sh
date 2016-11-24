@@ -44,7 +44,7 @@ version_ds=10.2.0.GA
 version_parent=4.4.2.Final-SNAPSHOT
 #TODO support branching from somewhere other than master
 github_branch=jbosstools-4.4.1.x # or master
-github_branch_fallback=master # if required branch doesn't exist, fall back to fetching sources from this branch instead; default: master
+github_branch_fallback=master # if required branch doesn't exist, fall back to fetching sources from this branch instead; default: master (eg., could be 4.4.x instead)
 TARGET_PLATFORM_VERSION_MIN=4.60.2.Final
 TARGET_PLATFORM_VERSION_MAX=4.61.0.Final
 JIRA_HOST="https://issues.stage.jboss.org" # or https://issues.jboss.org
@@ -194,13 +194,13 @@ checkProjects () {
 %20fixVersion%20in%20%28${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28\
 ${version_ds}%29%29%29%20and%20resolution%20%3D%20Unresolved]
 
-1. Check out your existing *{color:orange}master{color}* branch:
+1. Check out your existing *{color:orange}${github_branch_fallback}{color}* branch:
 
 {code}
-git checkout master
+git checkout ${github_branch_fallback}
 {code}
 
-2. Update your *{color:orange}master branch{color}* root pom to use the latest parent pom version, *{color:orange}${version_parent}{color}*:
+2. Update your *{color:orange}${github_branch_fallback} branch{color}* root pom to use the latest parent pom version, *{color:orange}${version_parent}{color}*:
 
 {code}
   <parent>
@@ -212,14 +212,14 @@ git checkout master
 
 Now, your root pom will use parent pom version:
 
-* *{color:orange}${version_parent}{color}* in your *{color:orange}master{color}* branch
+* *{color:orange}${version_parent}{color}* in your *{color:orange}${github_branch_fallback}{color}* branch
 
-3. Branch from your existing master branch into a new *{color:blue}${github_branch}{color}* branch:
+3. Branch from your existing ${github_branch_fallback} branch into a new *{color:blue}${github_branch}{color}* branch:
 
 {code}
-git checkout master
-git pull origin master
-git checkout -b ${github_branch}
+git checkout ${github_branch_fallback};
+git pull origin ${github_branch_fallback};
+git checkout -b ${github_branch};
 git push origin ${github_branch}
 {code}
 
