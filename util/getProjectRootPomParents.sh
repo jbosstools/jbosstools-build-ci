@@ -19,7 +19,7 @@ usage ()
     echo "Example 2: $0 -pv 4.4.0.Final-SNAPSHOT -skipupdate -w1 /home/nboldt/tru -w2 /home/nboldt/truu -p2 build-sites -p3 product"
     echo ""
     echo "Example 3: $0 -b master -pv 4.4.1.Alpha1-SNAPSHOT -w1 \${WORKSPACE}/jbosstools.github -w2 \${WORKSPACE}/jbdevstudio.github \\"
-    echo"               -p1 openshift -p2 build-sites -p3 product"
+    echo "               -p1 openshift -p2 build-sites -p3 product"
     echo ""
     echo "Example 4: $0 -updateRootPom -createBranch -b jbosstools-4.4.1.x -b2 master -pv 4.4.1.Final-SNAPSHOT \\"
     echo "              -w1 /tmp/jbosstools.github -p1 \"aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge freemarker hibernate \\"
@@ -39,14 +39,14 @@ doGitUpdate=1 # perform a git update to ensure we're current; default true
 doUpdateRootPom=0 # if the wrong parent pom is referenced from the root pom (and all-tests/pom.xml) update it locally and push to master
 doCreateBranch=0 # if the required branch doesn't exist, fetch from master instead, and create a new branch after pushing root pom update to master
 logfileprefix=${0##*/}; logfileprefix=${logfileprefix%.sh}
-version_jbt=4.4.2.AM1
-version_ds=10.2.0.AM1
-version_parent=4.4.2.AM1-SNAPSHOT
+version_jbt=4.4.2.Final
+version_ds=10.2.0.GA
+version_parent=4.4.2.Final-SNAPSHOT
 #TODO support branching from somewhere other than master
 github_branch=jbosstools-4.4.1.x # or master
 github_branch_fallback=master # if required branch doesn't exist, fall back to fetching sources from this branch instead; default: master
-TARGET_PLATFORM_VERSION_MIN=4.60.1.Final
-TARGET_PLATFORM_VERSION_MAX=4.61.0.AM1-SNAPSHOT
+TARGET_PLATFORM_VERSION_MIN=4.60.2.Final
+TARGET_PLATFORM_VERSION_MAX=4.61.0.Final
 JIRA_HOST="https://issues.stage.jboss.org" # or https://issues.jboss.org
 WORKSPACE1=/tmp
 PROJECTS1="" # or "aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge freemarker hibernate  \
