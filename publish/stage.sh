@@ -183,7 +183,7 @@ for site in ${sites}; do
       suffix=-updatesite-${sitename}
       y=${tmpdir}/all/repository.zip
       if [[ ! -f $y ]] && [[ -d ${tmpdir}/all/ ]]; then
-        y=$(find ${tmpdir}/all/ -name "${ZIPPREFIX}*${suffix}.zip" -a -not -name "*latest*")
+        y=$(find ${tmpdir}/all/ -name "${ZIPPREFIX}*${suffix}.zip" -o -name "*site-*-SNAPSHOT.zip" -a -not -name "*latest*")
       fi
       if [[ -f $y ]]; then
         if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local
