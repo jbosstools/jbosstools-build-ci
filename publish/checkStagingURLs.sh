@@ -116,7 +116,7 @@ if [[ ${versionWithRespin_jbt} ]]; then
   if [[ ${onlydiscovery} -lt 1 ]]; then 
     # build folders
     for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
-      for f in core coretests central earlyaccess; do
+      for f in core coretests central earlyaccess integration-tests; do
         for ff in repo/artifacts.xml.xz repo/content.xml.xz repository.zip repository.zip.sha256; do
           a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
           logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
@@ -140,7 +140,7 @@ if [[ ${versionWithRespin_jbt} ]]; then
 
     # update sites
     for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
-      for f in core coretests central earlyaccess; do
+      for f in core coretests central earlyaccess integration-tests; do
         for ff in artifacts.xml.xz content.xml.xz; do
           a=${u}/${f}/${versionWithRespin_jbt}/${ff}
           logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
