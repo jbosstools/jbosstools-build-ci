@@ -116,8 +116,20 @@ if [[ ${versionWithRespin_jbt} ]]; then
   if [[ ${onlydiscovery} -lt 1 ]]; then 
     # build folders
     for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
-      for f in core coretests central earlyaccess integration-tests; do
+      for f in core coretests central earlyaccess; do
         for ff in repo/artifacts.xml.xz repo/content.xml.xz repository.zip repository.zip.sha256; do
+          a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
+          logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+        done
+        log ""
+      done
+    done
+
+    # integration tests have no zip file
+    for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
+      for f in integration-tests; do
+        for ff in repo/artifacts.xml.xz repo/content.xml.xz; do
           a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
           logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
