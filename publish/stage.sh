@@ -127,7 +127,7 @@ for site in ${sites}; do
 
   if [[ ${whichID} == "latest" ]]; then
     ID=""
-    log "[DEBUG] [$site] + Check ${DEST_URL}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}" | egrep "${grepstring}"
+    log "[DEBUG] [$site] + Check ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}" | egrep "${grepstring}"
     if [[ ${SOURCE/@/} == ${SOURCE} ]]; then # local
       ID=$(ls ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} | grep "20.\+" | grep -v sftp | sort | tail -1)
     else # remote
