@@ -269,6 +269,21 @@ if [[ ${versionWithRespin_ds} ]]; then
       done
     done
 
+    # yum repo for rpm
+    # https://devstudio.jboss.com/10.0/staging/builds/devstudio-10.2.0.GA-build-rpm/latest/x86_64/
+    # https://devstudio.jboss.com/static/10.0/stable/rpms/x86_64/
+    if [[ ${qual} == "staging" ]]; then
+      u=https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-rpm/latest
+    else
+      u=https://devstudio.jboss.com/${static}${devstudioReleaseVersion}/${qual}/rpms
+    fi
+    for ff in x86_64/README.html x86_64/repodata/repomd.xml; do
+      a=${u}/${ff}
+      logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+      if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+    done
+    log ""
+
     # zips
     for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
       for f in core/devstudio-${versionWithRespin_ds}-updatesite-core.zip          core/devstudio-${versionWithRespin_ds}-target-platform.zip \
