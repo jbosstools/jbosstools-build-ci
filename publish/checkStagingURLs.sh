@@ -211,22 +211,24 @@ if [[ ${versionWithRespin_ds} ]]; then
   fi
 
   if [[ ${onlydiscovery} -lt 1 ]]; then 
-    # zips
-    for u in http://www.qa.jboss.com/binaries/devstudio/${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
-      for f in devstudio-${versionWithRespin_ds_latest_INT}-installer-eap.jar devstudio-${versionWithRespin_ds_latest_INT}-installer-standalone.jar \
-        devstudio-${versionWithRespin_ds_latest_INT}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest_INT}-updatesite-core.zip; do
-        for ff in $f ${f}.sha256; do
-          a=${u}/${ff}
-          logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-          if [[ $stat ]]; then # try backup URL (.latest or .GA)
-            #logerr "${a}: " "${red}NO${norm}"
-            log ""
-            a=${u}/${ff/.latest/.GA}
+    # zips: only if /stable/ or /staging/
+    if [[ ${qual} != "development" ]]; then
+      for u in http://www.qa.jboss.com/binaries/devstudio/${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
+        for f in devstudio-${versionWithRespin_ds_latest_INT}-installer-eap.jar devstudio-${versionWithRespin_ds_latest_INT}-installer-standalone.jar \
+          devstudio-${versionWithRespin_ds_latest_INT}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest_INT}-updatesite-core.zip; do
+          for ff in $f ${f}.sha256; do
+            a=${u}/${ff}
             logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-          fi
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+            if [[ $stat ]]; then # try backup URL (.latest or .GA)
+              #logerr "${a}: " "${red}NO${norm}"
+              log ""
+              a=${u}/${ff/.latest/.GA}
+              logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+            fi
+            if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+          done
         done
-      done
+      fi
     done
     log ""
 
@@ -254,7 +256,7 @@ if [[ ${versionWithRespin_ds} ]]; then
       done
     done
 
-    # yum repo for rpm
+    # yum repo for rpm: only if /stable/ or /staging/
     # https://devstudio.jboss.com/10.0/staging/builds/devstudio-10.2.0.GA-build-rpm/latest/x86_64/
     # https://devstudio.jboss.com/static/10.0/stable/rpms/x86_64/
     if [[ ${qual} == "staging" ]]; then
@@ -262,11 +264,13 @@ if [[ ${versionWithRespin_ds} ]]; then
     else
       u=https://devstudio.jboss.com/${static}${devstudioReleaseVersion}/${qual}/rpms
     fi
-    for ff in x86_64/README.html x86_64/repodata/repomd.xml; do
-      a=${u}/${ff}
-      logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
-      if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
-    done
+    if [[ ${qual} != "development" ]]; then
+      for ff in x86_64/README.html x86_64/repodata/repomd.xml; do
+        a=${u}/${ff}
+        logn "${a}: "; stat=$(curl -I -s ${a} | egrep "404")
+        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
+      done
+    fi
     log ""
 
     # zips
