@@ -228,8 +228,8 @@ if [[ ${versionWithRespin_ds} ]]; then
             if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a}: " "${red}NO${norm}"; let notOK+=1; fi
           done
         done
-      fi
-    done
+      done
+    fi
     log ""
 
     # installer build folder [EXTERNAL]
