@@ -64,7 +64,7 @@ fi
 # defaults
 MVN="mvn"
 MRL="" # placeholder for -Dmaven.repo.local, if used
-Dflags="" # placeholer for additional -D flags to pass to maven, eg., -DTARGET_PLATFORM_VERSION_MAXIMUM=4.61.0.AM1-SNAPSHOT
+Dflags="" # placeholer for additional -D flags to pass to maven, eg., -DTARGET_PLATFORM_VERSION_MAX=4.62.0.AM1-SNAPSHOT
 includeSources="-Dmirror-target-to-repo.includeSources=true" # by default, include sources
 INSTALLSCRIPT=/tmp/installFromTarget.sh
 LOG_GREP_INCLUDES="BUILD FAILURE|Only one of the following|Missing requirement|Unresolved requirement|IllegalArgumentException|Could not resolve|could not be found|being installed|Cannot satisfy dependency|FAILED"
