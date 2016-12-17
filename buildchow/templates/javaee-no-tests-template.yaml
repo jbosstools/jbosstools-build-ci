@@ -1,12 +1,12 @@
 - job-template:
-    name: 'jbosstools-{component}_{stream}'
+    name: 'jbosstools-javaee-no-tests_{stream}'
     disabled: '{obj:disabled}'
     description: |
-      CI build for '<a href="https://github.com/jbosstools/jbosstools-{component}/">jbosstools-{component}</a>', checking every 8 hrs for changes.
+      CI build for '<a href="https://github.com/jbosstools/jbosstools-javaee/">jbosstools-javaee</a>', checking every 8 hrs for changes.
       <h2><a style="color:#FF9933" href="https://github.com/jbosstools/jbosstools-devdoc/blob/master/list_of_projects.adoc">Project Listing</a></h2>
       <h3>Job runs these steps: build using min target platform, 
       publish <a href="http://download.jboss.org/jbosstools/mars/snapshots/builds/">snapshot</a>, 
-      run tests using max target platform</h3>
+      fire downstream job <a href=../jbosstools-javaee-tests-matrix_master>jbosstools-javaee-tests-matrix_master</a></h3>
     node: "{default-nodes}"
     logrotate:
       daysToKeep: "{default-daysToKeep}"
@@ -14,6 +14,8 @@
       artifactDaysToKeep: "{default-artifactDaysToKeep}"
       artifactNumToKeep: "{default-artifactNumToKeep}"
     jdk: '{default-jdk}'
+    blockBuildWhenDownstreamBuilding: false
+    blockBuildWhenUpstreamBuilding: true
      
     parameters:
       - string:
@@ -34,14 +36,14 @@
 
     properties:          
       - github:
-          url: https://github.com/jbosstools/jbosstools-{component}/
+          url: https://github.com/jbosstools/jbosstools-javaee/
       #- delivery-pipeline:
       #    stage: Dev
-      #    task: Build {component}
+      #    task: Build javaee
           
     scm:
       - git:
-          url: git://github.com/jbosstools/jbosstools-{component}.git
+          url: git://github.com/jbosstools/jbosstools-javaee.git
           wipe-workspace: false
           basedir: "sources"
           branches: 
@@ -94,45 +96,17 @@
                  echo "Publish cancelled (nothing to do). Skip this check with skipRevisionCheckWhenPublishing=true"
                  BUILD_DESCRIPTION="NOT PUBLISHED: UNCHANGED"
                fi
-
-               echo "Available JREs for testing:"
-               echo "jbosstools.test.jre.5=${{NATIVE_TOOLS}}${{SEP}}${{JAVA15}}"
-               echo "jbosstools.test.jre.6=${{NATIVE_TOOLS}}${{SEP}}${{JAVA16}}"
-               echo "jbosstools.test.jre.7=${{NATIVE_TOOLS}}${{SEP}}${{JAVA17}}"
-               echo "jbosstools.test.jre.8=${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}"
-      - maven-target:
-          goals: "{test-flags-max}"
-          maven-version: "{default-maven-version}"
-          java-opts: 
-            - "{jvm-memory}"
-          pom: "${{WORKSPACE}}/sources/{tests-folder}/pom.xml"
-          private-repository: true
-          properties:
-            - maven.test.skip=false
-            - maven.test.failure.ignore=true
-            - maven.test.error.ignore=true
-            - download.cache.directory={download-cache}
-            - JOB_NAME=${{JOB_NAME}}
-            - BUILD_ID=${{BUILD_ID}}
-            - BUILD_NUMBER=${{BUILD_NUMBER}}
-            - skipBaselineComparison=true
-            - skipITests=false
-            - skipPrivateRequirements=false
-            - jbosstools.test.jre.5=${{NATIVE_TOOLS}}${{SEP}}${{JAVA15}} 
-            - jbosstools.test.jre.6=${{NATIVE_TOOLS}}${{SEP}}${{JAVA16}}
-            - jbosstools.test.jre.7=${{NATIVE_TOOLS}}${{SEP}}${{JAVA17}}
-            - jbosstools.test.jre.8=${{NATIVE_TOOLS}}${{SEP}}${{JAVA18}}
     publishers:
       - archive:
           artifacts: "**/target/*.zip, **/target/**/*.zip, **/*.log, **/coverage-report/**, **/jacoco.exec" 
           excludes: ".repository, .repository/*, .repository/**"
           latest-only: true
-      - junit:
-          results: "sources/*tests/*/target/surefire-reports/TEST-*.xml,sources/*/*tests/*/target/surefire-reports/TEST-*.xml"
-          keep-long-stdio: false
-      - description-setter: 
-          regexp: "BUILD_DESCRIPTION='(.+)'"
-          description: "\\1"
+      #- junit:
+      #    results: "sources/*tests/*/target/surefire-reports/TEST-*.xml,sources/*/*tests/*/target/surefire-reports/TEST-*.xml"
+      #    keep-long-stdio: false
+      #- description-setter: 
+      #    regexp: "BUILD_DESCRIPTION='(.+)'"
+      #    description: "\\1"
       - email:
           recipients: "{component-responsible} {builds-email}"
           send-to-individuals: true
@@ -142,7 +116,7 @@
           publish-failed-builds: false
     wrappers:
       - timeout:
-          timeout: "{job-timeout}"
+          timeout: 420
       - xvnc:
           screenshot: false
           xauthority: true
