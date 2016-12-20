@@ -333,4 +333,6 @@ if [[ ${jobsToCheck} ]]; then
   if [[ ${launchBrowser} == 1 ]]; then 
     google-chrome && google-chrome ${jobsToCheck}
   fi
+  # if we had errors, make sure any jenkins wrappers fail too
+  exit 1
 fi
