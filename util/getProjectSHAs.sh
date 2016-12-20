@@ -255,13 +255,14 @@ checkProjects () {
     tmp=`mktemp`
     curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} ${GITHUBUSERPASS} -s -S > ${tmp}
     if [[ $(cat $tmp | grep "Bad credentials") ]]; then
-      echo "[ERROR] Bad credentials reading https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} as ${GITHUBUSERPASS}!"
+      echo "[ERROR] Bad credentials: curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} ${GITHUBUSERPASS} -s -S"
       exit 1
     fi
 
     if [[ $(cat $tmp) ]]; then
       if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [1] cat ${tmp}:"; cat $tmp | head -2; echo "[DEBUG] [1] end cat ${tmp}"; fi
     else
+      # should never go here -- need authenticated access to github API or we get rate-limiting & can't read data
       if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [2] wget https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch}"; fi
       wget -q --no-check-certificate https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -O ${tmp}
     fi
