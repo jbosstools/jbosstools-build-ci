@@ -41,6 +41,7 @@ branch=jbosstools-4.4.x # or master
 jbtpath=neon/snapshots/builds # or builds/staging, from JBDS 8 and before
 jbdspath=10.0/snapshots/builds
 launchBrowser=0; # set to 1 to automatically launch a browser if any missing builds are found
+quiet="" # or "" or "-q"
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -73,6 +74,8 @@ while [[ "$#" -gt 0 ]]; do
     '-jbdsm') jbdsm="$2"; shift 1;;
     '-respin') respin="$2"; shift 1;;
     '-launch') launchBrowser=1; shift 0;;
+    '-q') quiet="-q"; shift 0;;
+
   esac
   shift 1
 done
@@ -245,10 +248,12 @@ checkProjects () {
       echo "== ${g_project} =="
     fi
 
-    # githash=`firefox https://github.com/jbdevstudio/jbdevstudio-product/commits/jbosstools-4.4.x` 
-    # echo https://api.github.com/repos/jbdevstudio/jbdevstudio-${j}/commits/${branch}
+    GITHUBUSERPASS=""
+    if [[ ${g_user} ]] && [[ ${g_password} ]]; then GITHUBUSERPASS="-u ${g_user}:${g_password}"; fi
+
+    echo https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch}
     tmp=`mktemp`
-    githash=`curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -u "${g_user}:${g_password}" -s -S > ${tmp} && cat ${tmp} | head -2 | grep sha | \
+    githash=`curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} ${GITHUBUSERPASS} -s -S > ${tmp} && cat ${tmp} | head -2 | grep sha | \
     sed "s#  \"sha\": \"\(.\+\)\",#\1 (${branch})#" && rm -f ${tmp}`
     # alternate approach to curl, using wget 
     #githash=`wget -q --no-check-certificate https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -O - | head -2 | grep sha | \
@@ -273,7 +278,8 @@ checkProjects () {
 
     if [[ ! ${githash} ]] || [[ ! ${jenkinshash} ]]; then 
       if [[ ! ${githash} ]]; then
-        echo "ERROR: branch $branch does not exist:" | egrep ERROR
+        echo "ERROR: branch $branch does not exist or github user/pwd (${g_user}:${g_password}) not authorized:" | egrep ERROR
+        echo " >> https://api.github.com/repos/${g_project_prefix}${j}/commits/${branch}"
         echo " >> https://github.com/${g_project_prefix}${j}/tree/${branch}"
       elif [[ ! ${jenkinshash} ]]; then
         echo "ERROR: could not retrieve GIT revision from:" | egrep ERROR
