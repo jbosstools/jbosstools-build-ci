@@ -251,13 +251,23 @@ checkProjects () {
     GITHUBUSERPASS=""
     if [[ ${g_user} ]] && [[ ${g_password} ]]; then GITHUBUSERPASS="-u ${g_user}:${g_password}"; fi
 
-    echo https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch}
+    if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] Load https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch}"; fi
     tmp=`mktemp`
-    githash=`curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} ${GITHUBUSERPASS} -s -S > ${tmp} && cat ${tmp} | head -2 | grep sha | \
-    sed "s#  \"sha\": \"\(.\+\)\",#\1 (${branch})#" && rm -f ${tmp}`
-    # alternate approach to curl, using wget 
-    #githash=`wget -q --no-check-certificate https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -O - | head -2 | grep sha | \
-    #	sed "s#  \"sha\": \"\(.\+\)\",#\1 (${branch})#"`
+    curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} ${GITHUBUSERPASS} -s -S > ${tmp}
+    if [[ $(cat $tmp) ]]; then
+      if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [1] cat ${tmp}:"; cat $tmp | head -2; echo "[DEBUG] [1] end cat ${tmp}"; fi
+    else
+      wget -q --no-check-certificate https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -O ${tmp}
+    fi
+    if [[ $(cat $tmp) ]]; then
+      if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [2] cat ${tmp}:"; cat $tmp | head -2; echo "[DEBUG] [2] end cat ${tmp}"; fi
+    else
+      echo "[ERROR] could not read https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} !"
+      exit 1
+    fi
+    githash=`cat ${tmp} | head -2 | grep sha | sed "s#  \"sha\": \"\(.\+\)\",#\1 (${branch})#"`
+    # cleanup
+    rm -f ${tmp}
 
     # new for JBDS 9 (used to pull logs/GIT_REVISION.txt) - use buildinfo.json
     jenkinshash=`wget -q --no-check-certificate ${staging_url}${jobname_prefix}${j}_${stream}/latest/all/repo/buildinfo.json -O - | \
