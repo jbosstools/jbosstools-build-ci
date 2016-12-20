@@ -231,7 +231,7 @@ fi
 
 jobsToCheck=""
 checkProjects () {
-  jenkins_prefix="https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/"
+  jenkins_prefix="http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/"
   PROJECTS="$1" # ${JBTPROJECTS} or ${JBDSPROJECTS}
   g_project_prefix="$2" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
   staging_url="$3" # http://download.jboss.org/jbosstools/${jbtpath}/ or http://www.qa.jboss.com/binaries/RHDS/${jbdspath}/
@@ -251,12 +251,18 @@ checkProjects () {
     GITHUBUSERPASS=""
     if [[ ${g_user} ]] && [[ ${g_password} ]]; then GITHUBUSERPASS="-u ${g_user}:${g_password}"; fi
 
-    if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] Load https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch}"; fi
+    if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [1] curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch}"; fi
     tmp=`mktemp`
     curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} ${GITHUBUSERPASS} -s -S > ${tmp}
+    if [[ $(cat $tmp | grep "Bad credentials") ]]; then
+      echo "[ERROR] Bad credentials reading https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} as ${GITHUBUSERPASS}!"
+      exit 1
+    fi
+
     if [[ $(cat $tmp) ]]; then
       if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [1] cat ${tmp}:"; cat $tmp | head -2; echo "[DEBUG] [1] end cat ${tmp}"; fi
     else
+      if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [2] wget https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch}"; fi
       wget -q --no-check-certificate https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -O ${tmp}
     fi
     if [[ $(cat $tmp) ]]; then
