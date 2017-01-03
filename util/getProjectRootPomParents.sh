@@ -30,6 +30,15 @@ usage ()
     exit 1;
 }
 
+if [[ ${0} == "./getProjectRootPomParents.sh" ]] || [[ ${0##/*} ]]; then
+  echo "[ERROR] Must run this script using an absolute path."
+  exit 1
+fi
+if [[ ! -f ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} ]]; then
+  echo "[ERROR] Could not find createTaskJIRAs.py in ${0/getProjectRootPomParents.sh/}"
+  exit 1
+fi
+
 if [[ $# -lt 1 ]]; then
   usage;
 fi
