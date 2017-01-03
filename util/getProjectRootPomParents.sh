@@ -12,16 +12,16 @@ usage ()
 {
     echo "Usage:     $0 -b GITHUBBRANCH -pv PARENTVERSION [-skipupdate] -w1 [/path/to/jbosstools-projects/parent-folder] -w2 [/path/to/jbdevstudio-projects/parent-folder]"
     echo ""
-    echo "Example 1: $0 -b jbosstools-4.2.x -pv 4.2.3.CR1-SNAPSHOT -w1 /home/nboldt/42x -w2 /home/nboldt/42xx \\"
+    echo "Example 1: $0 -b jbosstools-4.4.2.x -pv 4.4.2.Final-SNAPSHOT -w1 /home/nboldt/44x -w2 /home/nboldt/44xx \\"
     echo "              -p1 \"aerogear arquillian base browsersim central discovery forge freemarker \\"
     echo "              hibernate javaee jst livereload openshift server vpe webservices\""
     echo ""
-    echo "Example 2: $0 -pv 4.4.0.Final-SNAPSHOT -skipupdate -w1 /home/nboldt/tru -w2 /home/nboldt/truu -p2 build-sites -p3 product"
+    echo "Example 2: $0 -pv 4.4.2.Final-SNAPSHOT -skipupdate -w1 /home/nboldt/tru -w2 /home/nboldt/truu -p2 build-sites -p3 product -noCreateTaskJIRAs"
     echo ""
-    echo "Example 3: $0 -b master -pv 4.4.1.Alpha1-SNAPSHOT -w1 \${WORKSPACE}/jbosstools.github -w2 \${WORKSPACE}/jbdevstudio.github \\"
+    echo "Example 3: $0 -b master -pv 4.4.2.Final-SNAPSHOT -w1 \${WORKSPACE}/jbosstools.github -w2 \${WORKSPACE}/jbdevstudio.github \\"
     echo "               -p1 openshift -p2 build-sites -p3 product"
     echo ""
-    echo "Example 4: $0 -updateRootPom -createBranch -b jbosstools-4.4.1.x -b2 master -pv 4.4.1.Final-SNAPSHOT \\"
+    echo "Example 4: $0 -updateRootPom -createBranch -b jbosstools-4.4.2.x -b2 master -pv 4.4.2.Final-SNAPSHOT \\"
     echo "              -w1 /tmp/jbosstools.github -p1 \"aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge freemarker hibernate \\"
     echo "               javaee::jsf jst livereload openshift server vpe::visual-page-editor-core webservices integration-tests\" \\"
     echo "              -p2 \"build build-sites::updatesite discovery::central-update devdoc download.jboss.org maven-plugins:build versionwatch\" \\"
@@ -32,10 +32,7 @@ usage ()
 
 if [[ ${0} == "./getProjectRootPomParents.sh" ]] || [[ ${0##/*} ]]; then
   echo "[ERROR] Must run this script using an absolute path."
-  exit 1
-fi
-if [[ ! -f ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} ]]; then
-  echo "[ERROR] Could not find createTaskJIRAs.py in ${0/getProjectRootPomParents.sh/}"
+  echo "[ERROR] If you're trying to run this script WITHOUT creating Task JIRAs, use -noCreateTaskJIRAs flag."
   exit 1
 fi
 
@@ -47,6 +44,7 @@ quiet="" # or "" or "-q"
 doGitUpdate=1 # perform a git update to ensure we're current; default true
 doUpdateRootPom=0 # if the wrong parent pom is referenced from the root pom (and all-tests/pom.xml) update it locally and push to master
 doCreateBranch=0 # if the required branch doesn't exist, fetch from master instead, and create a new branch after pushing root pom update to master
+doCreateTaskJIRAs=1 # create Task JIRAs for the changes to be done
 logfileprefix=${0##*/}; logfileprefix=${logfileprefix%.sh}
 version_jbt=4.4.2.Final
 version_ds=10.2.0.GA
@@ -86,10 +84,16 @@ while [[ "$#" -gt 0 ]]; do
     '-jirapwd') JIRA_PWD="$2"; shift 1;;
     '-updateRootPom') doUpdateRootPom=1; shift 0;;
     '-createBranch') doCreateBranch=1; shift 0;;
+    '-noCreateTaskJIRAs') doCreateTaskJIRAs=0; shift 0;;
     '-q') quiet="-q"; shift 0;;
   esac
   shift 1
 done
+
+if [[ ! -f ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} ]] && [[ ${doCreateTaskJIRAs} -gt 0 ]]; then
+  echo "[ERROR] Could not find createTaskJIRAs.py in ${0/getProjectRootPomParents.sh/}"
+  exit 1
+fi
 
 # backups if not set above
 if [[ ! ${stream_jbt} ]] || [[ ! ${stream_ds} ]]; then
@@ -190,7 +194,7 @@ checkProjects () {
               ${pomfile}
               isCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep $version_parent` # empty string if wrong version
             fi
-            if [[ ${isCorrectVersion} ]]; then
+            if [[ ${isCorrectVersion} ]] && [[ ${doCreateTaskJIRAs} -gt 0 ]]; then
               # create new JIRA using createTaskJIRAs.py, then pass that into the commit comment below
               # if component does not exist, JIRA will be nullstring
               if [[ ${doCreateBranch} -gt 0 ]]; then # update root poms then branch
