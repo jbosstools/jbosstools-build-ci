@@ -37,7 +37,7 @@ if [[ ${userpass} = ":" ]] || [[ ! ${job} ]] || [[ ! ${task} ]]; then usage; fi
 echo -n "["
 prevJob=$(curl -s ${jenkinsURL}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
 echo "${prevJob}] POST: ${jenkinsURL}/${job}/${task} $data"
-curl -k -X POST -u ${userpass} ${data} https://${jenkinsURL}/${job}/${task}
+curl -k -X POST -u ${userpass} ${data} ${jenkinsURL}/${job}/${task}
 sleep 10s
 
 browser=/usr/bin/google-chrome; if [[ ! -x ${browser} ]]; then browser=/usr/bin/firefox; fi
