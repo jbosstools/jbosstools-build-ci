@@ -4,28 +4,35 @@
 
 usage ()
 {
-	echo "Usage: $0 [job] [task] [jenkinsUser] [jenkinsPass] [jenkinsURL] [querystring data foo=bar&baz=foo&...]"
-	echo "Example:    export userpass=\"KERBUSER:KERBPWD\" && $0 jbosstools-base_master buildWithParameters"
-	echo "Example:    $0 jbosstools-build.parent_master build nboldt PASSWORD jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job"
+	echo "Usage: $0 -j JOBNAME -t TaskOrActionToPerform {-u jenkinsUser} {-p jenkinsPass} {-s jenkinsURL} {-d querystring data foo=bar&baz=foo&...}"
+	echo ""
+	echo "Example:    export userpass=\"KERBUSER:KERBPWD\" && $0 -j jbosstools-base_master -t buildWithParameters"
+	echo "Example:    $0 -j jbosstools-build.parent_master -t build -u KERBUSER -p KERBPWD -s jenkins.mw.lab.eng.bos.redhat.com/hudson/job"
+	echo ""
 	exit 1
 }
 
 if [[ $# -lt 2 ]]; then usage; fi
 
-jenkinsURL="jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job"
+jenkinsURL="jenkins.mw.lab.eng.bos.redhat.com/hudson/job"
 
-job="$1"
-task="$2"
-if [[ $3 ]]; then jenkinsUser="$3"; fi
-if [[ $4 ]]; then jenkinsPass="$4"; fi
-if [[ $5 ]]; then jenkinsURL="$5"; fi
-if [[ $6 ]]; then data="--data \"$6\""; fi # to pass in --data to the buildWithParameters POST
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    '-j') job="$2"; shift 1;;
+    '-t') task="$2"; shift 1;;
+    '-u') jenkinsUser="$2"; shift 1;;
+    '-p') jenkinsPass="$2"; shift 1;;
+    '-s') jenkinsURL="$2"; shift 1;;
+    '-d') data="--data \"$2\""; shift 1;;
+  esac
+  shift 1
+done
 
 if [[ ! ${userpass} ]]; then 
 	userpass="${jenkinsUser}:${jenkinsPass}"
 fi
 
-if [[ ${userpass} = ":" ]]; then usage; fi
+if [[ ${userpass} = ":" ]] || [[ ! ${job} ]] || [[ ! ${task} ]]; then usage; fi
 
 echo -n "["
 prevJob=$(curl -s http://${jenkinsURL}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
