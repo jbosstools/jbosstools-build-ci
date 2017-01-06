@@ -42,15 +42,12 @@ sleep 10s
 
 browser=/usr/bin/google-chrome; if [[ ! -x ${browser} ]]; then browser=/usr/bin/firefox; fi
 
-echo -n "["
-nextJob=$(curl -s http://${jenkinsURL}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
-echo "${nextJob}]  GET:  http://${jenkinsURL}/${job}/lastBuild/"
-
-if [[ $prevJob != $nextJob ]]; then 
-  ${browser} >/dev/null 2>/dev/null && ${browser} \
-    http://${jenkinsURL}/${job}/lastBuild/console \
-    http://${jenkinsURL}/${job}/lastBuild/parameters \
-    >/dev/null 2>/dev/null
+if [[ $task == "build"* ]]; then # build or buildWithParameters
+	nextJob=$(curl -s http://${jenkinsURL}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
+	if [[ $prevJob != $nextJob ]]; then 
+		echo "[${nextJob}]  GET:  http://${jenkinsURL}/${job}/lastBuild/"
+		${browser} ttp://${jenkinsURL}/${job}/lastBuild/parameters http://${jenkinsURL}/${job}/lastBuild/console >/dev/null 2>/dev/null
+	fi
 fi
 
 exit
