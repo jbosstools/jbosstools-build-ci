@@ -176,7 +176,7 @@ for site in ${sites}; do
       log "[DEBUG] [$site] + ${RSYNC} ${EXCLUDESTRING} ${EXCLUDESTRING2} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/" | egrep "${grepstring}"
       y=${tmpdir}/all/repository.zip
       if [[ -f ${y} ]] && [[ ! -f ${y}.sha256 ]]; then
-        echo "[WARN] [$site] ${y}.sha256"
+        echo "[WARN] [$site] Create ${y}.sha256"
         for s in $(sha256sum ${y}); do if [[ ${s} != ${y} ]]; then echo ${s} > ${y}.sha256; fi; done
       fi
       ${RSYNC} ${EXCLUDESTRING} ${EXCLUDESTRING2} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ 
