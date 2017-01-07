@@ -158,7 +158,7 @@ for site in ${sites}; do
       tmpdir=${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/ && pushd $tmpdir >/dev/null
     else # copy from filemgmt to filemgmt via tmp folder intermediate
       # use ${HOME}/temp-stage/ instead of /tmp because insufficient space
-      tmpdir=`mkdir -p ${HOME}/temp-stage/ && mktemp -d -t -p ${HOME}/temp-stage/` && mkdir -p $tmpdir && pushd $tmpdir >/dev/null
+      tmpdir=`mkdir -p ${HOME}/temp-stage/ && mktemp -d -t -p ${HOME}/temp-stage/ tmp.${site}` && mkdir -p $tmpdir && pushd $tmpdir >/dev/null
       # echo "+ ${RSYNC} ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/" | egrep "${grepstring}"
       ${RSYNC} ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
     fi
