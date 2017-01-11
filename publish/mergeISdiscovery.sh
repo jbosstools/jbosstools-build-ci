@@ -41,7 +41,7 @@ while [[ "$#" -gt 0 ]]; do
   shift 1
 done
 
-# by default, only affect the staging site; use '-q development -q stable' to change LIVE development and stable site (use with caution!)
+# by default, only affect the staging site; use '-qual development -qual stable' to change LIVE development and stable site (use with caution!)
 if [[ ! ${qualities} ]]; then qualities=staging; fi
 
 if [[ $DESTINATION = $TOOLS ]]; then
