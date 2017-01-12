@@ -64,7 +64,7 @@ from components import checkFixVersionsExist
 if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.username, options.password) == True:
 
     taskdescription = options.taskdescription
-    taskdescriptionfull = options.taskdescriptionfull
+    taskdescriptionfull = options.taskdescriptionfull.replace("\\n", "\n")
     if not options.taskdescriptionfull:
         taskdescriptionfull = options.taskdescription
 
