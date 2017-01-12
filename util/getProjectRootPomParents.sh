@@ -259,8 +259,9 @@ ${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20i
 null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next. \
 \" \
 -s ${JIRA_HOST} -u ${JIRA_USER} -p ${JIRA_PWD} -J ${componentFlag} ${k}"
-                echo ${JIRAcmd}
-                JIRA=$(${JIRAcmd})
+                # if [[ ${quiet} != "-q" ]]; then echo ${JIRAcmd}; fi
+                echo "JIRA=\$(${JIRAcmd})" >> ${tskfile}
+                echo "echo \"New ${j} JIRA: \${JIRA}\"" >> ${tskfile}
               else # no branching - just update root poms
                 JIRAcmd="python -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds} \
 --task \"Prepare for ${version_jbt} / ${version_ds}\" --taskfull \"Please perform the following tasks: \
@@ -311,8 +312,9 @@ ${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20i
 null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next. \
 \" \
 -s ${JIRA_HOST} -u ${JIRA_USER} -p ${JIRA_PWD} -J ${componentFlag} ${k}"
-                echo ${JIRAcmd}
-                JIRA=$(${JIRAcmd})
+                # if [[ ${quiet} != "-q" ]]; then echo ${JIRAcmd}; fi
+                echo "JIRA=\$(${JIRAcmd})" >> ${tskfile}
+                echo "echo \"New ${j} JIRA: \${JIRA}\"" >> ${tskfile}
               fi
               if [[ ${j} == ${k} ]]; then
                 echo -n "$j :: " >> ${chgfile}
@@ -326,7 +328,7 @@ null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20
               echo "# Commit change to https://github.com/${g_project_prefix}${j}/blob/${github_branch_fallback}/${pomfile}
 pushd ${workspace}/${prefix}${j} >/dev/null && perl -0777 -i.orig -pe \\
 's#(<artifactId>parent</artifactId>)[\r\n\ \t]+(<version>)([\d.]+[^<>]+)(</version>)#\1\n\t\t<version>'${version_parent}'\4#igs' \\
-${pomfile} && git commit -m \"${JIRA} #comment bump up to parent pom version = ${version_parent} #close\" . && git push origin ${github_branch_fallback} &&
+${pomfile} && git commit -m \"\${JIRA} #comment bump up to parent pom version = ${version_parent} #close\" . && git push origin ${github_branch_fallback} &&
 popd >/dev/null; echo \">>> https://github.com/${g_project_prefix}${j}/commits/${github_branch_fallback}\"
 " >> ${tskfile}
             else
