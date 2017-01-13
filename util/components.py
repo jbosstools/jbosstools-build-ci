@@ -33,6 +33,7 @@ JIRA_components = {
     }
 
 # there are more N&N pages than there are JIRA components (eg., jbosstools-central includes Central, Maven and Project Examples) so this list is a bit different from teh above one
+# # first component listed in the set will be the one used to assign the JIRA
 NN_components = {
     "Aerogear          ": { "aerogear-hybrid", "cordovasim" },
     "Arquillian        ": { "arquillian" },
@@ -97,3 +98,23 @@ def checkFixVersionsExist (jbide_fixversion, jbds_fixversion, jiraserver, userna
        return False
     else:
         return True
+
+# default assignee if can't find one in JIRA
+def defaultAssignee():
+    return "jeffmaury"
+
+def queryComponentLead (componentList, componentID, nameOrDisplayName):
+    # print "Search for component lead of " + projectID+":"+componentID+" on "+jiraserver+"..."
+    for c in componentList:
+        # print c.name
+        if c.name == componentID:
+            if nameOrDisplayName == 1:
+                return c.lead.displayName # pretty name
+            else:
+                return c.lead.name # ID
+    # if component not found, return default assignee
+    return defaultAssignee()
+# examples
+# jira = JIRA(options={'server':jiraserver}, basic_auth=(options.username, options.password))
+# print queryComponentLead(jira.project_components(jira.project('JBIDE')), 'build', 0)
+# print queryComponentLead(jira.project_components(jira.project('JBIDE')), 'build', 1)
