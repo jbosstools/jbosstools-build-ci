@@ -1,10 +1,8 @@
-from jira.client import JIRA
-import magic, pprint, ast, urllib, requests, re
+from jira import JIRA
+import magic, ast, urllib, requests, re
 from xml.dom import minidom
 from optparse import OptionParser
 from requests.auth import HTTPBasicAuth
-
-pp = pprint.PrettyPrinter(indent=4)
 
 # Requires jira-python (See http://jira-python.readthedocs.org/en/latest/)
 # If connection to JIRA server fails with error: "The error message is __init__() got an unexpected keyword argument 'mime'"
@@ -42,7 +40,7 @@ jiraserver = options.jiraserver
 
 jbide_affectedversion = options.jbideversion
 
-from components import checkFixVersionsExist
+from components import checkFixVersionsExist, queryComponentLead
 
 if checkFixVersionsExist(jbide_affectedversion, None, jiraserver, options.usernameJIRA, options.passwordJIRA) == True:
 
@@ -128,8 +126,11 @@ if checkFixVersionsExist(jbide_affectedversion, None, jiraserver, options.userna
             }
 
         jira = JIRA(options={'server':jiraserver}, basic_auth=(options.usernameJIRA, options.passwordJIRA))
+        CLJBIDE = jira.project_components(jira.project('JBIDE')) # full list of components in JBIDE
         rootJBIDE = jira.create_issue(fields=rootJBIDE_dict)
-        accept = raw_input("\nAccept new JIRA " + jiraserver + '/browse/' + rootJBIDE.key + " ? [Y/n] ")
+        componentLead = queryComponentLead(CLJBIDE, component, 0)
+        jira.assign_issue(rootJBIDE, componentLead)
+        accept = raw_input("\nAccept new JIRA " + jiraserver + '/browse/' + rootJBIDE.key + " => " + componentLead + " ? [Y/n] ")
         if accept.capitalize() in ["N"] :
             rootJBIDE.delete()
 
