@@ -1,14 +1,12 @@
-from jira.client import JIRA
+from jira import JIRA
 from subprocess import Popen, PIPE
 import magic
-import pprint
-import urllib
-import os
-import sys
-
+import urllib, os, sys
 from optparse import OptionParser
 
-pp = pprint.PrettyPrinter(indent=4)
+# TODO: don't generate JIRAs unless there's actually a missing commit/merge across branches.
+# TODO: check that branch != master
+
 
 # Requires jira-python (See http://jira-python.readthedocs.org/en/latest/)
 # If connection to JIRA server fails with error: "The error message is __init__() got an unexpected keyword argument 'mime'"
@@ -43,12 +41,14 @@ jiraserver = options.jiraserver
 jbide_fixversion = options.jbidefixversion
 jbds_fixversion = options.jbdsfixversion
 
-from components import checkFixVersionsExist
+from components import checkFixVersionsExist, queryComponentLead, defaultAssignee
 
 if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.username, options.password) == True:
 
     frombranch = options.frombranch
     jira = JIRA(options={'server':jiraserver}, basic_auth=(options.username, options.password))
+    CLJBIDE = jira.project_components(jira.project('JBIDE')) # full list of components in JBIDE
+    CLJBDS = jira.project_components(jira.project('JBDS')) # full list of components in JBIDE
 
     taskdescription = options.taskdescription
     taskdescriptionfull = options.taskdescriptionfull
@@ -71,10 +71,12 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
         'labels' : [ "task" ],
         }
     rootJBDS = jira.create_issue(fields=rootJBDS_dict)
+    componentLead = defaultAssignee()
+    jira.assign_issue(rootJBDS, componentLead)
     print("Task JIRA created for this milestone include:")
     print("")
 
-    print("JBDS              : " + jiraserver + '/browse/' + rootJBDS.key)
+    print("JBDS              : " + jiraserver + '/browse/' + rootJBDS.key + " => " + componentLead)
 
     rootJBIDE_dict = {
         'project' : { 'key': 'JBIDE' },
@@ -87,7 +89,8 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
         'labels' : [ "task" ]
         }
     rootJBIDE = jira.create_issue(fields=rootJBIDE_dict)
-    print("JBoss Tools       : " + jiraserver + '/browse/' + rootJBIDE.key)
+    jira.assign_issue(rootJBIDE, componentLead)
+    print("JBoss Tools       : " + jiraserver + '/browse/' + rootJBIDE.key + " => " + componentLead)
 
 
     # Currently, the repo url (for printing links to the missing commits)
@@ -116,9 +119,11 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
     from components import JIRA_components
 
     for name, comps in JIRA_components.iteritems():
-        
-        cms = map(nametuple, comps)    
-        #print name + "->" + str(cms)
+        for firstcomponent in comps:
+            break
+        cms = map(nametuple, comps)
+        componentLead = queryComponentLead(CLJBIDE, firstcomponent, 0)
+        #print(name + "->" + str(cms) + " => " + componentLead)
         workingdir = os.getcwd()
         # skip if name contains spaces in components.py
         if " " not in name.rstrip():
@@ -147,7 +152,8 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
             os.chdir(workingdir)
 
             child = jira.create_issue(fields=rootJBIDE_dict)
-            print(name +  ": " + jiraserver + '/browse/' + child.key)
+            jira.assign_issue(child, componentLead)
+            print(name +  ": " + jiraserver + '/browse/' + child.key + " => " + componentLead)
 
     accept = raw_input("Accept created JIRAs? [Y/n] ")
 
