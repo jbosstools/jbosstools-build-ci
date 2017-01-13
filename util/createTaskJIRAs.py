@@ -1,11 +1,7 @@
-from jira.client import JIRA
+from jira import JIRA
 import magic
-import pprint
-import urllib
-
+import urllib, sys
 from optparse import OptionParser
-
-pp = pprint.PrettyPrinter(indent=4)
 
 # Requires jira-python (See http://jira-python.readthedocs.org/en/latest/)
 # If connection to JIRA server fails with error: "The error message is __init__() got an unexpected keyword argument 'mime'"
@@ -19,7 +15,7 @@ pp = pprint.PrettyPrinter(indent=4)
 
 usage = "\n\
 \n\
-Usage 1: %prog -u <user> -p <password> -s <JIRA server> -i <jbideversion> -d <jbdsversion>\n\
+Usage 1: python " + sys.argv[0] + " -u <user> -p <password> -s <JIRA server> -i <jbideversion> -d <jbdsversion>\n\
 -t <short task summary> -f <full detailed task description>\n\
 \n\
 This script will create 1 JBDS and 1 JBIDE JIRA with the specified task summary + description, then create \n\
@@ -55,11 +51,13 @@ if not options.username or not options.password or not options.jiraserver or not
 
 jiraserver = options.jiraserver
 jira = JIRA(options={'server':jiraserver}, basic_auth=(options.username, options.password))
+CLJBIDE = jira.project_components(jira.project('JBIDE')) # full list of components in JBIDE
+CLJBDS = jira.project_components(jira.project('JBDS')) # full list of components in JBIDE
 
 jbide_fixversion = options.jbidefixversion
 jbds_fixversion = options.jbdsfixversion
 
-from components import checkFixVersionsExist
+from components import checkFixVersionsExist, queryComponentLead
 
 if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.username, options.password) == True:
 
@@ -112,13 +110,15 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
             'labels' : [ "task" ],
             }
         rootJBDS = jira.create_issue(fields=rootJBDS_dict)
+        installerLead = queryComponentLead(CLJBDS, 'installer', 0)
+        jira.assign_issue(rootJBDS, installerLead)
 
         if (options.jiraonly):
             print(rootJBDS.key)
         else:
             print("Task JIRA created for this milestone include:")
             print("")
-            print("JBDS              : " + jiraserver + '/browse/' + rootJBDS.key)
+            print("JBDS              : " + jiraserver + '/browse/' + rootJBDS.key + " => " + installerLead)
 
         rootJBIDE_dict = {
             'project' : { 'key': 'JBIDE' },
@@ -132,15 +132,20 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
             'labels' : [ "task" ]
             }
         rootJBIDE = jira.create_issue(fields=rootJBIDE_dict)
+        componentLead = queryComponentLead(CLJBIDE, 'build', 0)
+        jira.assign_issue(rootJBIDE, componentLead)
+
         if (options.jiraonly):
             print(rootJBIDE.key)
         else:
-            print("JBoss Tools       : " + jiraserver + '/browse/' + rootJBIDE.key)
+            print("JBoss Tools       : " + jiraserver + '/browse/' + rootJBIDE.key + " => " + componentLead)
 
     for name, comps in componentList.iteritems():
-        
-        cms = map(nametuple, comps)    
-        # print name + "->" + str(cms)
+        for firstcomponent in comps:
+            break
+        cms = map(nametuple, comps)
+        componentLead = queryComponentLead(CLJBIDE, firstcomponent, 0)
+        #print(name + "->" + str(cms) + " => " + componentLead)
 
         comptasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery + " and component in (" + ",".join(map(quote,comps)) + ")")
         
@@ -162,10 +167,11 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
             singleJIRA_dict['fixVersions'] =[{ "name" : fixversion }]
 
         singleJIRA = jira.create_issue(fields=singleJIRA_dict)
+        jira.assign_issue(singleJIRA, componentLead)
         if (options.jiraonly):
             print(singleJIRA.key)
         else:
-            print(name +  ": " + jiraserver + '/browse/' + singleJIRA.key)
+            print(name +  ": " + jiraserver + '/browse/' + singleJIRA.key + " => " + componentLead)
 
     if (not options.autoaccept and not options.jiraonly):
         accept = raw_input("Accept created JIRAs? [Y/n] ")
