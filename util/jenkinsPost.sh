@@ -35,7 +35,7 @@ fi
 if [[ ${userpass} = ":" ]] || [[ ! ${job} ]] || [[ ! ${task} ]]; then usage; fi
 
 echo -n "["
-prevJob=$(curl -s ${jenkinsURL/https/http}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
+prevJob=$(curl -L -s ${jenkinsURL/https/http}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
 echo "${prevJob}] POST: ${jenkinsURL}/${job}/${task} $data"
 curl -k -X POST -u ${userpass} ${data} ${jenkinsURL}/${job}/${task}
 sleep 10s
