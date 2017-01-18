@@ -23,7 +23,7 @@ while [[ "$#" -gt 0 ]]; do
     '-u') jenkinsUser="$2"; shift 1;;
     '-p') jenkinsPass="$2"; shift 1;;
     '-s') jenkinsURL="$2"; shift 1;;
-    '-d') data="--data \"&$2&\""; shift 1;;
+    '-d') data="--data \"&"${2// /%20}"&\""; shift 1;;
   esac
   shift 1
 done
