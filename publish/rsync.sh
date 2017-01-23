@@ -69,6 +69,14 @@ while [[ "$#" -gt 0 ]]; do
 	esac
 	shift 1
 done
+
+# compute BUILD_TIMESTAMP from TARGET_PATH if not set
+if [[ ! ${BUILD_TIMESTAMP} ]] && [[ ${TARGET_PATH} ]]; then
+	BUILD_TIMESTAMP=${TARGET_PATH%/}; # trim trailing slash if any
+	BUILD_TIMESTAMP=${BUILD_TIMESTAMP##*/}; # trim up to and including prefix slashes
+	BUILD_TIMESTAMP=${BUILD_TIMESTAMP%-B*}; # trim off the -B### build number
+fi
+
 echo "[DEBUG] BUILD_TIMESTAMP = $BUILD_TIMESTAMP"
 echo "[DEBUG] RSYNCFLAGS = $RSYNCFLAGS"
 
