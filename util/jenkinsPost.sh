@@ -35,7 +35,7 @@ fi
 if [[ ${userpass} = ":" ]] || [[ ! ${job} ]] || [[ ! ${task} ]]; then usage; fi
 
 echo -n "["
-prevJob=$(curl -L -s ${jenkinsURL/https/http}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
+prevJob=$(curl -L --location-trusted -s ${jenkinsURL/https/http}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
 echo "${prevJob}] POST: ${jenkinsURL}/${job}/${task} $data"
 curl -k -X POST -u ${userpass} ${data} ${jenkinsURL}/${job}/${task}
 sleep 10s
@@ -43,7 +43,7 @@ sleep 10s
 browser=/usr/bin/google-chrome; if [[ ! -x ${browser} ]]; then browser=/usr/bin/firefox; fi
 
 if [[ $task == "build"* ]]; then # build or buildWithParameters
-	nextJob=$(curl -s ${jenkinsURL/https/http}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
+	nextJob=$(curl -L --location-trusted -s ${jenkinsURL/https/http}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
 	if [[ $prevJob != $nextJob ]]; then 
 		echo "[${nextJob}]  GET:  ${jenkinsURL/https/http}/${job}/lastBuild/"
 		${browser} ${jenkinsURL/https/http}/${job}/lastBuild/parameters ${jenkinsURL/https/http}/${job}/lastBuild/console >/dev/null 2>/dev/null
