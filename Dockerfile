@@ -7,9 +7,9 @@ RUN gpg2 --export -a 352c64e5 >352c64e5.key;gpg2 --export -a f4a80eb5 >f4a80eb5.
 RUN rpm --import 352c64e5.key;rpm --import f4a80eb5.key
 RUN rpm -iUvh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-9.noarch.rpm
 
-RUN yum install -y python-pip git
+RUN yum install -y python-pip git gcc python-devel
 
-RUN pip install python-magic jira
+RUN pip install python-magic jira PyGitHub
 
 WORKDIR /tmp/
 
