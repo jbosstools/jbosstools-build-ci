@@ -115,6 +115,6 @@ def queryComponentLead (componentList, componentID, nameOrDisplayName):
     # if component not found, return default assignee
     return defaultAssignee()
 # examples
-# jira = JIRA(options={'server':jiraserver}, basic_auth=(options.username, options.password))
+# jira = JIRA(options={'server':jiraserver}, basic_auth=(options.usernameJIRA, options.passwordJIRA))
 # print queryComponentLead(jira.project_components(jira.project('JBIDE')), 'build', 0)
 # print queryComponentLead(jira.project_components(jira.project('JBIDE')), 'build', 1)

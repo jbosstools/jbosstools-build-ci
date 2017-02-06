@@ -4,23 +4,23 @@ from jira import JIRA
 from optparse import OptionParser
 
 usage = "Creates a New + Noteworthy jira + subtasks for all components.\n\nUsage:   python " + sys.argv[0] + \
-  " -u <jira user> -p <jira password> -s <jira server> --jbide <jbidefixversion> --jbds <jbdsfixversion>\n" + \
-  "Example: python " + sys.argv[0] + " -u username -p password -s https://issues.stage.jboss.org -i 4.4.3.AM2 -d 10.3.0.AM2"
+  " -u <jira user> -p <jira pass> -s <jira server> --jbide <jbidefixversion> --jbds <jbdsfixversion>\n" + \
+  "Example: python " + sys.argv[0] + " -u usernameJIRA -p passwordJIRA -s https://issues.stage.jboss.org -i 4.4.3.AM2 -d 10.3.0.AM2"
 # \nRequires you have installed jira-python (See http://jira-python.readthedocs.org/en/latest/ )
 parser = OptionParser(usage)
-parser.add_option("-u", "--user", dest="username", help="jira username")
-parser.add_option("-p", "--pwd", dest="password", help="jira password")
+parser.add_option("-u", "--user", dest="usernameJIRA", help="JIRA Username")
+parser.add_option("-p", "--pwd", dest="passwordJIRA", help="JIRA Password")
 parser.add_option("-i", "--jbide", dest="jbidefixversion", help="JBIDE fix version")
 parser.add_option("-d", "--jbds", dest="jbdsfixversion", help="JBDS fix version")
 parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.org")
 
 (options, args) = parser.parse_args()
 
-if not options.username or not options.password or not options.jbidefixversion or not options.jbdsfixversion:
+if not options.usernameJIRA or not options.passwordJIRA or not options.jbidefixversion or not options.jbdsfixversion:
 	parser.error("Need to specify all commandline options:\n\n" + usage)
 	
 jiraserver = options.jiraserver
-jira = JIRA(options={'server':jiraserver}, basic_auth=(options.username, options.password))
+jira = JIRA(options={'server':jiraserver}, basic_auth=(options.usernameJIRA, options.passwordJIRA))
 CL = jira.project_components(jira.project('JBIDE')) # full list of components in JBIDE
 
 jbide_fixversion = options.jbidefixversion
@@ -28,7 +28,7 @@ jbds_fixversion = options.jbdsfixversion
 
 from components import checkFixVersionsExist, queryComponentLead, defaultAssignee
 
-if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.username, options.password) == True:
+if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.usernameJIRA, options.passwordJIRA) == True:
 	## The jql query across for all N&N - to find issues for which N&N needs to be written
 	nnsearchquery = '((project in (JBDS) and fixVersion = "' + jbds_fixversion + '") or (project in (JBIDE) and fixVersion = "' + jbide_fixversion + '")) AND resolution = Done AND labels = new_and_noteworthy'
 	nnsearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(nnsearchquery)
@@ -48,9 +48,13 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
 		'components' : [{ "name" : "website" }]
 		}
 	rootnn = jira.create_issue(fields=rootnn_dict)
-	jira.assign_issue(rootnn, defaultAssignee())
+	componentLead = defaultAssignee()
+	try:
+		jira.assign_issue(rootnn, componentLead)
+	except:
+		print "[WARNING] Unexpected error! User {0} tried to assign {1} to {2}: {3}".format(options.usernameJIRA, rootnn, componentLead, sys.exc_info()[0])
 
-	print("JBoss Tools       : " + jiraserver + '/browse/' + rootnn.key + " => " + defaultAssignee())
+	print("JBoss Tools       : " + jiraserver + '/browse/' + rootnn.key + " => " + componentLead + "")
 
 	def nametuple(x):
 		return { "name" : x }
@@ -77,9 +81,9 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
 			'* [All N&N Task JIRAs|' + jiraserver + '/issues/?jql=' + urllib.quote_plus(nnissuesqueryall) + ']\n\n'
 
 		childnn_description_milestone = \
-		    queryComponentLead(CL, firstcomponent, 1) + ",\n\n" + \
+			queryComponentLead(CL, firstcomponent, 1) + ",\n\n" + \
 			'Search for your component\'s New and Noteworthy issues:' + query_links + \
-		    'If no N&N issues are found for ' + name.strip() + ', check if there are issues that SHOULD have been labelled with *Labels =* _new_and_noteworthy_, and add them.\n\n ' + \
+			'If no N&N issues are found for ' + name.strip() + ', check if there are issues that SHOULD have been labelled with *Labels =* _new_and_noteworthy_, and add them.\n\n ' + \
 			'Document the ones relevant for ' + name.strip() + ' by submitting a pull request against:\n\n' + \
 			'* https://github.com/jbosstools/jbosstools-website/tree/master/documentation/whatsnew\n\n' + \
 			'If your PR\'s commit comment is of the form... {code}' + rootnn.key + ' #comment Create N&N for ' + name.strip() + " " + jbide_fixversion + ' #close{code}... and your github user\'s email address is the same as your JIRA one, ' + \
@@ -87,7 +91,7 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
 			'If there is nothing new or noteworthy for ' + name.strip() + ' for this milestone, please *reject* and *close* this issue.\n\n'
 
 		childnn_description_final = childnn_description_milestone + '----\n' + \
-		    'If there is nothing new or noteworthy for ' + jbide_fixversion + ' since the AM3 release of ' + name.strip() + ', please *reject* and ' + \
+			'If there is nothing new or noteworthy for ' + jbide_fixversion + ' since the AM3 release of ' + name.strip() + ', please *reject* and ' + \
 			'*close* this issue. The final N&N page will be aggregated from all previous N&N documents.\n\n' + \
 			'If you want to _add a comment to the final document_ then submit a PR to create a separate <component>-news-' + jbide_fixversion + '.adoc file here:\n\n' + \
 			'* https://github.com/jbosstools/jbosstools-website/tree/master/documentation/whatsnew\n\n' + \
@@ -111,7 +115,10 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
 		}
 
 		child = jira.create_issue(fields=childnn_dict)
-		jira.assign_issue(child, componentLead)
+		try:
+			jira.assign_issue(child, componentLead)
+		except:
+			print "[WARNING] Unexpected error! User {0} tried to assign {1} to {2}: {3}".format(options.usernameJIRA, child, componentLead, sys.exc_info()[0])
 		print(name +  ": " + jiraserver + '/browse/' + child.key + " => " + componentLead)
 
 	accept = raw_input("Accept created JIRAs? [Y/n] ")

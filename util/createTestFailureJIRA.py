@@ -8,9 +8,9 @@ from requests.auth import HTTPBasicAuth
 # If connection to JIRA server fails with error: "The error message is __init__() got an unexpected keyword argument 'mime'"
 # Then go edit /usr/lib/python2.7/site-packages/jira/client.py 
 # replace 
-#         self._magic = magic.Magic(mime=True)
+#		 self._magic = magic.Magic(mime=True)
 # with 
-#         self._magic = magic
+#		 self._magic = magic
 # 
 # ref: http://stackoverflow.com/questions/12609402/init-got-an-unexpected-keyword-argument-mime-in-python-django
 
@@ -32,10 +32,10 @@ parser.add_option("-v", "--testpwd", dest="passwordTestServer", help="Test Serve
 (options, args) = parser.parse_args()
 
 if not options.jbideversion or not options.component or \
-    not options.jiraserver or not options.usernameJIRA or not options.passwordJIRA or \
-    not options.testurl or not options.usernameTestServer or not options.passwordTestServer:
-    parser.error("Must to specify ALL commandline flags")
-    
+	not options.jiraserver or not options.usernameJIRA or not options.passwordJIRA or \
+	not options.testurl or not options.usernameTestServer or not options.passwordTestServer:
+	parser.error("Must to specify ALL commandline flags")
+	
 jiraserver = options.jiraserver
 
 jbide_affectedversion = options.jbideversion
@@ -44,96 +44,99 @@ from components import checkFixVersionsExist, queryComponentLead
 
 if checkFixVersionsExist(jbide_affectedversion, None, jiraserver, options.usernameJIRA, options.passwordJIRA) == True:
 
-    component = options.component
-    testurl = options.testurl
+	component = options.component
+	testurl = options.testurl
 
-    ## The jql query across for all testfailure issues
-    testfailuresearchquery = 'labels IN ("testfailure") AND project IN (JBIDE) AND affectedVersion IN ("' + jbide_affectedversion + '") AND component IN ("' + component + '")'
-    testfailuresearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(testfailuresearchquery)
-    testfailuresearchlabel = 'Search for Test Failure JIRAs in JBIDE ' + jbide_affectedversion + ' for ' + component + ' component'
+	## The jql query across for all testfailure issues
+	testfailuresearchquery = 'labels IN ("testfailure") AND project IN (JBIDE) AND affectedVersion IN ("' + jbide_affectedversion + '") AND component IN ("' + component + '")'
+	testfailuresearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(testfailuresearchquery)
+	testfailuresearchlabel = 'Search for Test Failure JIRAs in JBIDE ' + jbide_affectedversion + ' for ' + component + ' component'
 
-    # result here is pretty-printed XML
-    def prettyXML(xml):
-        uglyXml = xml.toprettyxml(indent='  ')
-        text_re = re.compile('>\n\s+([^<>\s].*?)\n\s+</', re.DOTALL)    
-        out = text_re.sub('>\g<1></', uglyXml)
-        return out
+	# result here is pretty-printed XML
+	def prettyXML(xml):
+		uglyXml = xml.toprettyxml(indent='  ')
+		text_re = re.compile('>\n\s+([^<>\s].*?)\n\s+</', re.DOTALL)	
+		out = text_re.sub('>\g<1></', uglyXml)
+		return out
 
-    def findChildNodeByName(parent, name):
-        for node in parent.childNodes:
-            if node.nodeType == node.ELEMENT_NODE and node.localName == name:
-                return node
-        return None
+	def findChildNodeByName(parent, name):
+		for node in parent.childNodes:
+			if node.nodeType == node.ELEMENT_NODE and node.localName == name:
+				return node
+		return None
 
-    def getText(nodelist):
-        rc = []
-        for node in nodelist:
-            if node.nodeType == node.TEXT_NODE:
-                rc.append(node.data)
-        return ''.join(rc)
+	def getText(nodelist):
+		rc = []
+		for node in nodelist:
+			if node.nodeType == node.TEXT_NODE:
+				rc.append(node.data)
+		return ''.join(rc)
 
-    print "\n" + testfailuresearchlabel + ":\n\n * " + testfailuresearch + "\n"
+	print "\n" + testfailuresearchlabel + ":\n\n * " + testfailuresearch + "\n"
 
-    # query JIRA for existing issues, or else find "No issues were found to match your search"
-    #  https://issues.stage.jboss.org/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?jqlQuery=labels+%3D+testfailure&tempMax=1000
-    q = requests.get(jiraserver + '/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?tempMax=1000&jqlQuery=' + urllib.quote_plus(testfailuresearchquery), auth=HTTPBasicAuth(options.usernameJIRA, options.passwordJIRA), verify=False)
-    #print q.text
-    xml = minidom.parseString(q.text)
-    issuelist = xml.getElementsByTagName('item')
-    numExistingIssues = len(issuelist)
-    if numExistingIssues > 0 : 
-        print "Found " + str(numExistingIssues) + " existing JIRAs:\n"
-        for s in issuelist :
-            print " * " + getText(findChildNodeByName(s, 'link').childNodes) + ": " + getText(findChildNodeByName(s, 'summary').childNodes).strip() + "\n"
+	# query JIRA for existing issues, or else find "No issues were found to match your search"
+	#  https://issues.stage.jboss.org/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?jqlQuery=labels+%3D+testfailure&tempMax=1000
+	q = requests.get(jiraserver + '/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?tempMax=1000&jqlQuery=' + urllib.quote_plus(testfailuresearchquery), auth=HTTPBasicAuth(options.usernameJIRA, options.passwordJIRA), verify=False)
+	#print q.text
+	xml = minidom.parseString(q.text)
+	issuelist = xml.getElementsByTagName('item')
+	numExistingIssues = len(issuelist)
+	if numExistingIssues > 0 : 
+		print "Found " + str(numExistingIssues) + " existing JIRAs:\n"
+		for s in issuelist :
+			print " * " + getText(findChildNodeByName(s, 'link').childNodes) + ": " + getText(findChildNodeByName(s, 'summary').childNodes).strip() + "\n"
 
-    accept = raw_input("Create new JIRA? [Y/n] ")
-    if accept.capitalize() not in ["N"] :
+	accept = raw_input("Create new JIRA? [Y/n] ")
+	if accept.capitalize() not in ["N"] :
 
-        ## get the XML or JSON content from the Jenkins test report page
-        payload = {'wrapper': 'failures', 'xpath': "//case[status='FAILED']"}
-        # print testurl
-        r = requests.get(testurl + "api/xml", auth=HTTPBasicAuth(options.usernameTestServer, options.passwordTestServer), params=payload, verify=False)
-        # print r.text
-        xml = minidom.parseString(r.text)
+		## get the XML or JSON content from the Jenkins test report page
+		payload = {'wrapper': 'failures', 'xpath': "//case[status='FAILED']"}
+		# print testurl
+		r = requests.get(testurl + "api/xml", auth=HTTPBasicAuth(options.usernameTestServer, options.passwordTestServer), params=payload, verify=False)
+		# print r.text
+		xml = minidom.parseString(r.text)
 
-        testcaselist = xml.getElementsByTagName('case') 
-        failureSummary = '*' + str(len(testcaselist)) + ' Test Failure(s) in JBIDE ' + jbide_affectedversion + ' for ' + component + ' component:*\n\n' + testurl.strip() + '\n\n'
-        failureDetails = '\n\n[' + testfailuresearchlabel + '|' + testfailuresearch + ']\n\n-----\n'
+		testcaselist = xml.getElementsByTagName('case') 
+		failureSummary = '*' + str(len(testcaselist)) + ' Test Failure(s) in JBIDE ' + jbide_affectedversion + ' for ' + component + ' component:*\n\n' + testurl.strip() + '\n\n'
+		failureDetails = '\n\n[' + testfailuresearchlabel + '|' + testfailuresearch + ']\n\n-----\n'
 
-        for s in testcaselist :
-            className = getText(findChildNodeByName(s, 'className').childNodes)
-            className_re = re.sub(r'\.([a-zA-Z0-9_]+$)',"/\g<1>",className.strip())
-            name = getText(findChildNodeByName(s, 'name').childNodes)
-            name_re = re.sub(r'[\[\]]+',"_",name)
-            age = getText(findChildNodeByName(s, 'age').childNodes)
-            failureSummary = failureSummary + '# [' + className + '|' + testurl + '' + className_re + '/' + name_re + '] (failing for ' + age + ' builds)\n'
+		for s in testcaselist :
+			className = getText(findChildNodeByName(s, 'className').childNodes)
+			className_re = re.sub(r'\.([a-zA-Z0-9_]+$)',"/\g<1>",className.strip())
+			name = getText(findChildNodeByName(s, 'name').childNodes)
+			name_re = re.sub(r'[\[\]]+',"_",name)
+			age = getText(findChildNodeByName(s, 'age').childNodes)
+			failureSummary = failureSummary + '# [' + className + '|' + testurl + '' + className_re + '/' + name_re + '] (failing for ' + age + ' builds)\n'
 
-            failureDetails = failureDetails + '* {color:red}' + className + " : " + name + '{color} (failing for ' + age + ' builds) \n \n '
-            failureDetails = failureDetails + '{code:title=' + testurl + '' + className_re + '/' + name_re + '}\n'
-            failureDetails = failureDetails + prettyXML(s)
-            failureDetails = failureDetails + '\n{code}\n\n'
-            #print failureDetails
+			failureDetails = failureDetails + '* {color:red}' + className + " : " + name + '{color} (failing for ' + age + ' builds) \n \n '
+			failureDetails = failureDetails + '{code:title=' + testurl + '' + className_re + '/' + name_re + '}\n'
+			failureDetails = failureDetails + prettyXML(s)
+			failureDetails = failureDetails + '\n{code}\n\n'
+			#print failureDetails
 
-        rootJBIDE_dict = {
-            'project' : { 'key': 'JBIDE' },
-            'summary' :     str(len(testcaselist)) + ' Test Failure(s) in JBIDE ' + jbide_affectedversion + ' for ' + component + ' component',
-            'description' :  failureSummary + failureDetails,
-            'issuetype' : { 'name' : 'Task' },
-            'priority' : { 'name' :'Critical'},
-            'versions' : [{ "name" : jbide_affectedversion }],
-            'components' : [{ "name" : component }],
-            'labels' : [ "testfailure" ]
-            }
+		rootJBIDE_dict = {
+			'project' : { 'key': 'JBIDE' },
+			'summary' : str(len(testcaselist)) + ' Test Failure(s) in JBIDE ' + jbide_affectedversion + ' for ' + component + ' component',
+			'description' :  failureSummary + failureDetails,
+			'issuetype' : { 'name' : 'Task' },
+			'priority' : { 'name' :'Critical'},
+			'versions' : [{ "name" : jbide_affectedversion }],
+			'components' : [{ "name" : component }],
+			'labels' : [ "testfailure" ]
+			}
 
-        jira = JIRA(options={'server':jiraserver}, basic_auth=(options.usernameJIRA, options.passwordJIRA))
-        CLJBIDE = jira.project_components(jira.project('JBIDE')) # full list of components in JBIDE
-        rootJBIDE = jira.create_issue(fields=rootJBIDE_dict)
-        componentLead = queryComponentLead(CLJBIDE, component, 0)
-        jira.assign_issue(rootJBIDE, componentLead)
-        accept = raw_input("\nAccept new JIRA " + jiraserver + '/browse/' + rootJBIDE.key + " => " + componentLead + " ? [Y/n] ")
-        if accept.capitalize() in ["N"] :
-            rootJBIDE.delete()
+		jira = JIRA(options={'server':jiraserver}, basic_auth=(options.usernameJIRA, options.passwordJIRA))
+		CLJBIDE = jira.project_components(jira.project('JBIDE')) # full list of components in JBIDE
+		rootJBIDE = jira.create_issue(fields=rootJBIDE_dict)
+		componentLead = queryComponentLead(CLJBIDE, component, 0)
+		try:
+			jira.assign_issue(rootJBIDE, componentLead)
+		except:
+			print "[WARNING] Unexpected error! User {0} tried to assign {1} to {2}: {3}".format(options.usernameJIRA, rootJBIDE, componentLead, sys.exc_info()[0])
+		accept = raw_input("\nAccept new JIRA " + jiraserver + '/browse/' + rootJBIDE.key + " => " + componentLead + " ? [Y/n] ")
+		if accept.capitalize() in ["N"] :
+			rootJBIDE.delete()
 
-    # see JIRA_components listing in components.py
+	# see JIRA_components listing in components.py
 
-    # Sample usage: see createTestFailureJIRA.py.examples.txt
+	# Sample usage: see createTestFailureJIRA.py.examples.txt
