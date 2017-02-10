@@ -12,9 +12,20 @@ usage ()
 	exit 1
 }
 
+logn ()
+{
+  if [[ $quiet == 0 ]]; then echo -n -e "$1"; fi
+}
+
+log ()
+{
+  if [[ $quiet == 0 ]]; then echo -e "$1"; fi
+}
+
 if [[ $# -lt 2 ]]; then usage; fi
 
 jenkinsURL="https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job"
+quiet=0
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -24,6 +35,7 @@ while [[ "$#" -gt 0 ]]; do
     '-p') jenkinsPass="$2"; shift 1;;
     '-s') jenkinsURL="$2"; shift 1;;
     '-d') data="--data \"&"${2// /%20}"&\""; shift 1;;
+    '-q') quiet="1"; shift 0;;
   esac
   shift 1
 done
@@ -34,20 +46,20 @@ fi
 
 if [[ ${userpass} = ":" ]] || [[ ! ${job} ]] || [[ ! ${task} ]]; then usage; fi
 
-echo -n "["
-prevJob=$(curl -L --location-trusted -s ${jenkinsURL/https/http}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
-echo "${prevJob}] POST: ${jenkinsURL}/${job}/${task} $data"
-curl -k -X POST -u ${userpass} ${data} ${jenkinsURL}/${job}/${task}
-sleep 10s
+logn "["
+prevJob=$(curl -s -S -L --location-trusted -s ${jenkinsURL/https/http}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
+log "${prevJob}] POST: ${jenkinsURL}/${job}/${task} $data"
+if [[ $quiet == 1 ]] && [[ $task != "build"* ]]; then echo ${prevJob}; fi
 
-browser=/usr/bin/google-chrome; if [[ ! -x ${browser} ]]; then browser=/usr/bin/firefox; fi
+curl -s -S -k -X POST -u ${userpass} ${data} ${jenkinsURL}/${job}/${task}
 
 if [[ $task == "build"* ]]; then # build or buildWithParameters
-	nextJob=$(curl -L --location-trusted -s ${jenkinsURL/https/http}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
-	if [[ $prevJob != $nextJob ]]; then 
-		echo "[${nextJob}]  GET:  ${jenkinsURL/https/http}/${job}/lastBuild/"
+	sleep 10s
+	browser=/usr/bin/google-chrome; if [[ ! -x ${browser} ]]; then browser=/usr/bin/firefox; fi
+	nextJob=$(curl -s -S -L --location-trusted -s ${jenkinsURL/https/http}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
+	if [[ $quiet == 1 ]]; then echo ${nextJob}; fi
+	if [[ "${prevJob}" != "${nextJob}" ]]; then
+		log "[${nextJob}]  GET:  ${jenkinsURL/https/http}/${job}/lastBuild/"
 		${browser} ${jenkinsURL/https/http}/${job}/lastBuild/parameters ${jenkinsURL/https/http}/${job}/lastBuild/console >/dev/null 2>/dev/null
 	fi
 fi
-
-exit
