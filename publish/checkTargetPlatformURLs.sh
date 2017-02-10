@@ -58,15 +58,13 @@ if [[ ${TARGET_PLATFORM_VERSION_MAX} ]]; then
     for u in http://download.jboss.org/jbosstools/${static}targetplatforms/jbosstoolstarget \
              https://devstudio.jboss.com/${static}targetplatforms/jbdevstudiotarget; do
       t=${u%%/}; t=${t##*/}; # echo $t; # jbosstoolstarget or jbdevstudiotarget      
-      for f in ${TARGET_PLATFORM_VERSION_MAX}; do
-        for ff in / /REPO; do
-          a=${u}/${f}${ff}
-          logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm}"; let notOK+=1; fi
-          for j in compositeArtifacts.xml compositeContent.xml p2.index; do
-            logn " + ${j} : "; stat=$(curl -I -s ${a}/${j} | egrep "404")
-            if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm}"; let notOK+=1; fi
-          done
+      for f in ${TARGET_PLATFORM_VERSION_MAX} ${TARGET_PLATFORM_VERSION_MAX}/REPO; do
+        a=${u}/${f}
+        logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
+        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm}"; let notOK+=1; fi
+        for j in compositeArtifacts.xml compositeContent.xml p2.index; do
+          logn " + [0] ${a}/${j} : "; stat=$(curl -I -s ${a}/${j} | egrep "404")
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + [0] ${a}/${j} : " "${red}NO${norm}"; let notOK+=1; fi
         done
       done
       log ""
@@ -83,24 +81,22 @@ if [[ ${TARGET_PLATFORM_VERSION_MAX} ]]; then
            https://devstudio.jboss.com/${static}targetplatforms/jbdevstudiotarget; do
     t=${u%%/}; t=${t##*/}; # echo $t; # jbosstoolstarget or jbdevstudiotarget
 
-    for f in ${TARGET_PLATFORM_VERSION_MAX}; do
-      for ff in / /REPO; do
-        a=${u}/${f}${ff}
-        logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm}"; let notOK+=1; fi
+    for f in ${TARGET_PLATFORM_VERSION_MAX} ${TARGET_PLATFORM_VERSION_MAX}/REPO; do
+      a=${u}/${f}
+      logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
+      if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm}"; let notOK+=1; fi
 
-        if [[ ${ff} == "/REPO" ]]; then
-          for j in artifacts.jar binary content.jar features plugins; do
-            logn " + ${j} : "; stat=$(curl -I -s ${a}/${j} | egrep "404")
-            if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm}"; let notOK+=1; fi
-          done
-        else
-          for j in compositeArtifacts.xml compositeContent.xml ${t}-${TARGET_PLATFORM_VERSION_MAX}.zip ${t}-${TARGET_PLATFORM_VERSION_MAX}.zip.sha256; do
-            logn " + ${j} : "; stat=$(curl -I -s ${a}/${j} | egrep "404")
-            if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} s: " "${red}NO${norm}"; let notOK+=1; fi
-          done
-        fi
-      done
+      if [[ ${f} == *"/REPO" ]]; then
+        for j in artifacts.jar binary content.jar features plugins; do
+          logn " + [2] ${a}/${j} : "; stat=$(curl -I -s ${a}/${j} | egrep "404")
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + [2] ${a}/${j} : " "${red}NO${norm}"; let notOK+=1; fi
+        done
+      else
+        for j in compositeArtifacts.xml compositeContent.xml ${t}-${TARGET_PLATFORM_VERSION_MAX}.zip ${t}-${TARGET_PLATFORM_VERSION_MAX}.zip.sha256; do
+          logn " + [1] ${a}/${j} : "; stat=$(curl -I -s ${a}/${j} | egrep "404")
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + [1] ${a}/${j} : " "${red}NO${norm}"; let notOK+=1; fi
+        done
+      fi
     done
     log ""
   done
