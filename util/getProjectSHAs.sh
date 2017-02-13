@@ -231,7 +231,7 @@ fi
 
 jobsToCheck=""
 checkProjects () {
-  jenkins_prefix="http://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/"
+  jenkins_prefix="http://jenkins.hosts.mwqe.eng.bos.redhat.com/hudson/job/"
   PROJECTS="$1" # ${JBTPROJECTS} or ${JBDSPROJECTS}
   g_project_prefix="$2" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
   staging_url="$3" # http://download.jboss.org/jbosstools/${jbtpath}/ or http://www.qa.jboss.com/binaries/RHDS/${jbdspath}/

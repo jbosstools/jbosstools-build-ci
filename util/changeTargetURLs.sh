@@ -36,9 +36,9 @@ done
 if [[ ! ${WORKSPACE} ]]; then WORKSPACE=/tmp; fi
 if [[ ! -x $p2diff ]]; then echo "Error: cannot run p2diff from $p2diff"; echo ""; usage; fi
 
-# 1. fetch and parse http://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job/jbosstoolstargetplatformrequirements-mirror-matrix/${whichBuild}/api/xml?xpath=//description
+# 1. fetch and parse http://jenkins.hosts.mwqe.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job/jbosstoolstargetplatformrequirements-mirror-matrix/${whichBuild}/api/xml?xpath=//description
 tmpfile=${WORKSPACE}/jbosstoolstargetplatformrequirements-mirror-matrix-descriptions.txt
-descriptionURL=http://jenkins.mw.lab.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job/jbosstoolstargetplatformrequirements-mirror-matrix/${whichBuild}/api/xml?xpath=//description
+descriptionURL=http://jenkins.hosts.mwqe.eng.bos.redhat.com/hudson/view/DevStudio/view/DevStudio_Master/job/jbosstoolstargetplatformrequirements-mirror-matrix/${whichBuild}/api/xml?xpath=//description
 curl -s ${descriptionURL} > ${tmpfile}
 if [[ ! $(cat ${tmpfile} | grep "http://download.jboss.org/jbosstools/updates/requirements/") ]]; then
   echo "Error: could not parse description from ${descriptionURL}"

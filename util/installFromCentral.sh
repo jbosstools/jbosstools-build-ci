@@ -10,7 +10,7 @@
 # -INSTALL_PLAN "https://devstudio.redhat.com/10.0/snapshots/builds/jbosstools-discovery.central_4.4.neon/latest/all/repo/;https://devstudio.redhat.com/10.0/snapshots/builds/jbosstools-discovery.earlyaccess_4.4.neon/latest/all/repo/devstudio-directory.xml" \
 # | tee /tmp/installFromCentral_log.txt; cat /tmp/installFromCentral_log.txt | egrep -i "could not be found|FAILED|Missing|Only one of the following|being installed|Cannot satisfy dependency|cannot be installed"
 #
-# See also https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-install-p2director.install-tests.matrix_master/
+# See also https://jenkins.hosts.mwqe.eng.bos.redhat.com/hudson/job/jbosstools-install-p2director.install-tests.matrix_master/
 
 usage ()
 {
