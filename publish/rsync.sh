@@ -143,7 +143,7 @@ getRemoteFile ()
 	getRemoteFileReturn=""
 	grfURL="$1"
 	mkdir -p ${tmpdir}
-	output=$(mktemp --tmpdir=${tmpdir} getRemoteFile.XXXXXX)
+	output=$(mktemp -p ${tmpdir} getRemoteFile.XXXXXX)
 	if [[ ! `wget ${wgetParams} ${grfURL} -O ${output} 2>&1 | egrep "ERROR 404"` ]]; then # file downloaded
 		getRemoteFileReturn=${output}
 	else
