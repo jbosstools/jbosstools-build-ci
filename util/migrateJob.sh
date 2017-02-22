@@ -83,7 +83,7 @@ echo ""; (( i++ ))
 if [[ $createNewJob != *"job already exists"* ]]; then 
   let tot=tot+1
   echo "[INFO] [$i/$tot] Copy OLD job to NEW path, instead of dummy job"
-  rsync \
+   rsync \
      cache/https/${SOURCE_JENKINS}/${SOURCE_PATH}/job/${JOB_NAME}/config.xml \
      cache/https/${TARGET_JENKINS}/${TARGET_PATH}job/${JOB_NAME}/config.xml
   echo ""; (( i++ ))
