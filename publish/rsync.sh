@@ -153,9 +153,11 @@ getRemoteFile ()
 }
 
 # store a copy of this build's log in the target folder (if JOB_NAME is defined)
-if [[ ${JOB_NAME} ]]; then 
+if [[ ${JOB_NAME} ]] && [[ ${JENKINS_URL} ]]; then
+	# JENKINS_URL=https://dev-platform-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/ or the old one
+	# JENKINS_URL=http://jenkins.hosts.mwqe.eng.bos.redhat.com/hudson/
 	bl=${tmpdir}/BUILDLOG.txt
-	getRemoteFile "http://jenkins.hosts.mwqe.eng.bos.redhat.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/consoleText"; if [[ -w ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${bl}; fi
+	getRemoteFile "${JENKINS_URL}job/${JOB_NAME}/${BUILD_NUMBER}/consoleText"; if [[ -w ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${bl}; fi
 	touch ${bl}; chmod 664 ${bl}; rsync -arzq --protocol=28 ${bl} $DESTINATION/${TARGET_PATH/\/all\/repo/}/logs/
 fi
 
