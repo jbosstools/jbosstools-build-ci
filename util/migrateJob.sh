@@ -17,6 +17,7 @@ TARGET_PATH="view/Devstudio/view/jbosstools-releng"
 # string replacements to apply to the destination version of the job
 assignedNode="rhel7-devstudio-releng" # new node to use
 jdk="jdk1.8"
+mavenName="maven-3.3.9"
 
 usage ()
 {
@@ -24,6 +25,10 @@ usage ()
 	echo ""
 	echo "Example: $0 -s view/DevStudio/view/jbosstools-releng/ -t view/Devstudio/view/jbosstools-releng/ \\"
 	echo "  -j jbosstools-releng-push-to-staging-01-check-versions-branches-root-poms"
+	echo "Example: $0 -s view/DevStudio/view/DevStudio_Master/ -t view/Devstudio/view/devstudio_master/ \\"
+	echo "  -j jbosstools-cleanup"
+	echo "Example: $0 -s view/DevStudio/view/devstudio_10.0.neon/ -t view/Devstudio/view/devstudio_10.0.neon/ \\"
+	echo "  -j jbosstools-build-ci_4.4.neon"
 	exit 1
 }
 
@@ -42,6 +47,7 @@ while [[ "$#" -gt 0 ]]; do
 		'-tj') TARGET_JENKINS="$2"; shift 1;;
 
 		'-assignedNode') 	assignedNode=="$2"; shift 1;;
+		'-mavenName') 		mavenName=="$2"; shift 1;;
 		'-jdk') 			jdk=="$2"; shift 1;;
 	esac
 	shift 1
@@ -94,6 +100,7 @@ echo "       cache/https/${TARGET_JENKINS}/${TARGET_PATH}job/${JOB_NAME}/config.
 sed -i \
     -e "s#<assignedNode>.\+</assignedNode>#<assignedNode>${assignedNode}</assignedNode>#" \
     -e "s#<jdk>.\+</jdk>#<jdk>${jdk}</jdk>#" \
+    -e "s#<mavenName>.\+</mavenName>#<mavenName>${mavenName}</mavenName>#" \
     cache/https/${TARGET_JENKINS}/${TARGET_PATH}job/${JOB_NAME}/config.xml
 echo ""; (( i++ ))
 
