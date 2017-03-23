@@ -47,9 +47,9 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
   # get the mirror
   if [[ ${SOURCE_URL} ]]; then SOURCE_URL_PARAM="-DURL=${SOURCE_URL}"; else SOURCE_URL_PARAM=""; fi
   date; time ${JDK8}/bin/java -cp ${WORKSPACE}/eclipse/plugins/org.eclipse.equinox.launcher_*.jar \
-      org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp -vmargs -Declipse.p2.mirrors=false \
-      -application org.eclipse.ant.core.antRunner \
-      -f ${SCRIPTNAME} -Dversion=${VERSION} ${SOURCE_URL_PARAM} ${TASK} | tee ${logFile}
+      org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp \
+      -application org.eclipse.ant.core.antRunner -f ${SCRIPTNAME} -Dversion=${VERSION} ${SOURCE_URL_PARAM} ${TASK} \
+      -vmargs -Declipse.p2.mirrors=false | tee ${logFile}
 
   if [[ -f ${logFile} ]]; then 
     echo "[INFO] Log file: ${logFile}"
