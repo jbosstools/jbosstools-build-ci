@@ -35,16 +35,19 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
   # put a copy of ant-contrib.jar in ${WORKDIR}/..
   if [[ $(grep ant-contrib ${SCRIPTNAME}) ]]; then
     M2_HOME=/qa/tools/opt/apache-maven-3.2.5/
-    $M2_HOME/bin/mvn dependency:copy -DtrimVersion=true -Dmdep.stripClassifier=true -Dmdep.stripVersion=true -DoutputDirectory=${WORKSPACE}/updates/requirements/ -Dartifact=ant-contrib:ant-contrib:1.0b3:jar
+    $M2_HOME/bin/mvn dependency:copy -DtrimVersion=true -Dmdep.stripClassifier=true -Dmdep.stripVersion=true \
+      -DoutputDirectory=${WORKSPACE}/updates/requirements/ -Dartifact=ant-contrib:ant-contrib:1.0b3:jar
   fi
 
   # get the mirror
   if [[ ${SOURCE_URL} ]]; then
-    date; ${JDK8}/bin/java -cp ${WORKSPACE}/eclipse/plugins/org.eclipse.equinox.launcher_*.jar \
-        org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp -application org.eclipse.ant.core.antRunner -f ${SCRIPTNAME} -Dversion=${VERSION} -DURL=${SOURCE_URL} ${TASK}
+    date; time ${JDK8}/bin/java -cp ${WORKSPACE}/eclipse/plugins/org.eclipse.equinox.launcher_*.jar \
+        org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp -application org.eclipse.ant.core.antRunner -f ${SCRIPTNAME} \
+          -Dversion=${VERSION} -DURL=${SOURCE_URL} -Declipse.p2.mirrors=false ${TASK}
   else
-    date; ${JDK8}/bin/java -cp ${WORKSPACE}/eclipse/plugins/org.eclipse.equinox.launcher_*.jar \
-        org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp -application org.eclipse.ant.core.antRunner -f ${SCRIPTNAME} -Dversion=${VERSION} ${TASK}
+    date; time ${JDK8}/bin/java -cp ${WORKSPACE}/eclipse/plugins/org.eclipse.equinox.launcher_*.jar \
+        org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp -application org.eclipse.ant.core.antRunner -f ${SCRIPTNAME} \
+          -Dversion=${VERSION} -Declipse.p2.mirrors=false ${TASK}
   fi
 
   # publish to /builds/staging/${JOB_NAME}_${REQ_NAME}/${VERSION}
@@ -60,7 +63,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
   # optionally, publish to updates/requirements/${REQ_NAME}/ too
   if [[ ${VERSION} != "SNAPSHOT" ]]; then
     date
-    ${RSYNC} --delete ${WORKDIR}/${VERSION} ${DESTINATION}/updates/requirements/${REQ_NAME}/
+    time ${RSYNC} --delete ${WORKDIR}/${VERSION} ${DESTINATION}/updates/requirements/${REQ_NAME}/
   fi
 
   # optionally, publish to updates/${PUBLISH_PATH}/${REQ_NAME} too
@@ -68,7 +71,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
     date
     echo "mkdir ${PUBLISH_PATH}" | sftp ${DESTINATION}/updates
     echo "mkdir ${PUBLISH_PATH}/${REQ_NAME}" | sftp ${DESTINATION}/updates
-    ${RSYNC} --delete ${WORKDIR}/${VERSION} ${DESTINATION}/updates/${PUBLISH_PATH}/${REQ_NAME}/
+    time ${RSYNC} --delete ${WORKDIR}/${VERSION} ${DESTINATION}/updates/${PUBLISH_PATH}/${REQ_NAME}/
 
     # regen composite metadata 
     chmod +x ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh
