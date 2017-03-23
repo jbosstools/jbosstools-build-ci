@@ -39,17 +39,39 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
       -DoutputDirectory=${WORKSPACE}/updates/requirements/ -Dartifact=ant-contrib:ant-contrib:1.0b3:jar
   fi
 
-  # get the mirror
-  if [[ ${SOURCE_URL} ]]; then
-    date; time ${JDK8}/bin/java -cp ${WORKSPACE}/eclipse/plugins/org.eclipse.equinox.launcher_*.jar \
-        org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp -application org.eclipse.ant.core.antRunner -f ${SCRIPTNAME} \
-          -Dversion=${VERSION} -DURL=${SOURCE_URL} -Declipse.p2.mirrors=false ${TASK}
-  else
-    date; time ${JDK8}/bin/java -cp ${WORKSPACE}/eclipse/plugins/org.eclipse.equinox.launcher_*.jar \
-        org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp -application org.eclipse.ant.core.antRunner -f ${SCRIPTNAME} \
-          -Dversion=${VERSION} -Declipse.p2.mirrors=false ${TASK}
-  fi
+  logFile=${WORKSPACE}/tmp/mirror.log.txt
+  errFile=${WORKSPACE}/tmp/mirror.err.txt
+  rm -f ${logFile} ${errFile}
 
+  # get the mirror
+  if [[ ${SOURCE_URL} ]]; then SOURCE_URL_PARAM="-DURL=${SOURCE_URL}"; else SOURCE_URL_PARAM=""; fi
+  date; time ${JDK8}/bin/java -cp ${WORKSPACE}/eclipse/plugins/org.eclipse.equinox.launcher_*.jar \
+      org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp -application org.eclipse.ant.core.antRunner \
+      -f ${SCRIPTNAME} -Dversion=${VERSION} ${SOURCE_URL_PARAM} ${TASK} -vmargs -Declipse.p2.mirrors=false | tee $logFile
+
+  echo "[INFO] Log file: ${logFile}"
+
+  # check mirror log for failures
+  errorMsgs="java.lang.reflect.InvocationTargetException"
+  errorMsgs="${errorMsgs}|Failed to transfer artifact canonical"
+  errorMsgs="${errorMsgs}|Validation found errors"
+  errorMsgs="${errorMsgs}|Cannot satisfy dependency|Could not resolve content"
+  errorMsgs="${errorMsgs}|Connection refused|Missing requirement"
+  errorMsgs="${errorMsgs}|No repository found|No such file or directory|Unable to read repository"
+  errorMsgs="${errorMsgs}|The following error occurred|BUILD FAIL"
+  sed -n "/${errorMsgs}/p" ${logFile} > ${errFile}
+
+  if [[ $(cat ${errFile}) ]]; then
+    echo "[ERROR] The following errors have occurred while mirroring - must exit!"
+    echo ""
+    echo "========================================================================"
+    echo ""
+    cat ${errFile}
+    echo ""
+    echo "========================================================================"
+    exit 1
+  fi
+  
   # publish to /builds/staging/${JOB_NAME}_${REQ_NAME}/${VERSION}
   DESTINATION="tools@filemgmt.jboss.org:/downloads_htdocs/tools"
   date
