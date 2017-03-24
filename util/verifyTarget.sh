@@ -28,7 +28,7 @@
 
 usage ()
 {
-  echo "Usage: $0 -b BASEDIR -p PROJECT1,PROJECT2,... [-z ECLIPSEZIP] [-u UPSTREAM_SITES] [-d P2DIFF] [-x]"
+  echo "Usage: $0 -b BASEDIR -p PROJECT1,PROJECT2,... [-z ECLIPSEZIP] [-u UPSTREAM_SITES] [-d P2DIFF] [-x] [-Dflag=value...]"
   echo ""
   echo "Example (JBT/JBDS - include sources): $0 \\"
   echo "  -b /path/to/jbosstools-target-platforms -p jbosstools,jbdevstudio \\"
@@ -36,6 +36,7 @@ usage ()
   echo ""
   echo "Example (JBoss Central - eXclude sources): $0 \\"
   echo "  -b /path/to/jbosstools-discovery -p jbtcentral -x \\"
+  echo "  -DTARGET_PLATFORM_VERSION_MAX=4.63.0.Final-SNAPSHOT \\"
   echo "  -z /path/to/eclipse-jee-neon-R-linux-gtk-x86_64.tar.gz  -d /path/to/executable/p2diff \\"
   echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.61.0.AM1-SNAPSHOT/"
   echo "          or, use locally built sites"
@@ -43,6 +44,7 @@ usage ()
   echo ""
   echo "Example (JBoss Central Early Access - eXclude sources): $0 \\"
   echo "  -b /path/to/jbosstools-discovery -p jbtearlyaccess -x \\"
+  echo "  -DTARGET_PLATFORM_VERSION_MAX=4.63.0.Final-SNAPSHOT \\"
   echo "  -z /path/to/eclipse-jee-neon-R-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff \\"
   echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.61.0.AM1-SNAPSHOT/,\\
 http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.61.0.AM1-SNAPSHOT/"
