@@ -89,9 +89,11 @@ echo ""; (( i++ ))
 if [[ $createNewJob != *"job already exists"* ]]; then 
   let tot=tot+1
   echo "[INFO] [$i/$tot] Copy OLD job to NEW path, instead of dummy job"
+  echo "[DEBUG] rsync cache/https/${SOURCE_JENKINS}/${SOURCE_PATH}/job/${JOB_NAME}/config.xml"
+  echo "              cache/https/${TARGET_JENKINS}/${TARGET_PATH}job/${JOB_NAME}/config.xml"
    rsync \
      cache/https/${SOURCE_JENKINS}/${SOURCE_PATH}/job/${JOB_NAME}/config.xml \
-     cache/https/${TARGET_JENKINS}/${TARGET_PATH}job/${JOB_NAME}/config.xml
+     cache/https/${TARGET_JENKINS}/${TARGET_PATH}/job/${JOB_NAME}/config.xml
   echo ""; (( i++ ))
 fi
 
@@ -101,7 +103,36 @@ sed -i \
     -e "s#<assignedNode>.\+</assignedNode>#<assignedNode>${assignedNode}</assignedNode>#" \
     -e "s#<jdk>.\+</jdk>#<jdk>${jdk}</jdk>#" \
     -e "s#<mavenName>.\+</mavenName>#<mavenName>${mavenName}</mavenName>#" \
-    cache/https/${TARGET_JENKINS}/${TARGET_PATH}job/${JOB_NAME}/config.xml
+    cache/https/${TARGET_JENKINS}/${TARGET_PATH}/job/${JOB_NAME}/config.xml
+echo ""; (( i++ ))
+
+let tot=tot+1
+hasRentention=$(egrep -i "logRotator|daysToKeep|numToKeep" cache/https/${TARGET_JENKINS}/${TARGET_PATH}job/${JOB_NAME}/config.xml)
+if [[ ! $hasRentention ]]; then
+  retentionPolicy="
+  <logRotator class=\"hudson.tasks.LogRotator\">
+    <daysToKeep>-1</daysToKeep>
+    <numToKeep>5</numToKeep>
+    <artifactDaysToKeep>-1</artifactDaysToKeep>
+    <artifactNumToKeep>-1</artifactNumToKeep>
+  </logRotator>
+  <keepDependencies>false</keepDependencies>
+"
+  echo "[INFO] Create new retention policy:
+
+${retentionPolicy}
+
+"
+	sed -i \
+	-e "s#<keepDependencies>false</keepDependencies>#${retentionPolicy}#" \
+    cache/https/${TARGET_JENKINS}/${TARGET_PATH}/job/${JOB_NAME}/config.xml
+else
+  echo "[INFO] Existing retention policy:
+
+${hasRentention}
+
+";
+fi
 echo ""; (( i++ ))
 
 echo "[INFO] [$i/$tot] Push NEW job back to server"
@@ -110,8 +141,8 @@ echo "[INFO] [$i/$tot] Push NEW job back to server"
 echo ""; (( i++ ))
 
 echo "[INFO] [$i/$tot] Job created: "
-echo "       https://${TARGET_JENKINS}/${TARGET_PATH}job/${JOB_NAME}/"
+echo "       https://${TARGET_JENKINS}/${TARGET_PATH}/job/${JOB_NAME}/"
 echo ""
-google-chrome https://${TARGET_JENKINS}/${TARGET_PATH}job/${JOB_NAME}/configure
+google-chrome https://${TARGET_JENKINS}/${TARGET_PATH}/job/${JOB_NAME}/configure
 
 popd
