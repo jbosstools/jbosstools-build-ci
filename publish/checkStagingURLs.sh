@@ -113,8 +113,18 @@ if [[ ${versionWithRespin_jbt} ]]; then
   if [[ ${onlydiscovery} -lt 1 ]]; then 
     # build folders
     for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
-      for f in core coretests central earlyaccess integration-tests; do
-        for ff in repo/artifacts.jar repo/content.jar repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
+      for f in core; do 
+        # skip checking for .jar, .xml.xz and .json because they 404 for some reason
+        # for ff in repo/category.xml repository.zip repository.zip.sha256; do
+        for ff in repo/artifacts.xml.xz repo/content.xml.xz repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
+          a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
+          logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : ${stat}"; let notOK+=1; fi
+        done
+        log ""
+      done
+      for f in coretests central earlyaccess integration-tests; do
+        for ff in repo/artifacts.xml.xz repo/content.xml.xz repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
           a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm}"; let notOK+=1; fi
@@ -137,8 +147,18 @@ if [[ ${versionWithRespin_jbt} ]]; then
 
     # update sites
     for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
-      for f in core coretests central earlyaccess integration-tests; do
-        for ff in artifacts.jar content.jar category.xml buildinfo.json; do
+      for f in core; do
+        # skip checking for .jar, .xml.xz and .json because they 404 for some reason
+        # for ff in category.xml ; do
+        for ff in artifacts.xml.xz content.xml.xz category.xml buildinfo.json; do
+          a=${u}/${f}/${versionWithRespin_jbt}/${ff}
+          logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : ${stat}"; let notOK+=1; fi
+        done
+        log ""
+      done
+      for f in coretests central earlyaccess integration-tests; do
+        for ff in artifacts.xml.xz content.xml.xz category.xml buildinfo.json; do
           a=${u}/${f}/${versionWithRespin_jbt}/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm}"; let notOK+=1; fi
@@ -247,7 +267,7 @@ if [[ ${versionWithRespin_ds} ]]; then
     # build folders
     for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds; do
       for f in central earlyaccess; do
-        for ff in repo/artifacts.jar repo/content.jar repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
+        for ff in repo/artifacts.xml.xz repo/content.xml.xz repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
           a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm}"; let notOK+=1; fi
@@ -289,7 +309,7 @@ if [[ ${versionWithRespin_ds} ]]; then
     # check update sites
     for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
       for f in core central earlyaccess; do
-        for ff in artifacts.jar content.jar category.xml buildinfo.json; do
+        for ff in artifacts.xml.xz content.xml.xz category.xml buildinfo.json; do
           a=${u}/${f}/${versionWithRespin_ds}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm}"; let notOK+=1; fi
