@@ -119,7 +119,7 @@ if [[ ${versionWithRespin_jbt} ]]; then
         for ff in repo/artifacts.xml.xz repo/content.xml.xz repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
           a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : ${stat}"; let notOK+=1; fi
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
         done
         log ""
       done
@@ -153,7 +153,7 @@ if [[ ${versionWithRespin_jbt} ]]; then
         for ff in artifacts.xml.xz content.xml.xz category.xml buildinfo.json; do
           a=${u}/${f}/${versionWithRespin_jbt}/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : ${stat}"; let notOK+=1; fi
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
         done
         log ""
       done
