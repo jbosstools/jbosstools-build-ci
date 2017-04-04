@@ -290,7 +290,7 @@ if [[ ${versionWithRespin_ds} ]]; then
     for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
       for f in core central earlyaccess; do
         for ff in artifacts.xml.xz content.xml.xz category.xml buildinfo.json; do
-          a=${u}/${f}/${versionWithRespin_ds}
+          a=${u}/${f}/${versionWithRespin_ds}/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
         done
