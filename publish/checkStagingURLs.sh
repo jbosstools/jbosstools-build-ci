@@ -114,7 +114,7 @@ if [[ ${versionWithRespin_jbt} ]]; then
     # build folders
     for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
       for f in core coretests central earlyaccess integration-tests; do
-        for ff in repo/artifacts.xml.xz repo/content.xml.xz repository.zip repository.zip.sha256; do
+        for ff in repo/artifacts.jar repo/content.jar repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
           a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm}"; let notOK+=1; fi
@@ -138,7 +138,7 @@ if [[ ${versionWithRespin_jbt} ]]; then
     # update sites
     for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
       for f in core coretests central earlyaccess integration-tests; do
-        for ff in artifacts.xml.xz content.xml.xz; do
+        for ff in artifacts.jar content.jar category.xml buildinfo.json; do
           a=${u}/${f}/${versionWithRespin_jbt}/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm}"; let notOK+=1; fi
@@ -247,7 +247,7 @@ if [[ ${versionWithRespin_ds} ]]; then
     # build folders
     for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds; do
       for f in central earlyaccess; do
-        for ff in repo/artifacts.xml.xz repo/content.xml.xz repository.zip repository.zip.sha256; do
+        for ff in repo/artifacts.jar repo/content.jar repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
           a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm}"; let notOK+=1; fi
@@ -289,7 +289,7 @@ if [[ ${versionWithRespin_ds} ]]; then
     # check update sites
     for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
       for f in core central earlyaccess; do
-        for ff in artifacts.xml.xz content.xml.xz; do
+        for ff in artifacts.jar content.jar category.xml buildinfo.json; do
           a=${u}/${f}/${versionWithRespin_ds}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm}"; let notOK+=1; fi
