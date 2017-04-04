@@ -106,10 +106,14 @@ if [[ ${forceOverwriteDestinationJob} == 1 ]] || [[ $createNewJob != *"job alrea
   echo ""; (( i++ ))
 fi
 
+label_exp_find="<hudson.matrix.LabelExpAxis>\n<name>label_exp</name>\n<values>\n<string>\n.\+</string>\n</values>\n</hudson.matrix.LabelExpAxis>\n"
+label_exp_replace="<hudson.matrix.LabelExpAxis>\n<name>label_exp</name>\n<values>\n<string>\n${assignedNode}</string>\n</values>\n</hudson.matrix.LabelExpAxis>\n"
+
 echo "[INFO] [$i/$tot] Edit the NEW job locally"
 echo "       cache/https/${TARGET_JENKINS}/${TARGET_PATH}job/${JOB_NAME}/config.xml"
 sed -i \
     -e "s#<assignedNode>.\+</assignedNode>#<assignedNode>${assignedNode}</assignedNode>#" \
+    -e "s#${label_exp_find}#${label_exp_replace}#" \
     -e "s#<jdk>.\+</jdk>#<jdk>${jdk}</jdk>#" \
     -e "s#<mavenName>.\+</mavenName>#<mavenName>${mavenName}</mavenName>#" \
     -e "s#<groovyName>.\+</groovyName>#<groovyName>${groovyName}</groovyName>#" \
