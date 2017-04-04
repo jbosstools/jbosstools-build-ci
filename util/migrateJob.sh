@@ -18,6 +18,7 @@ TARGET_PATH="view/Devstudio/view/jbosstools-releng"
 assignedNode="rhel7-devstudio-releng" # new node to use
 jdk="jdk1.8"
 mavenName="maven-3.3.9"
+groovyName="groovy-2.4.3"
 forceOverwriteDestinationJob=0
 
 usage ()
@@ -54,6 +55,7 @@ while [[ "$#" -gt 0 ]]; do
 
     '-assignedNode') assignedNode=="$2"; shift 1;;
     '-mavenName')    mavenName=="$2"; shift 1;;
+    '-groovyName')   groovyName=="$2"; shift 1;;
     '-jdk')          jdk=="$2"; shift 1;;
     '-F')            forceOverwriteDestinationJob=1; shift 0;;
   esac
@@ -110,6 +112,7 @@ sed -i \
     -e "s#<assignedNode>.\+</assignedNode>#<assignedNode>${assignedNode}</assignedNode>#" \
     -e "s#<jdk>.\+</jdk>#<jdk>${jdk}</jdk>#" \
     -e "s#<mavenName>.\+</mavenName>#<mavenName>${mavenName}</mavenName>#" \
+    -e "s#<groovyName>.\+</groovyName>#<groovyName>${groovyName}</groovyName>#" \
     cache/https/${TARGET_JENKINS}/${TARGET_PATH}/job/${JOB_NAME}/config.xml
 echo ""; (( i++ ))
 
