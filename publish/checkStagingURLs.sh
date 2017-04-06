@@ -127,9 +127,23 @@ if [[ ${versionWithRespin_jbt} ]]; then
     for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
       for f in browsersim-standalone; do
         for ff in jbosstools-${version_jbt}-${f}.zip jbosstools-${version_jbt}-${f}.zip.sha256; do
-          a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/${ff}
-          logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+          a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest
+          logn "${a}/${ff} : "; stat=$(curl -I -s ${a}/${ff} | egrep "404 Not Found")
+          if [[ ! $stat ]]; then
+            then log "${green}OK${norm}"; let OK+=1;
+          else
+            # could be running with respin suffix or we're mock building so this might be OK. Check folder for children instead.
+            ext="."${ff#*.}
+            zips=$(curl -s ${a} | grep "${ext}" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
+            if [[ ! ${zips} ]]; then
+              logerr "${a} : " "${red}NO ${ext} FOUND${norm} : $(curl -I -s ${a})"; let notOK+=1;
+            else
+              for j in ${zips}; do
+                logn " + ${j} : "; stat=$(curl -I -s ${a}/${j} | egrep "404 Not Found")
+                if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} : $(curl -I -s ${a}/${j})"; let notOK+=1; fi
+              done
+            fi
+          fi
         done
       done
     done
