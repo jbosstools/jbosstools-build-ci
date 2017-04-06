@@ -60,7 +60,6 @@ done
 
 norm="\033[0;39m"
 green="\033[1;32m"
-orange=""
 yellow="\033[0;33m"
 red="\033[1;31m"
 OK=0
@@ -140,7 +139,7 @@ if [[ ${versionWithRespin_jbt} ]]; then
             if [[ ! ${zips} ]]; then
               logerr "${a} : " "${red}NO ${ext} FOUND${norm} : $(curl -I -s ${a})"; let notOK+=1;
             else
-              log "${orange}WARNING${norm}"
+              log "${yellow}WARNING${norm}"
               for j in ${zips}; do
                 logn " => ${j} : "; stat=$(curl -I -s ${a}${j} | egrep "404 Not Found")
                 if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a}${j})"; let notOK+=1; fi
