@@ -133,8 +133,8 @@ if [[ ${versionWithRespin_jbt} ]]; then
             log "${green}OK${norm}"; let OK+=1
           else
             # could be running with respin suffix or we're mock building so this might be OK. Check folder for children instead.
-            ext="."${ff#*.}
-            zips=$(curl -s ${a} | grep "${ext}" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
+            ext=".zip"${ff##*.}
+            zips=$(curl -s ${a} | grep "${ext}\"" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
             if [[ ! ${zips} ]]; then
               logerr "${a} : " "${red}NO ${ext} FOUND${norm} : $(curl -I -s ${a})"; let notOK+=1;
             else
