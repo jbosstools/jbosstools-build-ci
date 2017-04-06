@@ -130,7 +130,7 @@ if [[ ${versionWithRespin_jbt} ]]; then
           a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest
           logn "${a}/${ff} : "; stat=$(curl -I -s ${a}/${ff} | egrep "404 Not Found")
           if [[ ! $stat ]]; then
-            then log "${green}OK${norm}"; let OK+=1;
+            log "${green}OK${norm}"; let OK+=1
           else
             # could be running with respin suffix or we're mock building so this might be OK. Check folder for children instead.
             ext="."${ff#*.}
