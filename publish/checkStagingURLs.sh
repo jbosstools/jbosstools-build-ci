@@ -60,7 +60,7 @@ done
 
 norm="\033[0;39m"
 green="\033[1;32m"
-yellow="\033[0;33m"
+yellow='\e[0;30m\e[1;43m' # yellow reversed
 red="\033[1;31m"
 OK=0
 notOK=0
