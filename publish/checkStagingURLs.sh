@@ -60,6 +60,8 @@ done
 
 norm="\033[0;39m"
 green="\033[1;32m"
+orange=""
+yellow="\033[0;33m"
 red="\033[1;31m"
 OK=0
 notOK=0
@@ -88,20 +90,20 @@ if [[ ${versionWithRespin_jbt} ]]; then
             a=${u}/${f}/${versionWithRespin_jbt}/${ff} # updates
           fi
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
           if [[ ${ff} == "plugins/" ]]; then
             jars=$(curl -s ${a} | grep ".jar" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
             # check jar 404s
             for j in ${jars}; do
               logn " + ${j} : "; stat=$(curl -I -s ${a}${j} | egrep "404 Not Found")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
             done
           elif [[ ${ff/directory.xml} != ${ff} ]]; then
             jars=$(curl -s ${a} | grep "url" | sed -e "s#.\+url=\"\([^\"]\+\)\".\+#\1#")
             # check jar 404s
             for j in ${jars}; do
               logn " + ${j} : "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404 Not Found")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
             done
           fi
         done
@@ -117,7 +119,7 @@ if [[ ${versionWithRespin_jbt} ]]; then
         for ff in repo/artifacts.xml.xz repo/content.xml.xz repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
           a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
         done
         log ""
       done
@@ -138,9 +140,10 @@ if [[ ${versionWithRespin_jbt} ]]; then
             if [[ ! ${zips} ]]; then
               logerr "${a} : " "${red}NO ${ext} FOUND${norm} : $(curl -I -s ${a})"; let notOK+=1;
             else
+              log "${orange}WARNING${norm}"
               for j in ${zips}; do
-                logn " + ${j} : "; stat=$(curl -I -s ${a}${j} | egrep "404 Not Found")
-                if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} : $(curl -I -s ${a}${j})"; let notOK+=1; fi
+                logn " => ${j} : "; stat=$(curl -I -s ${a}${j} | egrep "404 Not Found")
+                if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a}${j})"; let notOK+=1; fi
               done
             fi
           fi
@@ -155,7 +158,7 @@ if [[ ${versionWithRespin_jbt} ]]; then
         for ff in artifacts.xml.xz content.xml.xz category.xml buildinfo.json; do
           a=${u}/${f}/${versionWithRespin_jbt}/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
         done
         log ""
       done
@@ -168,7 +171,7 @@ if [[ ${versionWithRespin_jbt} ]]; then
           for ff in jbosstools-${version_jbt}-${f}.zip jbosstools-${version_jbt}-${f}.zip.sha256; do
             a=${u}/${ff}
             logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
-            if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+            if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
           done
         done
       done
@@ -202,20 +205,20 @@ if [[ ${versionWithRespin_ds} ]]; then
             a=${u}/${f}/${versionWithRespin_ds}/${ff} # updates
           fi
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
           if [[ ${ff} == "plugins/" ]]; then
             jars=$(curl -s ${a} | grep ".jar" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
             # check jar 404s
             for j in ${jars}; do
               logn " + ${j} : "; stat=$(curl -I -s ${a}${j} | egrep "404 Not Found")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
             done
           elif [[ ${ff/directory.xml} != ${ff} ]]; then
             jars=$(curl -s ${a} | grep "url" | sed -e "s#.\+url=\"\([^\"]\+\)\".\+#\1#")
             # check jar 404s
             for j in ${jars}; do
               logn " + ${j} : "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404 Not Found")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
             done
           fi
         done
@@ -234,12 +237,12 @@ if [[ ${versionWithRespin_ds} ]]; then
             a=${u}/${ff}
             logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
             if [[ $stat ]]; then # try backup URL (.latest or .GA)
-              #logerr "${a} : " "${red}NO${norm} : $(curl -I -s ${a})"
+              #logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"
               log ""
               a=${u}/${ff/.latest/.GA}
               logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
             fi
-            if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+            if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
           done
         done
       done
@@ -252,7 +255,7 @@ if [[ ${versionWithRespin_ds} ]]; then
         devstudio-${versionWithRespin_ds_latest}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest}-updatesite-core.zip; do
         for ff in $f ${f}.sha256; do
           logn "${u}/${ff} : "; stat=$(curl -I -s ${u}/${ff} | egrep "404 Not Found")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${ff} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${ff} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
         done
       done
     done
@@ -264,7 +267,7 @@ if [[ ${versionWithRespin_ds} ]]; then
         for ff in repo/artifacts.xml.xz repo/content.xml.xz repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
           a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
         done
       log ""
       done
@@ -282,7 +285,7 @@ if [[ ${versionWithRespin_ds} ]]; then
       for ff in x86_64/README.html x86_64/repodata/repomd.xml; do
         a=${u}/${ff}
         logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
-        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
       done
     fi
     log ""
@@ -294,7 +297,7 @@ if [[ ${versionWithRespin_ds} ]]; then
           earlyaccess/devstudio-${versionWithRespin_ds}-updatesite-earlyaccess.zip core/devstudio-${versionWithRespin_ds}-target-platform-earlyaccess.zip; do
         for ff in $f ${f}.sha256; do
           logn "${u}/${ff} : "; stat=$(curl -I -s ${u}/${ff} | egrep "404 Not Found")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${ff} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${ff} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
         done
       done
     done
@@ -306,7 +309,7 @@ if [[ ${versionWithRespin_ds} ]]; then
         for ff in artifacts.xml.xz content.xml.xz category.xml buildinfo.json; do
           a=${u}/${f}/${versionWithRespin_ds}/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} : $(curl -I -s ${a})"; let notOK+=1; fi
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
         done
       log ""
       done
