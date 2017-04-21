@@ -6,7 +6,7 @@
 tmpdir=`mktemp -d`
 mkdir -p $tmpdir
 
-DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /qa/services/http/binaries/RHDS
+DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /home/windup/apache2/www/html/rhd/devstudio
 
 INCLUDES="*"
 EXCLUDES=""
@@ -38,7 +38,7 @@ usage ()
 	echo ""
 
 	echo "To push JBDS build + update site folders:"
-	echo "   $0 -DESTINATION hudson@dev01.mw.lab.eng.bos.redhat.com:/qa/services/http/binaries/RHDS  -s \${WORKSPACE}/sources/results/target      -t 10.0/snapshots/builds/\${JOB_NAME}/all"
+	echo "   $0 -DESTINATION devstudio@10.16.89.81:/home/windup/apache2/www/html/rhd/devstudio  -s \${WORKSPACE}/sources/results/target      -t 10.0/snapshots/builds/\${JOB_NAME}/all"
 	echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio -e \*eap.jar         -s \${WORKSPACE}/sources/results/target      -t 10.0/snapshots/builds/\${JOB_NAME}/all"
 	echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio                      -s \${WORKSPACE}/sources/results/target/repo -t 10.0/snapshots/updates/core/\${stream} --del"
 	echo ""
@@ -50,7 +50,7 @@ if [[ $# -lt 1 ]]; then usage; fi
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
 	case $1 in
-		'-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., /qa/services/http/binaries/RHDS
+		'-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., /home/windup/apache2/www/html/rhd/devstudio
 		'-s') SOURCE_PATH="$2"; shift 1;; # ${WORKSPACE}/sources/site/target/repository/
 		'-t') TARGET_PATH="$2"; shift 1;; # neon/snapshots/builds/<job-name>/<build-number>/, neon/snapshots/updates/core/{4.4.0.Final, master}/
 		'-i') INCLUDES="$2"; shift 1;;
@@ -102,7 +102,10 @@ fi
 # return PARENT_PATH=10.0/snapshots/builds/devstudio.product_master
 # given  TARGET_PATH=10.0/snapshots/builds/devstudio.rpm_10.0.neon/2016-09-21_05-50-B28/x86_64
 # return PARENT_PATH=10.0/snapshots/builds/devstudio.rpm_10.0.neon
-PARENT_PATH=$(echo $TARGET_PATH | sed -e "s#/\?downloads_htdocs/tools/##" -e "s#/\?www_htdocs/devstudio/##" -e "s#/\?qa/services/http/binaries/RHDS/##" \
+PARENT_PATH=$(echo $TARGET_PATH | sed -e "s#/\?downloads_htdocs/tools/##" -e "s#/\?www_htdocs/devstudio/##" \
+-e "s#/\?qa/services/http/binaries/RHDS/##" \
+-e "s#/\?qa/services/http/binaries/devstudio/##" \
+-e "s#/\?home/windup/apache2/www/html/rhd/devstudio/##" \
 -e "s#/\?all/repo/\?##" -e "s#/\?all/\?##" -e "s#/\$##" -e "s#^/##" -e "s#\(.\+\)/[^/]\+#\1#" -e "s#/\?${BUILD_TIMESTAMP}-B${BUILD_NUMBER}/\?##")
 # if TARGET_PATH contains a BUILD_TIMESTAMP-B# folder (or, previously / deprecated, a BUILD_ID-B# folder),
 # create symlink: jbosstools-build-sites.aggregate.earlyaccess-site_master/latest -> jbosstools-build-sites.aggregate.earlyaccess-site_master/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}

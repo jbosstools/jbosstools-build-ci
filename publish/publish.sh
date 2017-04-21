@@ -65,7 +65,7 @@ SRCSNAME="${JOB_NAME}-${ZIPSUFFIX}-src.zip"
 # define suffix to use for additional update sites
 SUFFNAME="${ZIPSUFFIX}-updatesite.zip"
 
-# for JBDS, use DESTINATION=/qa/services/http/binaries/RHDS
+# for JBDS, use DESTINATION=/home/windup/apache2/www/html/rhd/devstudio
 if [[ $DESTINATION == "" ]]; then DESTINATION="tools@filemgmt.jboss.org:/downloads_htdocs/tools"; fi
 
 # internal destination mirror, for file:// access (instead of http://)
@@ -276,7 +276,7 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
     else
       # set a build description for JBDS product builds
       REV_LOG_SHORT=`echo $REV_LOG_DETAIL | sed "s#.*repos/devstudio/##g" | sed "s/[\n\r\ \t]\+//g"`
-      BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_SHORT}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://www.qa.jboss.com/binaries/RHDS/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://www.qa.jboss.com/binaries/RHDS/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://www.qa.jboss.com/binaries/RHDS/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="http://www.qa.jboss.com/binaries/RHDS/builds/staging/'${JOB_NAME}'/installer/">Installers & Zips</a></li> <li>Upstream: <a href="http://download.jboss.org/jbosstools/builds/staging/'${UPSTREAM_JOB_NAME}'/all/repo/">Update Site</a>'
+      BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_SHORT}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/builds/staging/'${JOB_NAME}'/installer/">Installers & Zips</a></li> <li>Upstream: <a href="http://download.jboss.org/jbosstools/builds/staging/'${UPSTREAM_JOB_NAME}'/all/repo/">Update Site</a>'
     fi
     if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then echo ">> ${PUBLISHEDSITE} <<"; fi
     exit 0
@@ -295,7 +295,7 @@ if [[ ${JOB_NAME/.product} == ${JOB_NAME} ]]; then
 else
   # set a build description for JBDS product builds
   REV_LOG_SHORT=`echo $REV_LOG_DETAIL | sed "s#.*repos/devstudio/##g" | sed "s/[\n\r\ \t]\+//g"`
-  BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_SHORT}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://www.qa.jboss.com/binaries/RHDS/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://www.qa.jboss.com/binaries/RHDS/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://www.qa.jboss.com/binaries/RHDS/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="http://www.qa.jboss.com/binaries/RHDS/builds/staging/'${JOB_NAME}'/installer/">Installers & Zips</a></li> <li>Upstream: <a href="http://download.jboss.org/jbosstools/builds/staging/'${UPSTREAM_JOB_NAME}'/all/repo/">Update Site</a>'
+  BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_SHORT}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/builds/staging/'${JOB_NAME}'/installer/">Installers & Zips</a></li> <li>Upstream: <a href="http://download.jboss.org/jbosstools/builds/staging/'${UPSTREAM_JOB_NAME}'/all/repo/">Update Site</a>'
 fi
 
 METAFILE="${BUILD_TIMESTAMP}-B${BUILD_NUMBER}.txt"

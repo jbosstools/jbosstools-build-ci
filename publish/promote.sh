@@ -3,8 +3,8 @@
 
 # defaults
 OPERATION=COPY # or MOVE
-DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or /qa/services/http/binaries/RHDS
-URL=http://download.jboss.org/jbosstools # or http://www.qa.jboss.com/binaries/RHDS
+DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or /home/windup/apache2/www/html/rhd/devstudio
+URL=http://download.jboss.org/jbosstools # or http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio or http://www.qa.jboss.com/binaries/devstudio
 RELEASE_TYPE=updates # or discovery
 BUILD_TYPE=nightly
 TARGET_PLATFORM=
@@ -46,16 +46,16 @@ if [[ $# -lt 1 ]]; then
 
   # push to http://download.jboss.org/jbosstools/discovery/nightly/core/trunk/jbosstools-directory.xml
   echo "Example: $0 -RELEASE_TYPE discovery -PARENT_FOLDER core -TARGET_FOLDER trunk -SOURCE_PATH ${WORKSPACE}/sources/discovery/core/org.jboss.tools.central.discovery/target/discovery-site/"
-  # push to http://www.qa.jboss.com/binaries/RHDS/discovery/nightly/core/4.1.kepler/devstudio-directory.xml
-  echo "Example: $0 -DESTINATION /qa/services/http/binaries/RHDS -URL http://www.qa.jboss.com/binaries/RHDS -RELEASE_TYPE discovery -PARENT_FOLDER core -TARGET_FOLDER 4.1.kepler -SOURCE_PATH ${WORKSPACE}/sources/discovery/core/com.jboss.jbds.central.discovery/target/discovery-site/"
+  # push to http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/discovery/nightly/core/4.1.kepler/devstudio-directory.xml
+  echo "Example: $0 -DESTINATION /home/windup/apache2/www/html/rhd/devstudio -URL http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio -RELEASE_TYPE discovery -PARENT_FOLDER core -TARGET_FOLDER 4.1.kepler -SOURCE_PATH ${WORKSPACE}/sources/discovery/core/com.jboss.jbds.central.discovery/target/discovery-site/"
   exit 1
 fi
 
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
   case $1 in
-    '-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., /qa/services/http/binaries/RHDS
-    '-URL') URL="$2"; shift 1;; # override for JBDS publishing, eg., http://www.qa.jboss.com/binaries/RHDS
+    '-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., /home/windup/apache2/www/html/rhd/devstudio
+    '-URL') URL="$2"; shift 1;; # override for JBDS publishing, eg., http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio
     '-RELEASE_TYPE') RELEASE_TYPE="$2"; shift 1;; # updates, discovery
     '-BUILD_TYPE') BUILD_TYPE="$2"; shift 1;; # nightly, integration, development or stable
     '-TARGET_PLATFORM') TARGET_PLATFORM="$2"; shift 1;; # indigo, juno, kepler, ...

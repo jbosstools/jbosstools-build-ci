@@ -229,7 +229,7 @@ if [[ ${versionWithRespin_ds} ]]; then
   if [[ ${onlydiscovery} -lt 1 ]]; then 
     # zips: only if /stable/ or /staging/
     if [[ ${qual} != "development" ]]; then
-      for u in http://www.qa.jboss.com/binaries/devstudio/${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
+      for u in http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
         for f in devstudio-${versionWithRespin_ds_latest_INT}-installer-eap.jar devstudio-${versionWithRespin_ds_latest_INT}-installer-standalone.jar \
           devstudio-${versionWithRespin_ds_latest_INT}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest_INT}-updatesite-core.zip; do
           for ff in $f ${f}.sha256; do

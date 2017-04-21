@@ -10,7 +10,7 @@
 # TODO: add verification steps - wget or curl the destination URLs and look for 404s or count of matching child objects
 #  - see end of https://github.com/jbdevstudio/jbdevstudio-devdoc/blob/master/release_guide/9.x/JBDS_Staging_for_QE.adoc#push-installers-update-site-and-discovery-site
 
-DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /qa/services/http/binaries/RHDS
+DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /home/windup/apache2/www/html/rhd/devstudio
 DEST_URL="http://download.jboss.org/jbosstools"
 whichID=latest
 PRODUCT="jbosstools"
@@ -86,9 +86,9 @@ while [[ "$#" -gt 0 ]]; do
 
     '-DJOB_NAME'|'-JOB_NAME') rawJOB_NAME="$2"; shift 1;;
 
-    '-SOURCE')      SOURCE="$2"; shift 1;; # override for JBDS from /qa/services/http/binaries/RHDS to devstudio@filemgmt.jboss.org:/www_htdocs/devstudio - saves time!
-    '-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /qa/services/http/binaries/RHDS
-    '-DEST_URL')    DEST_URL="$2"; shift 1;; # override for JBDS publishing, eg., https://devstudio.redhat.com or http://www.qa.jboss.com/binaries/RHDS
+    '-SOURCE')      SOURCE="$2"; shift 1;; # override for JBDS from /home/windup/apache2/www/html/rhd/devstudio to devstudio@filemgmt.jboss.org:/www_htdocs/devstudio - saves time!
+    '-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /home/windup/apache2/www/html/rhd/devstudio
+    '-DEST_URL')    DEST_URL="$2"; shift 1;; # override for JBDS publishing, eg., https://devstudio.redhat.com or http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio
 
     '-DID'|'-ID') whichID="$2"; shift 1;; # optionally, set a specific build ID such as 2015-10-02_18-28-18-B124; if not set, pull latest
     '-q') quiet=1; shift 0;; # suppress extra console output
