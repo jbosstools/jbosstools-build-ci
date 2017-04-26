@@ -21,7 +21,7 @@ usage ()
     echo "Example 3: $0 -b master -pv 4.4.2.Final-SNAPSHOT -w1 \${WORKSPACE}/jbosstools.github -w2 \${WORKSPACE}/jbdevstudio.github \\"
     echo "               -p1 openshift -p2 build-sites -p3 product"
     echo ""
-    echo "Example 4: $0 -updateRootPom -createBranch -b jbosstools-4.4.2.x -b2 master -pv 4.4.2.Final-SNAPSHOT \\"
+    echo "Example 4: $0 -updateRootPom -createBranch -b jbosstools-4.4.4.x -b2 jbosstools-4.4.x -pv 4.4.4.Final-SNAPSHOT \\"
     echo "              -w1 /tmp/jbosstools.github -p1 \"aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge freemarker hibernate \\"
     echo "               javaee::jsf jst livereload openshift server vpe::visual-page-editor-core webservices integration-tests\" \\"
     echo "              -p2 \"build build-sites::updatesite discovery::central-update devdoc download.jboss.org maven-plugins:build versionwatch\" \\"
