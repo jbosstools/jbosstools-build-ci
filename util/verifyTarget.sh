@@ -90,7 +90,7 @@ while [[ "$#" -gt 0 ]]; do
     '-d') P2DIFF="$2"; shift 1;;
     '-p') PROJECTS="$PROJECTS $2"; shift 1;;
     '-m') MVN="$2"; shift 1;;
-    '-x') includeSources=""; shift 0;;
+    '-x') includeSources="-Dmirror-target-to-repo.includeSources=false"; shift 0;;
     '-V') targetplatformutilsversion="$2"; shift 1;;
     '-vm') VM="-vm $2"; shift 1;;
     '-mrl') MRL="-Dmaven.repo.local=$2"; shift 1;;
