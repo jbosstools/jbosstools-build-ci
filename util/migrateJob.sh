@@ -67,6 +67,17 @@ if [[ ! ${JOB_NAME} ]]; then usage; fi
 i=1
 tot=6
 
+# build required projects
+mkdir -p /tmp/jbt.github
+pushd /tmp/jbt.github >/dev/null
+	if [[ ! -d maven-plugins ]]; then git clone --depth 1 git@github.com:nickboldt/maven-plugins.git; fi
+	pushd maven-plugins >/dev/null
+		git checkout master
+		mvn install -DskipTests -f hudson-job-sync-plugin/pom.xml -q
+		mvn install -DskipTests -f hudson-job-publisher-plugin/pom.xml -q
+	popd >/dev/null
+popd >/dev/null
+
 # echo "[DEBUG] Copy job ${JOB_NAME} ..."
 
 # TODO: git fetch the sources if not found in jbdevstudio_ci_folder
