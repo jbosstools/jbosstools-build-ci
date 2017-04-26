@@ -73,8 +73,8 @@ pushd /tmp/jbt.github >/dev/null
 	if [[ ! -d maven-plugins ]]; then git clone --depth 1 git@github.com:nickboldt/maven-plugins.git; fi
 	pushd maven-plugins >/dev/null
 		git checkout master
-		mvn install -DskipTests -f hudson-job-sync-plugin/pom.xml -q
-		mvn install -DskipTests -f hudson-job-publisher-plugin/pom.xml -q
+		mvn clean install -DskipTests -f hudson-job-sync-plugin/pom.xml -q
+		mvn clean install -DskipTests -f hudson-job-publisher-plugin/pom.xml -q
 	popd >/dev/null
 popd >/dev/null
 
@@ -93,11 +93,25 @@ echo "[INFO] [$i/$tot] Fetch latest OLD job ${JOB_NAME} from Jenkins"
 echo ""; (( i++ ))
 
 echo "[INFO] [$i/$tot] Create dummy job on CCI (if not exist)"
+if [[ ${forceOverwriteDestinationJob} == 1 ]]; then 
+  createNewJobCmdReplace="-DreplaceExistingJob=true"
+else
+  createNewJobCmdReplace="-DreplaceExistingJob=false"
+fi
 # requires: https://github.com/nickboldt/maven-plugins/tree/master/hudson-job-publisher-plugin
-createNewJob=$(mvn install -f pom-publisher-internal.xml \
-  -DjobTemplateFile=cache/https/${SOURCE_JENKINS}/${SOURCE_PATH}/job/${JOB_NAME}/config.xml \
-  -DreplaceExistingJob=false -DJOB_NAME=${JOB_NAME})
-  echo $createNewJob | egrep -o "SUCCESS|FAIL|${JOB_NAME}"
+createNewJobCmd="mvn install -e -fae -f ${jbdevstudio_ci_folder}/pom-publisher-internal.xml \
+  -DjobTemplateFile=${jbdevstudio_ci_folder}/cache/https/${SOURCE_JENKINS}/${SOURCE_PATH}/job/${JOB_NAME}/config.xml \
+  ${createNewJobCmdReplace} -DJOB_NAME=${JOB_NAME}"
+echo "[INFO] ${createNewJobCmd}"
+createNewJobLog=/tmp/createNewJob.log.txt
+${createNewJobCmd} 2>&1 > /tmp/createNewJob.log.txt
+if [[ $(cat ${createNewJobLog} | egrep "FAIL") ]]; then 
+  cat ${createNewJobLog}
+  exit
+else
+  cat ${createNewJobLog} | egrep -o "SUCCESS|${JOB_NAME}"
+  rm -f ${createNewJobLog}
+fi
 echo ""; (( i++ ))
 
 echo "[INFO] [$i/$tot] Fetch latest NEW job from Jenkins (after creating it)"
