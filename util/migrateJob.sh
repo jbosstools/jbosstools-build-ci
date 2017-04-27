@@ -16,7 +16,7 @@ TARGET_PATH="view/Devstudio/view/jbosstools-releng"
 
 # string replacements to apply to the destination version of the job
 assignedNode="rhel7-devstudio-releng" # new node to use
-jdk="jdk1.8"
+jdk="openjdk-1.8"
 mavenName="maven-3.3.9"
 groovyName="groovy-2.4.3"
 forceOverwriteDestinationJob=0
@@ -142,6 +142,7 @@ sed -i \
     -e "s#<jdk>.\+</jdk>#<jdk>${jdk}</jdk>#" \
     -e "s#<mavenName>.\+</mavenName>#<mavenName>${mavenName}</mavenName>#" \
     -e "s#<groovyName>.\+</groovyName>#<groovyName>${groovyName}</groovyName>#" \
+    -e "s# -gs /home/hudson/.m2/settings.xml##" \
     cache/https/${TARGET_JENKINS}/${TARGET_PATH}/job/${JOB_NAME}/config.xml
 echo ""; (( i++ ))
 
