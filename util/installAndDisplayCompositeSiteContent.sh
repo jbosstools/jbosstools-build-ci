@@ -26,6 +26,8 @@ IUs=""
 DESTINATION="tools@filemgmt.jboss.org:/downloads_htdocs/tools"
 DEST_URL="http://download.jboss.org/jbosstools"
 manifest="composite.site.IUs.txt"
+# comma-separated list of IUs to exclude from installation
+EXCLUDES_CMD=""
 
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
@@ -33,6 +35,7 @@ while [[ "$#" -gt 0 ]]; do
 		'-COMP_PATH') COMP_PATH="$2"; shift 1;;
 		'-SITES') SITES="$2"; shift 1;;
 		'-IUs') IUs="$2"; shift 1;;
+		'-EXCLUDES') EXCLUDES_CMD="-EXCLUDES $2"; shift 1;;
 		'-DESTINATION') DESTINATION="$2"; shift 1;;
 		'-DEST_URL') DEST_URL="$2"; shift 1;;
 	esac
@@ -59,7 +62,7 @@ if [[ ! $IUs ]]; then
     cp -f ${WORKSPACE}/sources/util/installFromTarget.sh ${WORKSPACE}/installFromTarget.sh
 	fi
 	chmod +x ${WORKSPACE}/installFromTarget.sh ${WORKSPACE}/eclipse/eclipse
-	${WORKSPACE}/installFromTarget.sh -ECLIPSE ${WORKSPACE}/eclipse/ -INSTALL_PLAN ${SITES} -WORKSPACE ${WORKSPACE}/data
+	${WORKSPACE}/installFromTarget.sh -ECLIPSE ${WORKSPACE}/eclipse/ -INSTALL_PLAN ${SITES} -WORKSPACE ${WORKSPACE}/data ${EXCLUDES_CMD}
 	res=$?
 else
 	# run scripted installation via p2.director

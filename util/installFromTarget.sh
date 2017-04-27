@@ -26,6 +26,8 @@ fi
 
 #director.xml script is used with Eclipse's AntRunner to launch p2.director
 DIRECTORXML="http://download.jboss.org/jbosstools/updates/scripted-install/director.xml"
+# comma-separated list of IUs to exclude from installation
+EXCLUDES=""
 
 # use Eclipse VM from JAVA_HOME if available
 if [[ -x ${JAVA_HOME}/bin/java ]]; then VM="-vm ${JAVA_HOME}/bin/java"; fi
@@ -40,6 +42,7 @@ while [[ "$#" -gt 0 ]]; do
     '-WORKSPACE') WORKSPACE="$2"; shift 1;;
     '-DIRECTORXML') DIRECTORXML="$2"; shift 1;;
     '-CLEAN') CLEAN="$2"; shift 1;;
+    '-EXCLUDES') EXCLUDES="$2"; shift 1;;
     '-vm') VM="-vm $2"; shift 1;;
   esac
   shift 1
@@ -55,6 +58,11 @@ if [[ ! ${ECLIPSE} ]] && [[ -d ${WORKSPACE}/eclipse/ ]]; then
   ECLIPSE=${WORKSPACE}/eclipse
 fi 
 # echo "ECLIPSE = ${ECLIPSE}"
+
+EXCLUDES_REGEX=""
+for e in ${EXCLUDES//,/ }; do
+  EXCLUDES_REGEX="${EXCLUDES_REGEX}|${e}"
+done
 
 ECLIPSEEXEC=""
 if [[ -f ${ECLIPSE}/eclipse ]]; then 
@@ -97,7 +105,7 @@ for f in feature.group.list.properties plugin.list.properties; do
     # also filter out any lines w/ spaces, as they are comments, not IU=version
     # eg. if running with JDK 8: "Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=256m; support was removed in 8.0"
     # or remove m2e log details: "org.eclipse.m2e.logback.configuration: The org.eclipse.m2e.logback.configuration bundle was activated before the state location was initialized.  Will retry after the state location is initialized."
-    ALL_IUS=`cat ${WORKSPACE}/${f} | egrep -v "win32|cocoa|macosx|x86|_64|ppc|aix|solaris|hpux|s390|ia64| " | grep "=" | sed "s#\(.\+\)=.\+#\1#" | sort | uniq`
+    ALL_IUS=`cat ${WORKSPACE}/${f} | egrep -v "win32|cocoa|macosx|x86|_64|ppc|aix|solaris|hpux|s390|ia64| ${EXCLUDES_REGEX}" | grep "=" | sed "s#\(.\+\)=.\+#\1#" | sort | uniq`
     for f in $ALL_IUS; do BASE_IUs="${BASE_IUs},${f}"; done
   fi
 done
