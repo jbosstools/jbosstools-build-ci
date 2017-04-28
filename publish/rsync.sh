@@ -56,7 +56,6 @@ while [[ "$#" -gt 0 ]]; do
 		'-i') INCLUDES="$2"; shift 1;;
 		'-e') EXCLUDES="$2"; shift 1;;
 		'-DBUILD_TIMESTAMP'|'-BUILD_TIMESTAMP') BUILD_TIMESTAMP="$2"; shift 1;; # does this work?
-		'-DBUILD_ID'|'-BUILD_ID')         BUILD_ID="$2"; shift 1;;  # deprecated
 		'-DBUILD_NUMBER'|'-BUILD_NUMBER') BUILD_NUMBER="$2"; shift 1;;
 		'-DJOB_NAME'|'-JOB_NAME')         JOB_NAME="$2"; shift 1;;
 		'-DWORKSPACE'|'-WORKSPACE')       WORKSPACE="$2"; shift 1;;
@@ -107,15 +106,12 @@ PARENT_PATH=$(echo $TARGET_PATH | sed -e "s#/\?downloads_htdocs/tools/##" -e "s#
 -e "s#/\?qa/services/http/binaries/devstudio/##" \
 -e "s#/\?home/windup/apache2/www/html/rhd/devstudio/##" \
 -e "s#/\?all/repo/\?##" -e "s#/\?all/\?##" -e "s#/\$##" -e "s#^/##" -e "s#\(.\+\)/[^/]\+#\1#" -e "s#/\?${BUILD_TIMESTAMP}-B${BUILD_NUMBER}/\?##")
-# if TARGET_PATH contains a BUILD_TIMESTAMP-B# folder (or, previously / deprecated, a BUILD_ID-B# folder),
+# if TARGET_PATH contains a BUILD_TIMESTAMP-B# folder,
 # create symlink: jbosstools-build-sites.aggregate.earlyaccess-site_master/latest -> jbosstools-build-sites.aggregate.earlyaccess-site_master/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}
 if [[ ${BUILD_NUMBER} ]]; then
 	if [[ ${BUILD_TIMESTAMP} ]] && [[ ${TARGET_PATH/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
 		echo "[DEBUG] Symlink[BT] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_TIMESTAMP}-B${BUILD_NUMBER}"
 		pushd $tmpdir >/dev/null; ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
-	elif [[ ${BUILD_ID} ]] && [[ ${TARGET_PATH/${BUILD_ID}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
-		echo "[DEBUG] Symlink[BI] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_ID}-B${BUILD_NUMBER}"
-		pushd $tmpdir >/dev/null; ln -s ${BUILD_ID}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
 	else
 		BUILD_DIR=$(echo ${TARGET_PATH#${PARENT_PATH}/} | sed -e "s#/\?all/repo/\?##" -e "s#/\?all/\?##")
 		if [[ ${BUILD_DIR} ]] && [[ ${BUILD_DIR%B${BUILD_NUMBER}} != ${BUILD_DIR} ]] && [[ ${TARGET_PATH/${BUILD_DIR}} != ${TARGET_PATH} ]]; then
