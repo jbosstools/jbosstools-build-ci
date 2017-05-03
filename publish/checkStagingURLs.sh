@@ -6,7 +6,7 @@ versionWithRespin_jbt=""
 versionWithRespin_ds=""
 devstudioReleaseVersion=10.0
 eclipseReleaseName=neon
-qual=staging # or development or stable
+qual=staging # or snapshots or development or stable
 static=""
 quiet=0
 skipdiscovery=0; # flag to skip discovery sites check
@@ -67,7 +67,7 @@ notOK=0
 versionWithRespin_ds_latest=${versionWithRespin_ds%.*}.latest
 
 # when not staging, check for static/ URLs and don't check for .latest symlinks but actual files
-if [[ ${qual} != "staging" ]]; then 
+if [[ ${qual} == "development" ]] || [[ ${qual} == "stable" ]]; then
   static="static/"
 fi
 
@@ -84,7 +84,11 @@ if [[ ${versionWithRespin_jbt} ]]; then
         for ff in compositeContent.xml compositeArtifacts.xml jbosstools-earlyaccess.properties jbosstools-directory.xml plugins/; do
           if [[ ${f} == "discovery.central" ]] && [[ ${ff/earlyaccess.properties/} != ${ff} ]]; then continue; fi # skip check for central + earlyaccess.properties
           if [[ ${u/builds/} != ${u} ]]; then
-            a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/repo/${ff} # builds
+            if [[ ${qual} == "snapshots" ]]; then
+              a=${u}/jbosstools-${f}_${versionWithRespin_jbt}/latest/all/repo/${ff} # builds
+            else
+              a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/repo/${ff} # builds
+            fi
           else
             a=${u}/${f}/${versionWithRespin_jbt}/${ff} # updates
           fi
@@ -199,7 +203,11 @@ if [[ ${versionWithRespin_ds} ]]; then
         for ff in compositeContent.xml compositeArtifacts.xml devstudio-earlyaccess.properties devstudio-directory.xml plugins/; do
           if [[ ${f} == "discovery.central" ]] && [[ ${ff/earlyaccess.properties/} != ${ff} ]]; then continue; fi # skip check for central + earlyaccess.properties
           if [[ ${u/builds/} != ${u} ]]; then
-            a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/repo/${ff} # builds
+            if [[ ${qual} == "snapshots" ]]; then
+              a=${u}/jbosstools-${f}_${versionWithRespin_jbt}/latest/all/repo/${ff} # builds
+            else
+              a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/repo/${ff} # builds
+            fi
           else
             a=${u}/${f}/${versionWithRespin_ds}/${ff} # updates
           fi
