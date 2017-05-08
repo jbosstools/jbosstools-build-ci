@@ -83,11 +83,6 @@
 						<configuration>
 							<artifacts>
 								<artifact>
-									<file>publish/build-jbosstools-component.sh</file>
-									<type>sh</type>
-									<classifier>build-jbosstools-component</classifier>
-								</artifact>
-								<artifact>
 									<file>publish/rsync.sh</file>
 									<type>sh</type>
 									<classifier>rsync</classifier>

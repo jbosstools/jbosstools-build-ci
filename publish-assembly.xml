@@ -11,7 +11,6 @@
 	    <directory>${project.basedir}</directory>
 	    <outputDirectory>/</outputDirectory>
 	    <includes>
-	      <include>publish/build-jbosstools-component.sh</include>
 	      <include>publish/rsync.sh</include>
 	      <include>publish/mirror.sh</include>
 	      <include>publish/publish.sh</include>
