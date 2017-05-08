@@ -45,8 +45,7 @@ usage = 'Usage: %prog -u <user> -p <pass> [-s <JIRA server>]'
 parser = OptionParser(usage)
 parser.add_option("-u", "--user", dest="usernameJIRA", help="JIRA Username")
 parser.add_option("-p", "--pwd", dest="passwordJIRA", help="JIRA Password")
-parser.add_option("-s", "--server", dest="jiraserver", default="https://issues.jboss.org", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.or
-g")
+parser.add_option("-s", "--server", dest="jiraserver", default="https://issues.jboss.org", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.org")
 (options, args) = parser.parse_args()
 if not options.usernameJIRA or not options.passwordJIRA or not options.jiraserver:
     parser.error("Must specify ALL commandline flags")
