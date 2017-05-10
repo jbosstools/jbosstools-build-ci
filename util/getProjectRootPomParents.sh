@@ -184,7 +184,7 @@ checkProjects () {
       if [[ -f ${pomfile} ]]; then # echo "$j $pomfile..."
 
         thisparent=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<"` # contains actual version
-        wasCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep $version_parent` # empty string if wrong version
+        wasCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep ">$version_parent<"` # empty string if wrong version
         # echo "thisparent = [$thisparent]"
         if [[ ${thisparent} ]]; then
           if [[ ! $wasCorrectVersion ]]; then
@@ -192,7 +192,7 @@ checkProjects () {
               perl -0777 -i.orig -pe \
               's#(<artifactId>parent</artifactId>)[\r\n\ \t]+(<version>)([\d.]+[^<>]+)(</version>)#\1\n\t\t<version>'${version_parent}'\4#igs' \
               ${pomfile}
-              isCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep $version_parent` # empty string if wrong version
+              isCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep ">$version_parent<"` # empty string if wrong version
             fi
             if [[ ${isCorrectVersion} ]] && [[ ${doCreateTaskJIRAs} -gt 0 ]]; then
               # create new JIRA using createTaskJIRAs.py, then pass that into the commit comment below
