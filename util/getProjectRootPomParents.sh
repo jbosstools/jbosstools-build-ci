@@ -46,14 +46,14 @@ doUpdateRootPom=0 # if the wrong parent pom is referenced from the root pom (and
 doCreateBranch=0 # if the required branch doesn't exist, fetch from master instead, and create a new branch after pushing root pom update to master
 doCreateTaskJIRAs=1 # create Task JIRAs for the changes to be done
 logfileprefix=${0##*/}; logfileprefix=${logfileprefix%.sh}
-version_jbt=4.4.2.Final
-version_ds=10.2.0.GA
-version_parent=4.4.2.Final-SNAPSHOT
+version_jbt=4.4.4.Final
+version_ds=10.4.0.GA
+version_parent=4.4.4.Final-SNAPSHOT # or 4.4.4.Final
 #TODO support branching from somewhere other than master
-github_branch=jbosstools-4.4.1.x # or master
+github_branch=jbosstools-4.4.x # or master
 github_branch_fallback=master # if required branch doesn't exist, fall back to fetching sources from this branch instead; default: master (eg., could be 4.4.x instead)
-TARGET_PLATFORM_VERSION_MIN=4.60.2.Final
-TARGET_PLATFORM_VERSION_MAX=4.61.0.Final
+TARGET_PLATFORM_VERSION_MIN=4.60.3.Final
+TARGET_PLATFORM_VERSION_MAX=4.63.0.Final
 JIRA_HOST="https://issues.stage.jboss.org" # or https://issues.jboss.org
 WORKSPACE1=/tmp
 PROJECTS1="" # or "aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge freemarker hibernate  \
