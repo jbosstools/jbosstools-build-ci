@@ -156,9 +156,9 @@ checkProjects () {
       # fetch the project to the workspace as it's not already here!
       pushd ${workspace} >/dev/null
       if [[ ${branchDoesNotExist} ]]; then # branch does not exist yet
-        git clone --depth 1 -b ${github_branch_fallback} ${quiet} git@github.com:${g_project_prefix}${j}.git | tee -a ${logfile} # shallow clone just the fallback branch
+        git clone --depth 5 -b ${github_branch_fallback} ${quiet} git@github.com:${g_project_prefix}${j}.git | tee -a ${logfile} # shallow clone just the fallback branch
       else
-        git clone --depth 1 -b ${github_branch} ${quiet} git@github.com:${g_project_prefix}${j}.git | tee -a ${logfile} # shallow clone just the branch we want
+        git clone --depth 5 -b ${github_branch} ${quiet} git@github.com:${g_project_prefix}${j}.git | tee -a ${logfile} # shallow clone just the branch we want
       fi
       popd >/dev/null
     fi
@@ -184,7 +184,7 @@ checkProjects () {
       if [[ -f ${pomfile} ]]; then # echo "$j $pomfile..."
 
         thisparent=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<"` # contains actual version
-        wasCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep ">$version_parent<"` # empty string if wrong version
+        wasCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | egrep ">${version_parent}<"` # empty string if wrong version
         # echo "thisparent = [$thisparent]"
         if [[ ${thisparent} ]]; then
           if [[ ! $wasCorrectVersion ]]; then
@@ -192,7 +192,7 @@ checkProjects () {
               perl -0777 -i.orig -pe \
               's#(<artifactId>parent</artifactId>)[\r\n\ \t]+(<version>)([\d.]+[^<>]+)(</version>)#\1\n\t\t<version>'${version_parent}'\4#igs' \
               ${pomfile}
-              isCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep ">$version_parent<"` # empty string if wrong version
+              isCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | egrep ">${version_parent}<"` # empty string if wrong version
             fi
             if [[ ${isCorrectVersion} ]] && [[ ${doCreateTaskJIRAs} -gt 0 ]]; then
               # create new JIRA using createTaskJIRAs.py, then pass that into the commit comment below
@@ -340,7 +340,7 @@ popd >/dev/null; echo \">>> https://github.com/${g_project_prefix}${j}/commits/$
             fi
             # echo "isCorrectVersion = [$isCorrectVersion]"
           else
-        echo "# No change needed: https://github.com/${g_project_prefix}${j}/blob/${github_branch_fallback}/${pomfile} !
+        	echo "# No change needed: https://github.com/${g_project_prefix}${j}/blob/${github_branch_fallback}/${pomfile} !
 " >> ${tskfile}
           fi
         else
