@@ -53,3 +53,5 @@ if not options.usernameJIRA or not options.passwordJIRA or not options.jiraserve
 jira = JIRA(options={'server':options.jiraserver,'agile_rest_path':'agile'},basic_auth=(options.usernameJIRA,options.passwordJIRA))
 report(jira,'ASSparta')
 report(jira,'devstudio everything')
+report(jira,'devstudio everything else')
+report(jira,'Build.next')
