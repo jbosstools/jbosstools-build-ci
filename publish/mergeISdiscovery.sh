@@ -46,11 +46,11 @@ if [[ ! ${qualities} ]]; then qualities=staging; fi
 
 if [[ $DESTINATION = $TOOLS ]]; then
   directoryXML=jbosstools-directory.xml
-  if [[ ! $rootFolder ]]; then rootFolder=neon; fi
+  if [[ ! $rootFolder ]]; then rootFolder=oxygen; fi
   destinationURL=http://download.jboss.org/jbosstools/${rootFolder}
 else
   directoryXML=devstudio-directory.xml
-  if [[ ! $rootFolder ]]; then rootFolder=10.0; fi
+  if [[ ! $rootFolder ]]; then rootFolder=11; fi
   destinationURL=https://devstudio.redhat.com/${rootFolder}
 fi  
 for quality in ${qualities}; do
