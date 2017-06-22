@@ -231,8 +231,8 @@ fi
 
 jobsToCheck=""
 checkProjects () {
-  jenkins_prefix1="https://dev-platform-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/"
-  jenkins_prefix2="https://dev-platform-jenkins-rhel7.rhev-ci-vms.eng.rdu2.redhat.com/job/"
+  jenkins_prefix1="https://dev-platform-jenkins-rhel7.rhev-ci-vms.eng.rdu2.redhat.com/job/"
+  jenkins_prefix2="https://dev-platform-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/"
   PROJECTS="$1" # ${JBTPROJECTS} or ${JBDSPROJECTS}
   g_project_prefix="$2" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
   staging_url="$3" # http://download.jboss.org/jbosstools/${jbtpath}/ or http://www.qa.jboss.com/binaries/RHDS/${jbdspath}/
