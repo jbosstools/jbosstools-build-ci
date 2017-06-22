@@ -128,29 +128,29 @@ if [[ ${versionWithRespin_jbt} ]]; then
       done
     done
 
-    # browsersim-standalone.zip
+    # browsersim-standalone.zip in browsersim (parent) folder
     for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
-      for f in browsersim-standalone; do
-        for ff in jbosstools-${version_jbt}-${f}.zip jbosstools-${version_jbt}-${f}.zip.sha256; do
-          a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/
-          logn "${a}${ff} : "; stat=$(curl -I -s ${a}${ff} | egrep "404 Not Found")
-          if [[ ! $stat ]]; then
-            log "${green}OK${norm}"; let OK+=1
+      fp=browsersim
+      f=browsersim-standalone
+      for ff in jbosstools-${version_jbt}-${f}.zip jbosstools-${version_jbt}-${f}.zip.sha256; do
+        a=${u}/jbosstools-${versionWithRespin_jbt}-build-${fp}/latest/
+        logn "${a}${ff} : "; stat=$(curl -I -s ${a}${ff} | egrep "404 Not Found")
+        if [[ ! $stat ]]; then
+          log "${green}OK${norm}"; let OK+=1
+        else
+          # could be running with respin suffix or we're mock building so this might be OK. Check folder for children instead.
+          ext=".zip"${ff##*.zip}
+          zips=$(curl -s ${a} | grep "${ext}\"" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
+          if [[ ! ${zips} ]]; then
+            logerr "${a} : " "${red}NO ${ext} FOUND${norm} : $(curl -I -s ${a})"; let notOK+=1;
           else
-            # could be running with respin suffix or we're mock building so this might be OK. Check folder for children instead.
-            ext=".zip"${ff##*.zip}
-            zips=$(curl -s ${a} | grep "${ext}\"" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
-            if [[ ! ${zips} ]]; then
-              logerr "${a} : " "${red}NO ${ext} FOUND${norm} : $(curl -I -s ${a})"; let notOK+=1;
-            else
-              log "${yellow}WARNING${norm}"
-              for j in ${zips}; do
-                logn " => ${j} : "; stat=$(curl -I -s ${a}${j} | egrep "404 Not Found")
-                if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a}${j})"; let notOK+=1; fi
-              done
-            fi
+            log "${yellow}WARNING${norm}"
+            for j in ${zips}; do
+              logn " => ${j} : "; stat=$(curl -I -s ${a}${j} | egrep "404 Not Found")
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a}${j})"; let notOK+=1; fi
+            done
           fi
-        done
+        fi
       done
     done
     log ""
@@ -235,26 +235,27 @@ if [[ ${versionWithRespin_ds} ]]; then
   fi
 
   if [[ ${onlydiscovery} -lt 1 ]]; then 
+    # no longer publishing to wonka 
     # zips: only if /stable/ or /staging/
-    if [[ ${qual} != "development" ]]; then
-      for u in http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
-        for f in devstudio-${versionWithRespin_ds_latest_INT}-installer-eap.jar devstudio-${versionWithRespin_ds_latest_INT}-installer-standalone.jar \
-          devstudio-${versionWithRespin_ds_latest_INT}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest_INT}-updatesite-core.zip; do
-          for ff in $f ${f}.sha256; do
-            a=${u}/${ff}
-            logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
-            if [[ $stat ]]; then # try backup URL (.latest or .GA)
-              #logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"
-              log ""
-              a=${u}/${ff/.latest/.GA}
-              logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
-            fi
-            if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
-          done
-        done
-      done
-    fi
-    log ""
+    # if [[ ${qual} != "development" ]]; then
+    #   for u in http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
+    #     for f in devstudio-${versionWithRespin_ds_latest_INT}-installer-standalone.jar \
+    #       devstudio-${versionWithRespin_ds_latest_INT}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest_INT}-updatesite-core.zip; do
+    #       for ff in $f ${f}.sha256; do
+    #         a=${u}/${ff}
+    #         logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
+    #         if [[ $stat ]]; then # try backup URL (.latest or .GA)
+    #           #logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"
+    #           log ""
+    #           a=${u}/${ff/.latest/.GA}
+    #           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
+    #         fi
+    #         if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
+    #       done
+    #     done
+    #   done
+    # fi
+    # log ""
 
     # installer build folder [EXTERNAL]
     for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
