@@ -1,3 +1,6 @@
+# Requires: 
+# sudo pip install pygithub
+# 
 from github import Github, GithubException
 import sys
 import csv
