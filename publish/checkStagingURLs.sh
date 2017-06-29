@@ -118,8 +118,18 @@ if [[ ${versionWithRespin_jbt} ]]; then
   if [[ ${onlydiscovery} -lt 1 ]]; then 
     # build folders
     for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
-      for f in fuse-extras coretests central earlyaccess integration-tests core; do
+      for f in coretests central earlyaccess integration-tests core; do
         for ff in repo/artifacts.xml.xz repo/content.xml.xz repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
+          a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
+          logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
+        done
+        log ""
+      done
+    done
+    for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
+      for f in fuse-extras; do
+        for ff in repo/artifacts.xml.xz repo/content.xml.xz repo/category.xml repo/buildinfo.json; do # no repo zip to check here
           a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
@@ -271,8 +281,18 @@ if [[ ${versionWithRespin_ds} ]]; then
 
     # build folders
     for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds; do
-      for f in fuse-extras central earlyaccess; do
+      for f in central earlyaccess; do
         for ff in repo/artifacts.xml.xz repo/content.xml.xz repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
+          a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/${ff}
+          logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
+          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
+        done
+      log ""
+      done
+    done
+    for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds; do
+      for f in fuse-extras; do
+        for ff in repo/artifacts.xml.xz repo/content.xml.xz repo/category.xml repo/buildinfo.json; do # no repo zip to check here
           a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/${ff}
           logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
