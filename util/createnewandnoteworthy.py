@@ -111,6 +111,7 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
 			'issuetype' : { 'name' : 'Sub-task' },
 			'parent' : { 'id' : rootnn.key},
 			'priority' : { 'name': 'Critical'},
+			'fixVersions' : [{ "name" : jbide_fixversion }],
 			'components' : cms,
 		}
 
