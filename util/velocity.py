@@ -10,7 +10,7 @@ def getIssues(jira, board_id, sprint_id):
               r_json['issues']]
     return issues
 
-def report(jira,name):
+def report(jira,name,reports):
     boards = jira.boards(name=name)
     sboards = [x for x in boards if x.name == name]
     board = sboards[0]
@@ -18,7 +18,6 @@ def report(jira,name):
     asprints = [x for x in sprints if x.state == 'active']
     sprint = asprints[len(asprints) - 1]
     issues = getIssues(jira, board.id, sprint.id)
-    reports = {}
     for x in issues:
         if x.fields.assignee:
             key = x.fields.assignee.name
@@ -27,17 +26,21 @@ def report(jira,name):
             key = 'unassigned'
             assigneeName = 'Unassigned'
         if key not in reports.keys():
-            reports[key] = [assigneeName,0,0]
+            reports[key] = [assigneeName,{},{}]
         if x.fields.status.id == '10011' or x.fields.status.id == '5':
-            reports[key][1] = reports[key][1] + 1
-        else :
-            reports[key][2] = reports[key][2] + 1
-    print 'Status for ' + name + ' ' + sprint.name
+            if x.key not in reports[key][1]:
+                reports[key][1][x.key] = x.key
+        else:
+            if x.key not in reports[key][2]:
+                reports[key][2][x.key] = x.key
+                
+def dump(reports):                
+#    print 'Status for ' + name + ' ' + sprint.name
     format=u'{:<20}{:<10}{:<10}{:<10}'
     print format.format('Name', 'Completed', 'Todo', 'Status')
     for x in reports:
-        done = reports[x][1]
-        todo = reports[x][2]
+        done = len(reports[x][1].keys())
+        todo = len(reports[x][2].keys())
         ratio = (float(done) / (done + todo)) * 100
         print format.format(reports[x][0].encode('ascii', 'ignore'), done, todo, str(int(ratio)) + '%')
 
@@ -51,7 +54,9 @@ if not options.usernameJIRA or not options.passwordJIRA or not options.jiraserve
     parser.error("Must specify ALL commandline flags")
 
 jira = JIRA(options={'server':options.jiraserver,'agile_rest_path':'agile'},basic_auth=(options.usernameJIRA,options.passwordJIRA))
-report(jira,'ASSparta')
-report(jira,'devstudio everything')
-report(jira,'devstudio everything else')
-report(jira,'Build.next')
+reports = {}
+report(jira,'ASSparta',reports)
+report(jira,'devstudio everything',reports)
+report(jira,'devstudio everything else',reports)
+report(jira,'Build.next',reports)
+dump(reports)
