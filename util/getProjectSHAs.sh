@@ -21,7 +21,7 @@ usage ()
     # for a list of projects, find any unbuilt commits
     echo "Example 2: $0 -branch jbosstools-4.4.x -jbtstream 4.4.neon -jbdsstream 10.0.neon -ju nboldt -jp j_pwd \\"
     echo "            -gu nickboldt@gmail.com -gp g_pwd -jbds product -jbt aerogear,arquillian,base,browsersim,central,discovery,\\"
-    echo "forge,freemarker,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices"
+    echo "forge,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices" # freemarker
     exit 1;
 }
 
@@ -31,7 +31,8 @@ fi
 
 #defaults
 toggleJenkinsJobs=~/truu/jbdevstudio-ci/bin/toggleJenkinsJobs.py
-#JBTPROJECT="aerogear,arquillian,base,browsersim,central,discovery,forge,freemarker,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices"
+# JBIDE-24484 remove freemarker
+#JBTPROJECT="aerogear,arquillian,base,browsersim,central,discovery,forge,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices"
 JBTPROJECT=""
 #JBDSPROJECT="product"
 JBDSPROJECT=""
@@ -128,7 +129,7 @@ if [[ ${jbtm} ]]; then
   if [[ $components ]]; then
     projects=""
     # define mapping between JIRA components and jenkins project names
-    # if not listed then mapping between component and project are 1:1,eg., for forge, server, livereload, openshift, webservices, hibernate, freemarker, browsersim
+    # if not listed then mapping between component and project are 1:1, eg., for forge, server, etc.
     declare -A projectMap=( 
       ["aerogear-hybrid"]="aerogear"
       ["arquillian"]="arquillian" 
@@ -205,7 +206,7 @@ if [[ ${jbdsm} ]]; then
   projects=""
   if [[ $components ]]; then
     # define mapping between JIRA components and jenkins project names
-    # if not listed then mapping between component and project are 1:1,eg., for forge, server, livereload, openshift, webservices, hibernate, birt, freemarker, browsersim, discovery
+    # if not listed then mapping between component and project are 1:1, eg., for forge, server, etc.
     declare -A projectMap=( 
       ["qa"]="qa"
       ["updatesite"]="product"
