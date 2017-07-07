@@ -81,10 +81,6 @@ toc::[]
 |===
 |Name | Description | Usage
 
-|link:util/generateCompositeStagingSiteMetadata.sh[generateComposite StagingSiteMetadata.sh]
-|Generates a pair of composite*.xml files based on a list of upstream projects
-|Deprecated
-
 |link:util/installAndDisplayCompositeSiteContent.sh[installAndDisplay CompositeSiteContent.sh]
 |Install and display list of what was installed from a composite site. Requires link:util/installFromTarget.sh[installFromTarget.sh]
 |Used in https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-composite-install_master/[composite-install]
