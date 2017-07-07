@@ -18,8 +18,8 @@ if [[ $# -lt 1 ]]; then
 fi
 
 # projects to check if branched
-# JBIDE-24484 remove freemarker, portlet
-# projects="aerogear arquillian base birt browsersim build build-ci build-sites central devdoc discovery download.jboss.org forge hibernate integration-tests javaee jst livereload maven-plugins openshift playground server versionwatch vpe webservices"
+# JBIDE-24484 remove freemarker, portlet, playground
+# projects="aerogear arquillian base birt browsersim build build-ci build-sites central devdoc discovery download.jboss.org forge hibernate integration-tests javaee jst livereload maven-plugins openshift server versionwatch vpe webservices"
 
 quiet=0
 checkAlternatives=0
