@@ -61,7 +61,13 @@ doInstall ()
   fi
 }
 
+totErrata=0
 for errataURL in ${errataURLs}; do
+  let totErrata=totErrata+1
+done
+numErrata=0
+for errataURL in ${errataURLs}; do
+  log ""
   # compute data as ?result_id=4852505 from the errataURL
   data=${errataURL##*\?}; if [[ ${data} ]]; then data="--data ${data}"; fi
   # logdebug "${data} ${errataURL} -> ${problem}"
@@ -133,10 +139,11 @@ for errataURL in ${errataURLs}; do
   fi
 
   log ""
+  let numErrata=numErrata+1
   if [[ ${hadError} -gt 0 ]]; then
-    log "[ERROR] For ${rpm}, found ${hadError} of ${count} ${problem}s at ${errataURL}"
+    log "[ERROR] [${numErrata}/${totErrata}] For ${rpm}, found ${hadError} of ${count} ${problem}s at ${errataURL}"
   else
-    log "[INFO] For ${rpm}, found ${hadError} of ${count} ${problem}s at ${errataURL}"
+    log "[INFO] [${numErrata}/${totErrata}] For ${rpm}, found ${hadError} of ${count} ${problem}s at ${errataURL}"
 
     # submit waive automatically
     if [[ ${waive} -eq 1 ]]; then
@@ -154,9 +161,9 @@ for errataURL in ${errataURLs}; do
       logdebug "[DEBUG] Post waiver to ${errataWaiveURL}"
       logdebug "[DEBUG] ${data}"
       curl -s -S -k -X POST -u ${userpass} --data ${data// /%20} ${errataWaiveURL} > ${tmpdir}/page2.html
-      log "[INFO] Waived ${errataURL}"
+      log "[INFO] [${numErrata}/${totErrata}] Waived ${errataURL}"
     else
-      log "[INFO] To automatically waive this result, re-run this script with the -waive flag."
+      log "[INFO] [${numErrata}/${totErrata}] To automatically waive this result, re-run this script with the -waive flag."
     fi
   fi
   logdebug ""
