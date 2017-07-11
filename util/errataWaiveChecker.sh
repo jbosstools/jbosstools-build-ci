@@ -24,8 +24,14 @@ errataURLs=""
 data=""
 quiet=""
 waive=0 # if =1, automatically submit a waiver if 0 unresolved problems found
-uninstallRpms=0 # if =1, uninstall installed RPMs when done
+uninstallRPMsBefore=0 # if =1, uninstall installed RPMs before any other installs (to remove extra deps)
+uninstallRPMsAfter=0 # if =1, uninstall installed RPMs when done
 installAnyVersion=0 # if =1, let yum install ANY version of required RPMs, rather than the specific version of RPMs
+
+norm="\033[0;39m"
+green="\033[1;32m"
+red="\033[1;31m"
+blue="\033[1;34m"
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -33,7 +39,8 @@ while [[ "$#" -gt 0 ]]; do
     '-p') problem="$2"; shift 1;;
     '-q') quiet="-q"; shift 0;;
     '-waive') waive=1; shift 0;;
-    '-U') uninstallRpms=1; shift 0;;
+    '-UB') uninstallRPMsBefore=1; shift 0;;
+    '-UA') uninstallRPMsAfter=1; shift 0;;
     '-I') installAnyVersion=1; shift 0;;
     *) errataURLs="${errataURLs} $1"; shift 0;;
   esac
@@ -42,11 +49,11 @@ done
 
 log ()
 {
-  echo "$1"
+  echo -e "$1"
 }
 logdebug ()
 {
-  if [[ ${quiet} == "" ]]; then echo "$1"; fi
+  if [[ ${quiet} == "" ]]; then echo -e "$1"; fi
 }
 
 doInstall ()
@@ -95,6 +102,10 @@ for errataURL in ${errataURLs}; do
         rpmInstallList="${rpmInstallList} ${rpm}-${rpmversion1}-${rpmversion2}"
       fi
     done
+
+    if [[ $uninstallRPMsBefore -eq 1 ]]; then
+      doInstall remove "${rpmInstallList}"
+    fi
     doInstall install "${rpmInstallList}"
 
     if [[ ${filesToCheck} ]]; then
@@ -118,32 +129,32 @@ for errataURL in ${errataURLs}; do
           if [[ -L "${afile}" ]]; then
             error=$(file "${afile}" | grep "broken symbolic link")
             if [[ ${error} ]]; then
-              status="[ERROR] Can't find '${afile}'"
+              status="${red}[ERROR] Can't find ${norm}'${red}${afile}${norm}'"
               let hadError=hadError+1
             fi
           else
-            status="[ERROR] Can't find '${alink}' -> '${afile}'"
+            status="${red}[ERROR] Can't find ${norm}'${red}${alink}${norm}' -> '${red}${afile}${norm}'"
             let hadError=hadError+1
           fi
         fi
         if [[ ${status} ]]; then
           log "${status}"
         else
-          logdebug "[INFO] OK: ${alink} -> ${afile}"
+          logdebug "[INFO] ${green}OK${norm}: ${alink} -> ${afile}"
         fi
       done
     fi
 
-  if [[ $uninstallRpms -eq 1 ]]; then
+  if [[ $uninstallRPMsAfter -eq 1 ]]; then
     doInstall remove "${rpmInstallList}"
   fi
 
   log ""
   let numErrata=numErrata+1
   if [[ ${hadError} -gt 0 ]]; then
-    log "[ERROR] [${numErrata}/${totErrata}] For ${rpm}, found ${hadError} of ${count} ${problem}s at ${errataURL}"
+    log "${red}[ERROR]${norm} [${numErrata}/${totErrata}] For ${rpm}, found ${red}${hadError}${norm} of ${red}${count}${norm} ${problem}s at ${errataURL}"
   else
-    log "[INFO] [${numErrata}/${totErrata}] For ${rpm}, found ${hadError} of ${count} ${problem}s at ${errataURL}"
+    log "[INFO] [${numErrata}/${totErrata}] For ${rpm}, found ${green}${hadError}${norm} of ${green}${count}${norm} ${problem}s at ${errataURL}"
 
     # submit waive automatically
     if [[ ${waive} -eq 1 ]]; then
@@ -163,7 +174,7 @@ for errataURL in ${errataURLs}; do
       curl -s -S -k -X POST -u ${userpass} --data ${data// /%20} ${errataWaiveURL} > ${tmpdir}/page2.html
       log "[INFO] [${numErrata}/${totErrata}] Waived ${errataURL}"
     else
-      log "[INFO] [${numErrata}/${totErrata}] To automatically waive this result, re-run this script with the -waive flag."
+      log "[INFO] [${numErrata}/${totErrata}] To automatically waive this result, re-run this script with the ${blue}-waive${norm} flag."
     fi
   fi
   logdebug ""
