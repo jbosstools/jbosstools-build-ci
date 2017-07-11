@@ -112,7 +112,7 @@ for errataURL in ${errataURLs}; do
         status=""
         logdebug "[DEBUG] alink = $alink"
         logdebug "[DEBUG] afile = $afile"
-        if [[ ! -f "${afile}" ]]; then
+        if [[ ! -f "${afile}" ]] && [[ ! -d "${afile}" ]]; then
           # echo "[WARNING] ${afile} not found - check symlink"
           error=""
           if [[ -L "${afile}" ]]; then
