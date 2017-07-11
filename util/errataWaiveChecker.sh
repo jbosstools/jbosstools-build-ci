@@ -59,6 +59,9 @@ tmpdir=`mktemp -d` && mkdir -p ${tmpdir} && pushd ${tmpdir} >/dev/null
       -e "s#.\+<pre>File ##" \
       -e "s# is.\+${problem}.\+to #:#" \
       -e "s#) on.\+</pre>##")
+  rpmsToInstall=$(cat page.html | egrep "NEEDS INSPECTION" -A4 \
+    | sed -e "s#--\|.\+<td>.*\|.\+</td>.*\|.\+NEEDS INSPECTION.*##" | sort | uniq)
+
   if [[ ${filesToCheck} ]]; then
     rpm=""
     count=0
@@ -66,12 +69,16 @@ tmpdir=`mktemp -d` && mkdir -p ${tmpdir} && pushd ${tmpdir} >/dev/null
       # first item is the rpm we're checking
       if [[ ! ${rpm} ]]; then 
         rpm=$f
-        logdebug "[INFO] Install rpm: ${rpm}"
-        if [[ -x /usr/bin/dnf ]]; then
-          sudo dnf ${quiet} -y install $rpm
-        else
-          sudo yum ${quiet} -y install $rpm
-        fi
+        rpmversion2=${rpm##*-}; # echo $rpmversion2; 
+        rpmversion1=${rpm%-${rpmversion2}}; rpmversion1=${rpmversion1##*-}; # echo $rpmversion1
+        for rpm in ${rpmsToInstall}; do
+          logdebug "[INFO] Install rpm: ${rpm}-${rpmversion1}-${rpmversion2}"
+          if [[ -x /usr/bin/dnf ]]; then
+            sudo dnf ${quiet} -y install ${rpm}-${rpmversion1}-${rpmversion2}
+          else
+            sudo yum ${quiet} -y install ${rpm}-${rpmversion1}-${rpmversion2}
+          fi
+        done
       else # split the rest into pairs
         let count=count+1
         logdebug ""
@@ -107,8 +114,6 @@ tmpdir=`mktemp -d` && mkdir -p ${tmpdir} && pushd ${tmpdir} >/dev/null
       fi
     done
   fi
-popd >/dev/null
-rm -fr ${tmpdir}
 
 log ""
 if [[ ${hadError} -gt 0 ]]; then
@@ -131,9 +136,13 @@ else
     errataWaiveURL=${errataURL%show/*}waive/${errataURL#*result_id=}
     logdebug "[DEBUG] Post waiver to ${errataWaiveURL}"
     logdebug "[DEBUG] ${data}"
-    curl -s -S -k -X POST -u ${userpass} --data ${data// /%20} ${errataWaiveURL}
+    curl -s -S -k -X POST -u ${userpass} --data ${data// /%20} ${errataWaiveURL} > ${tmpdir}/page2.html
+    log "[INFO] Waived ${errataURL}"
   else
-    log "[INFO] to automatically waive this result, re-run this script with the -waive flag."
+    log "[INFO] To automatically waive this result, re-run this script with the -waive flag."
   fi
 fi
 logdebug ""
+
+popd >/dev/null
+rm -fr ${tmpdir}
