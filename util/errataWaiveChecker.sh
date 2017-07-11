@@ -24,6 +24,7 @@ errataURL=""
 data=""
 quiet=""
 waive=0
+uninstallRpms=0
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -33,6 +34,7 @@ while [[ "$#" -gt 0 ]]; do
     '-q') quiet="-q"; shift 0;;
 
     '-waive') waive=1; shift 0;;
+    '-U') uninstallRpms=1; shift 0;;
   esac
   shift 1
 done
@@ -55,6 +57,7 @@ tmpdir=`mktemp -d` && mkdir -p ${tmpdir} && pushd ${tmpdir} >/dev/null
   curl -s -S -k -X POST -u ${userpass} ${data} ${errataURL} > ${tmpdir}/page.html
   filesToCheck=$(cat page.html | egrep "${problem}|Results for" \
     | sed \
+      -e "s#.\+This change is ok because.\+##" \
       -e "s#<h1> Results for \(.\+\) compared to .\+#\1#" \
       -e "s#.\+<pre>File ##" \
       -e "s# is.\+${problem}.\+to #:#" \
@@ -115,6 +118,17 @@ tmpdir=`mktemp -d` && mkdir -p ${tmpdir} && pushd ${tmpdir} >/dev/null
     done
   fi
 
+if [[ $uninstallRpms -eq 1 ]]; then
+  for rpm in ${rpmsToInstall}; do
+    logdebug "[INFO] Remove rpm: ${rpm}-${rpmversion1}-${rpmversion2}"
+    if [[ -x /usr/bin/dnf ]]; then
+      sudo dnf ${quiet} -y remove ${rpm}-${rpmversion1}-${rpmversion2}
+    else
+      sudo yum ${quiet} -y remove ${rpm}-${rpmversion1}-${rpmversion2}
+    fi
+  done
+fi
+
 log ""
 if [[ ${hadError} -gt 0 ]]; then
   log "[ERROR] For ${rpm}, found ${hadError} of ${count} ${problem}s at ${errataURL}"
@@ -122,7 +136,7 @@ else
   log "[INFO] For ${rpm}, found ${hadError} of ${count} ${problem}s at ${errataURL}"
 
   # submit waive automatically
-  if [[ ${waive} -gt 0 ]]; then
+  if [[ ${waive} -eq 1 ]]; then
     data=""
     #data="${data}&utf8=&#x2713;authenticity_token=QeudVj96QLvlX5PPcs8HTUgzwtCFaueiggPn+S3VAwU="
     #data="${data}&errata_id="
