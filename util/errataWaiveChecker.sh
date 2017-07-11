@@ -25,6 +25,7 @@ data=""
 quiet=""
 waive=0
 uninstallRpms=0
+installAnyVersion=0 # rather than restricting the install to the specific version of RPM, let yum install any matching version
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
@@ -35,6 +36,8 @@ while [[ "$#" -gt 0 ]]; do
 
     '-waive') waive=1; shift 0;;
     '-U') uninstallRpms=1; shift 0;;
+    '-I') installAnyVersion=1; shift 0;;
+
   esac
   shift 1
 done
@@ -48,6 +51,17 @@ logdebug ()
   if [[ ${quiet} == "" ]]; then echo "$1"; fi
 }
 
+doInstall ()
+{
+  op=$1
+  rpmInstallList=$2
+  log "[INFO] RPM(s) to ${op}:${rpmInstallList}"
+  if [[ -x /usr/bin/dnf ]]; then
+    time sudo dnf ${quiet} -y ${op} ${rpmInstallList}
+  else
+    time sudo yum ${quiet} -y ${op} ${rpmInstallList}
+  fi
+}
 # compute data as ?result_id=4852505 from the errataURL
 data=${errataURL##*\?}; if [[ ${data} ]]; then data="--data ${data}"; fi
 # logdebug "${data} ${errataURL} -> ${problem}"
@@ -55,78 +69,67 @@ data=${errataURL##*\?}; if [[ ${data} ]]; then data="--data ${data}"; fi
 hadError=0
 tmpdir=`mktemp -d` && mkdir -p ${tmpdir} && pushd ${tmpdir} >/dev/null
   curl -s -S -k -X POST -u ${userpass} ${data} ${errataURL} > ${tmpdir}/page.html
-  filesToCheck=$(cat page.html | egrep "${problem}|Results for" \
+  filesToCheck=$(cat page.html | egrep "${problem}" \
     | sed \
       -e "s#.\+This change is ok because.\+##" \
-      -e "s#<h1> Results for \(.\+\) compared to .\+#\1#" \
       -e "s#.\+<pre>File ##" \
       -e "s# is.\+${problem}.\+to #:#" \
       -e "s#) on.\+</pre>##")
   rpmsToInstall=$(cat page.html | egrep "NEEDS INSPECTION" -A4 \
     | sed -e "s#--\|.\+<td>.*\|.\+</td>.*\|.\+NEEDS INSPECTION.*##" | sort | uniq)
 
+  rpm=$(cat page.html | egrep "Results for" | sed -e "s#<h1> Results for \(.\+\) compared to .\+#\1#")
+  rpmInstallList=""
+  rpmversion2=${rpm##*-}; # echo $rpmversion2; 
+  rpmversion1=${rpm%-${rpmversion2}}; rpmversion1=${rpmversion1##*-}; # echo $rpmversion1
+  for rpm in ${rpmsToInstall}; do
+    if [[ ${installAnyVersion} -eq 1 ]]; then
+      rpmInstallList="${rpmInstallList} ${rpm}"
+    else
+      rpmInstallList="${rpmInstallList} ${rpm}-${rpmversion1}-${rpmversion2}"
+    fi
+  done
+  doInstall install "${rpmInstallList}"
+
   if [[ ${filesToCheck} ]]; then
-    rpm=""
     count=0
     for f in ${filesToCheck}; do # echo f = $f
-      # first item is the rpm we're checking
-      if [[ ! ${rpm} ]]; then 
-        rpm=$f
-        rpmversion2=${rpm##*-}; # echo $rpmversion2; 
-        rpmversion1=${rpm%-${rpmversion2}}; rpmversion1=${rpmversion1##*-}; # echo $rpmversion1
-        for rpm in ${rpmsToInstall}; do
-          logdebug "[INFO] Install rpm: ${rpm}-${rpmversion1}-${rpmversion2}"
-          if [[ -x /usr/bin/dnf ]]; then
-            sudo dnf ${quiet} -y install ${rpm}-${rpmversion1}-${rpmversion2}
-          else
-            sudo yum ${quiet} -y install ${rpm}-${rpmversion1}-${rpmversion2}
-          fi
-        done
-      else # split the rest into pairs
-        let count=count+1
-        logdebug ""
-        logdebug "[DEBUG] pair = $f"
-        alink=/${f%:*}
-        if [[ ${f#*:} = "/"* ]]; then
-          afile=${f#*:}
-        else
-          afile=${alink%/*}/${f#*:}
-        fi
-        status=""
-        logdebug "[DEBUG] alink = $alink"
-        logdebug "[DEBUG] afile = $afile"
-        if [[ ! -f "${afile}" ]]; then
-          # echo "[WARNING] ${afile} not found - check symlink"
-          error=""
-          if [[ -L "${afile}" ]]; then
-            error=$(file "${afile}" | grep "broken symbolic link")
-            if [[ ${error} ]]; then
-              status="[ERROR] Can't find '${afile}'"
-              let hadError=hadError+1
-            fi
-          else
-            status="[ERROR] Can't find '${alink}' -> '${afile}'"
+      let count=count+1
+      logdebug ""
+      logdebug "[DEBUG] pair = $f"
+      alink=/${f%:*}
+      if [[ ${f#*:} = "/"* ]]; then
+        afile=${f#*:}
+      else
+        afile=${alink%/*}/${f#*:}
+      fi
+      status=""
+      logdebug "[DEBUG] alink = $alink"
+      logdebug "[DEBUG] afile = $afile"
+      if [[ ! -f "${afile}" ]]; then
+        # echo "[WARNING] ${afile} not found - check symlink"
+        error=""
+        if [[ -L "${afile}" ]]; then
+          error=$(file "${afile}" | grep "broken symbolic link")
+          if [[ ${error} ]]; then
+            status="[ERROR] Can't find '${afile}'"
             let hadError=hadError+1
           fi
-        fi
-        if [[ ${status} ]]; then
-          log "${status}"
         else
-          logdebug "[INFO] OK: ${alink} -> ${afile}"
+          status="[ERROR] Can't find '${alink}' -> '${afile}'"
+          let hadError=hadError+1
         fi
+      fi
+      if [[ ${status} ]]; then
+        log "${status}"
+      else
+        logdebug "[INFO] OK: ${alink} -> ${afile}"
       fi
     done
   fi
 
 if [[ $uninstallRpms -eq 1 ]]; then
-  for rpm in ${rpmsToInstall}; do
-    logdebug "[INFO] Remove rpm: ${rpm}-${rpmversion1}-${rpmversion2}"
-    if [[ -x /usr/bin/dnf ]]; then
-      sudo dnf ${quiet} -y remove ${rpm}-${rpmversion1}-${rpmversion2}
-    else
-      sudo yum ${quiet} -y remove ${rpm}-${rpmversion1}-${rpmversion2}
-    fi
-  done
+  doInstall remove "${rpmInstallList}"
 fi
 
 log ""
