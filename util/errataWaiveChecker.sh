@@ -152,9 +152,9 @@ for errataURL in ${errataURLs}; do
   log ""
   let numErrata=numErrata+1
   if [[ ${hadError} -gt 0 ]]; then
-    log "${red}[ERROR]${norm} [${numErrata}/${totErrata}] For ${rpm}, found ${red}${hadError}${norm} of ${red}${count}${norm} ${problem}s at ${errataURL}"
+    log "${red}[ERROR]${norm} [${numErrata}/${totErrata}] For ${rpmInstallList}, found ${red}${hadError}${norm} of ${red}${count}${norm} ${problem}s at ${errataURL}"
   else
-    log "[INFO] [${numErrata}/${totErrata}] For ${rpm}, found ${green}${hadError}${norm} of ${green}${count}${norm} ${problem}s at ${errataURL}"
+    log "[INFO] [${numErrata}/${totErrata}] For ${rpmInstallList}, found ${green}${hadError}${norm} of ${green}${count}${norm} ${problem}s at ${errataURL}"
 
     # submit waive automatically
     if [[ ${waive} -eq 1 ]]; then
