@@ -95,11 +95,11 @@ for errataURL in ${errataURLs}; do
     rpmInstallList=""
     rpmversion2=${rpm##*-}; # echo $rpmversion2; 
     rpmversion1=${rpm%-${rpmversion2}}; rpmversion1=${rpmversion1##*-}; # echo $rpmversion1
-    for rpm in ${rpmsToInstall}; do
+    for anrpm in ${rpmsToInstall}; do
       if [[ ${installAnyVersion} -eq 1 ]]; then
-        rpmInstallList="${rpmInstallList} ${rpm}"
+        rpmInstallList="${rpmInstallList} ${anrpm}"
       else
-        rpmInstallList="${rpmInstallList} ${rpm}-${rpmversion1}-${rpmversion2}"
+        rpmInstallList="${rpmInstallList} ${anrpm}-${rpmversion1}-${rpmversion2}"
       fi
     done
 
@@ -167,7 +167,7 @@ for errataURL in ${errataURLs}; do
       data="${data}&result_id="${errataURL#*result_id=}
       data="${data}&waive_text=This change is ok because I ran "
       data="${data}https://github.com/jbosstools/jbosstools-build-ci/blob/master/util/errataWaiveChecker.sh and "
-      data="${data}after installing ${rpm}, all ${count} ${problem}s were resolved locally."
+      data="${data}after installing ${rpmInstallList}, all ${count} ${problem}s were resolved locally."
       errataWaiveURL=${errataURL%show/*}waive/${errataURL#*result_id=}
       logdebug "[DEBUG] Post waiver to ${errataWaiveURL}"
       logdebug "[DEBUG] ${data}"
