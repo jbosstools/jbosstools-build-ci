@@ -56,6 +56,7 @@ since = {
 	"jbosstools-central" : "jbosstools-4",
 	"jbosstools-download.jboss.org" : "jbosstools-4",
 	"jbosstools-forge" : "jbosstools-4.1",
+	"jbosstools-fuse" : "jbosstools-4.5",
 	"jbosstools-javaee" : "",
 	"jbosstools-jst" : "",
 	"jbosstools-openshift" : "jbosstools-4.1",

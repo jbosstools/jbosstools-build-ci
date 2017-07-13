@@ -13,7 +13,7 @@ usage ()
     echo "Usage:     $0 -b GITHUBBRANCH -pv PARENTVERSION [-skipupdate] -w1 [/path/to/jbosstools-projects/parent-folder] -w2 [/path/to/jbdevstudio-projects/parent-folder]"
     echo ""
     echo "Example 1: $0 -b jbosstools-4.4.2.x -pv 4.4.2.Final-SNAPSHOT -w1 /home/nboldt/44x -w2 /home/nboldt/44xx \\"
-    echo "              -p1 \"aerogear arquillian base browsersim central discovery forge \\" # freemarker
+    echo "              -p1 \"aerogear arquillian base browsersim central discovery forge fuse\\" # freemarker
     echo "              hibernate javaee jst livereload openshift server vpe webservices\""
     echo ""
     echo "Example 2: $0 -pv 4.4.2.Final-SNAPSHOT -skipupdate -w1 /home/nboldt/tru -w2 /home/nboldt/truu -p2 build-sites -p3 product -noCreateTaskJIRAs"
@@ -22,7 +22,7 @@ usage ()
     echo "               -p1 openshift -p2 build-sites -p3 product"
     echo ""
     echo "Example 4: $0 -updateRootPom -createBranch -b jbosstools-4.4.4.x -b2 jbosstools-4.4.x -pv 4.4.4.Final-SNAPSHOT \\"
-    echo "              -w1 /tmp/jbosstools.github -p1 \"aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge hibernate \\" # freemarker
+    echo "              -w1 /tmp/jbosstools.github -p1 \"aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge fuse::fuse-tooling hibernate \\" # freemarker
     echo "               javaee::jsf jst livereload openshift server vpe::visual-page-editor-core webservices integration-tests\" \\"
     echo "              -p2 \"build build-sites::updatesite discovery::central-update devdoc download.jboss.org maven-plugins:build versionwatch\" \\"
     echo "              -p3 \"artwork ci::build devdoc product::installer qa website\" -q"
@@ -57,7 +57,7 @@ TARGET_PLATFORM_VERSION_MAX=4.63.0.Final
 JIRA_HOST="https://issues.stage.jboss.org" # or https://issues.jboss.org
 WORKSPACE1=/tmp
 # JBIDE-24484 remove freemarker
-PROJECTS1="" # or "aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge hibernate  \
+PROJECTS1="" # or "aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge fuse-tooling hibernate  \
                 # javaee::jsf jst livereload openshift server vpe::visual-page-editor-core webservices integration-tests"
 PROJECTS2="" # or "build build-sites::updatesite discovery::central-update devdoc download.jboss.org maven-plugins:build versionwatch"
 PROJECTS3="" # or "artwork ci::build devdoc product::installer qa website
