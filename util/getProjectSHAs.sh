@@ -21,7 +21,7 @@ usage ()
     # for a list of projects, find any unbuilt commits
     echo "Example 2: $0 -branch jbosstools-4.4.x -jbtstream 4.4.neon -jbdsstream 10.0.neon -ju nboldt -jp j_pwd \\"
     echo "            -gu nickboldt@gmail.com -gp g_pwd -jbds product -jbt aerogear,arquillian,base,browsersim,central,discovery,\\"
-    echo "forge,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices" # freemarker
+    echo "forge,fuse,fuse-extras,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices" # freemarker
     exit 1;
 }
 
@@ -32,7 +32,7 @@ fi
 #defaults
 toggleJenkinsJobs=~/truu/jbdevstudio-ci/bin/toggleJenkinsJobs.py
 # JBIDE-24484 remove freemarker
-#JBTPROJECT="aerogear,arquillian,base,browsersim,central,discovery,forge,fusetools,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices"
+#JBTPROJECT="aerogear,arquillian,base,browsersim,central,discovery,forge,fuse,fuse-extras,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices"
 JBTPROJECT=""
 #JBDSPROJECT="product"
 JBDSPROJECT=""
