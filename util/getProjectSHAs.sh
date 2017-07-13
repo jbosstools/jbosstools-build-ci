@@ -32,7 +32,7 @@ fi
 #defaults
 toggleJenkinsJobs=~/truu/jbdevstudio-ci/bin/toggleJenkinsJobs.py
 # JBIDE-24484 remove freemarker
-#JBTPROJECT="aerogear,arquillian,base,browsersim,central,discovery,forge,fuse-tooling,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices"
+#JBTPROJECT="aerogear,arquillian,base,browsersim,central,discovery,forge,fusetools,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices"
 JBTPROJECT=""
 #JBDSPROJECT="product"
 JBDSPROJECT=""
@@ -141,7 +141,7 @@ if [[ ${jbtm} ]]; then
       ["common"]="base"
       ["cordovasim"]="aerogear"
       ["foundation"]="base"
-      ["fuse-tooling"]="fuse"
+      ["fusetools"]="fuse"
       ["integration-tests"]="integration-tests.aggregate"
       ["jsf"]="javaee"
       ["maven"]="central"
