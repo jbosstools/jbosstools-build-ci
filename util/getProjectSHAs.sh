@@ -36,11 +36,11 @@ toggleJenkinsJobs=~/truu/jbdevstudio-ci/bin/toggleJenkinsJobs.py
 JBTPROJECT=""
 #JBDSPROJECT="product"
 JBDSPROJECT=""
-jbtstream=4.4.neon # or master
-jbdsstream=10.0.neon # or master 
-branch=jbosstools-4.4.x # or master
-jbtpath=neon/snapshots/builds # or builds/staging, from JBDS 8 and before
-jbdspath=10.0/snapshots/builds
+jbtstream=master # 4.5.oxygen or master
+jbdsstream=master # 11.0.oxygen or master
+branch=master # jbosstools-4.5.0.x, jbosstools-4.5.x, or master
+jbtpath=oxygen/snapshots/builds
+jbdspath=11/snapshots/builds
 launchBrowser=0; # set to 1 to automatically launch a browser if any missing builds are found
 quiet="" # or "" or "-q"
 
@@ -69,6 +69,8 @@ while [[ "$#" -gt 0 ]]; do
     '-branch') branch="$2"; shift 1;;
     '-jbtstream') jbtstream="$2"; shift 1;;
     '-jbdsstream') jbdsstream="$2"; shift 1;;
+    '-jbtpath') jbtpath="$2"; shift 1;; # oxygen/snapshots/builds
+    '-jbdspath') jbdspath="$2"; shift 1;; # 11/snapshots/builds
 
     # milestone and respin-*
     '-jbtm') jbtm="$2"; shift 1;;
@@ -91,6 +93,29 @@ if [[ ! ${JBTPROJECTS} ]] && [[ ! ${JBDSPROJECTS} ]] && [[ ! ${jbtm} ]] && [[ ! 
   echo
   usage
 fi
+
+declare -A projectMap=(
+  ["aerogear-hybrid"]="aerogear"
+  ["arquillian"]="arquillian"
+  ["build"]="build.parent"
+  ["cdi"]="javaee"
+  ["cdi-extensions"]="javaee"
+  ["central"]="central"
+  ["central-update"]="discovery"
+  ["common"]="base"
+  ["cordovasim"]="aerogear"
+  ["foundation"]="base"
+  ["fusetools"]="fuse"
+  ["integration-tests"]="integration-tests.aggregate"
+  ["jsf"]="javaee"
+  ["maven"]="central"
+  ["project-examples"]="central"
+  ["qa"]="versionwatch"
+  ["seam2"]="javaee"
+  ["updatesite"]="build-sites"
+  ["usage"]="base"
+  ["visual-page-editor-core"]="vpe"
+)
 
 # for the milestone, find the related JIRAs and get the associated projects
 if [[ ${jbtm} ]]; then
@@ -130,29 +155,6 @@ if [[ ${jbtm} ]]; then
     projects=""
     # define mapping between JIRA components and jenkins project names
     # if not listed then mapping between component and project are 1:1, eg., for forge, server, etc.
-    declare -A projectMap=( 
-      ["aerogear-hybrid"]="aerogear"
-      ["arquillian"]="arquillian" 
-      ["build"]="build.parent"
-      ["cdi"]="javaee"
-      ["cdi-extensions"]="javaee"
-      ["central"]="central"
-      ["central-update"]="discovery"
-      ["common"]="base"
-      ["cordovasim"]="aerogear"
-      ["foundation"]="base"
-      ["fusetools"]="fuse"
-      ["integration-tests"]="integration-tests.aggregate"
-      ["jsf"]="javaee"
-      ["maven"]="central"
-      ["project-examples"]="central"
-      ["qa"]="versionwatch"
-      ["seam2"]="javaee"
-      ["updatesite"]="build-sites"
-      ["usage"]="base"
-      ["visual-page-editor-core"]="vpe"
-    )
-
     # load list of projects from component::project mapping, adding only if unique
     for c in $components; do
       m=${projectMap[$c]}
@@ -233,7 +235,7 @@ fi
 
 jobsToCheck=""
 checkProjects () {
-  jenkins_prefix1="https://dev-platform-jenkins-rhel7.rhev-ci-vms.eng.rdu2.redhat.com/job/"
+  jenkins_prefix1="https://fusesource-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/"
   jenkins_prefix2="https://dev-platform-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/"
   PROJECTS="$1" # ${JBTPROJECTS} or ${JBDSPROJECTS}
   g_project_prefix="$2" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
@@ -280,14 +282,23 @@ checkProjects () {
     rm -f ${tmp}
 
     # new for JBDS 9 (used to pull logs/GIT_REVISION.txt) - use buildinfo.json
+    if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [1] ${staging_url}${jobname_prefix}${j}_${stream}/latest/all/repo/buildinfo.json"; fi
     jenkinshash=`wget -q --no-check-certificate ${staging_url}${jobname_prefix}${j}_${stream}/latest/all/repo/buildinfo.json -O - | \
       grep HEAD | grep -v currentBranch | head -1 | sed -e "s/.\+\"HEAD\" : \"\(.\+\)\",/\1/"`
-    if [[ ! ${jenkinshash} ]]; then # try alternate URL
+    if [[ ! ${jenkinshash} ]]; then # try alternate URL - .aggregate
+      if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [2] ${staging_url}${jobname_prefix}${j}.aggregate_${stream}/latest/all/repo/buildinfo.json"; fi
       jenkinshash=`wget -q --no-check-certificate ${staging_url}${jobname_prefix}${j}.aggregate_${stream}/latest/all/repo/buildinfo.json -O - | \
         grep HEAD | grep -v currentBranch | head -1 | sed -e "s/.\+\"HEAD\" : \"\(.\+\)\",/\1/"`
     fi
-    if [[ ! ${jenkinshash} ]]; then # try alternate URL
+    if [[ ! ${jenkinshash} ]]; then # try alternate URL - .central
+      if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [3] ${staging_url}${jobname_prefix}${j}.central_${stream}/latest/all/repo/buildinfo.json"; fi
       jenkinshash=`wget -q --no-check-certificate ${staging_url}${jobname_prefix}${j}.central_${stream}/latest/all/repo/buildinfo.json -O - | \
+        grep HEAD | grep -v currentBranch | head -1 | sed -e "s/.\+\"HEAD\" : \"\(.\+\)\",/\1/"`
+    fi
+    if [[ ! ${jenkinshash} ]]; then # try alternate URL - projectMap mapping
+      j2=${projectMap[$j]}
+      if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [4] ${staging_url}${jobname_prefix}${j2}_${stream}/latest/all/repo/buildinfo.json"; fi
+      jenkinshash=`wget -q --no-check-certificate ${staging_url}${jobname_prefix}${j2}_${stream}/latest/all/repo/buildinfo.json -O - | \
         grep HEAD | grep -v currentBranch | head -1 | sed -e "s/.\+\"HEAD\" : \"\(.\+\)\",/\1/"`
     fi
     for jenkins_prefix in $jenkins_prefix1 $jenkins_prefix2 ; do
@@ -315,11 +326,11 @@ checkProjects () {
       echo " >> ${jenkins_prefix}${jobname_prefix}${j}_${stream}/lastBuild/git/"
       echo " >> https://github.com/${g_project_prefix}${j}/commits/${branch}"
     elif [[ ${githash%% *} == ${jenkinshash%% *} ]]; then # match
-    	echo "PASS: ${jenkinshash}"
+        echo "PASS: ${jenkinshash}"
     else
-    	echo "FAIL:" | grep FAIL
-    	echo "      Jenkins: $jenkinshash"
-    	echo "      Github:  $githash"
+        echo "FAIL:" | grep FAIL
+        echo "      Jenkins: $jenkinshash"
+        echo "      Github:  $githash"
       # because the SHAs don't match, prompt user to enable the job so it can run
       # echo "      ... enable job ${jobname_prefix}${j}_${stream} ..."
       if [[ ${branch} == "master" ]]; then view=DevStudio_Master; else view=DevStudio_${jbdsstream}; fi
