@@ -22,8 +22,8 @@ usage ()
     echo "               -p1 openshift -p2 build-sites -p3 product"
     echo ""
     echo "Example 4: $0 -updateRootPom -createBranch -b jbosstools-4.4.4.x -b2 jbosstools-4.4.x -pv 4.4.4.Final-SNAPSHOT \\"
-    echo "              -w1 /tmp/jbosstools.github -p1 \"aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge fuse::fusetools hibernate \\" # freemarker
-    echo "               javaee::jsf jst livereload openshift server vpe::visual-page-editor-core webservices integration-tests\" \\"
+    echo "              -w1 /tmp/jbosstools.github -p1 \"aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge fuse::fusetools fuse-extras::fusetools-extras \\" # freemarker
+    echo "               hibernate javaee::jsf jst livereload openshift server vpe::visual-page-editor-core webservices integration-tests\" \\"
     echo "              -p2 \"build build-sites::updatesite discovery::central-update devdoc download.jboss.org maven-plugins:build versionwatch\" \\"
     echo "              -p3 \"artwork ci::build devdoc product::installer qa website\" -q"
     echo ""
@@ -57,8 +57,8 @@ TARGET_PLATFORM_VERSION_MAX=4.63.0.Final
 JIRA_HOST="https://issues.stage.jboss.org" # or https://issues.jboss.org
 WORKSPACE1=/tmp
 # JBIDE-24484 remove freemarker
-PROJECTS1="" # or "aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge fusetools hibernate  \
-                # javaee::jsf jst livereload openshift server vpe::visual-page-editor-core webservices integration-tests"
+PROJECTS1="" # or "aerogear::aerogear-hybrid arquillian base::foundation browsersim central forge fuse::fusetools fuse-extras::fusetools-extras \
+                # hibernate javaee::jsf jst livereload openshift server vpe::visual-page-editor-core webservices integration-tests"
 PROJECTS2="" # or "build build-sites::updatesite discovery::central-update devdoc download.jboss.org maven-plugins:build versionwatch"
 PROJECTS3="" # or "artwork ci::build devdoc product::installer qa website
 hadError=0

@@ -106,6 +106,7 @@ declare -A projectMap=(
   ["cordovasim"]="aerogear"
   ["foundation"]="base"
   ["fusetools"]="fuse"
+  ["fusetools-extras"]="fuse-extras"
   ["integration-tests"]="integration-tests.aggregate"
   ["jsf"]="javaee"
   ["maven"]="central"
