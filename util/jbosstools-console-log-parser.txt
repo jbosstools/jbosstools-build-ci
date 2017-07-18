@@ -2,9 +2,11 @@
 # for more info see https://plugins.jenkins.io/log-parser
 # if a line matches multiple times, the FIRST match will apply
 
-# warnings/info we can ignore
-info /ignoring option .*PermSize/
-info /No baseline version/
+# warnings/errors to ignore
+ok /ignoring option .*PermSize/
+ok /No baseline version/
+ok /Could not transfer metadata org.jboss.tools:parent/
+ok /Failure to transfer org.jboss.tools:parent/
 
 # quick access links to these console log lines
 info /tycho.testArgLine/
