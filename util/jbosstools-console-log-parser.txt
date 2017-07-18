@@ -14,6 +14,7 @@ start /\[INFO\] Building /
 start /tycho-surefire-plugin:.+:test \(.+test\).+/
 start /T E S T S/
 start /Reactor Summary/
+start /checkLatestPublishedSHA.sh/ 
 
 # quick access links to these console log lines
 info /tycho\.testArgLine/
