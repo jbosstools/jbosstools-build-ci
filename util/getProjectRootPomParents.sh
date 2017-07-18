@@ -13,7 +13,7 @@ usage ()
     echo "Usage:     $0 -b GITHUBBRANCH -pv PARENTVERSION [-skipupdate] -w1 [/path/to/jbosstools-projects/parent-folder] -w2 [/path/to/jbdevstudio-projects/parent-folder]"
     echo ""
     echo "Example 1: $0 -b jbosstools-4.4.2.x -pv 4.4.2.Final-SNAPSHOT -w1 /home/nboldt/44x -w2 /home/nboldt/44xx \\"
-    echo "              -p1 \"aerogear arquillian base browsersim central discovery forge fuse\\" # freemarker
+    echo "              -p1 \"aerogear arquillian base browsersim central discovery forge fuse::fusetools fuse-extras::fusetools-extras \\" # freemarker
     echo "              hibernate javaee jst livereload openshift server vpe webservices\""
     echo ""
     echo "Example 2: $0 -pv 4.4.2.Final-SNAPSHOT -skipupdate -w1 /home/nboldt/tru -w2 /home/nboldt/truu -p2 build-sites -p3 product -noCreateTaskJIRAs"
