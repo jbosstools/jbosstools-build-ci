@@ -8,8 +8,15 @@ ok /No baseline version/
 ok /Could not transfer metadata org.jboss.tools:parent/
 ok /Failure to transfer org.jboss.tools:parent/
 
+# section starts: these are used to group errors and warnings found after the line; also creates a quick access link.
+start /Reactor Build Order/
+start /\[INFO\] Building /
+start /tycho-surefire-plugin:.+:test \(.+test\).+/
+start /T E S T S/
+start /Reactor Summary/
+
 # quick access links to these console log lines
-info /tycho.testArgLine/
+info /tycho\.testArgLine/
 info /\[INFO\] All tests passed/
 info /Tests run:.+/
 info /BUILD SUCCESS/
@@ -20,9 +27,10 @@ warning /.+\[WARNING\].+/
 warning /[Ww]arning/
 warning /WARNING/
 warning /Connection refused/
+warning /Skipped: [123456789]/
 
 # errors
-error / [ERROR] /
+error / \[ERROR\] /
 error /BUILD FAILED/
 error /Cannot complete the install/
 error /conflicting dependency/
@@ -30,9 +38,3 @@ error /exec returned: 13/
 # match line starting with 'error ', case-insensitive
 error /(?i)^error /
 
-# section starts: these are used to group errors and warnings found after the line; also creates a quick access link.
-start /Reactor Build Order/
-start /\[INFO\] Building /
-start /tycho-surefire-plugin:.+:test \(.+test\).+/
-start /T E S T S/
-start /Reactor Summary/
