@@ -1,0 +1,25 @@
+# this file is a parser rule config file for use with the Jenkins plugin log-parser
+# for more info see https://plugins.jenkins.io/log-parser
+
+# 1. match line starting with 'error ', case-insensitive
+error /(?i)^error /
+# 2. other error regexs
+error /BUILD FAILED/
+error /Cannot complete the install/
+error /conflicting dependency/
+error /exec returned: 13/
+
+# 3. warnings
+warning /[Ww]arning/
+warning /WARNING/
+warning /.+\[WARNING\].+/
+warning /Connection refused/
+
+# quick access links to these console log lines
+info /\[INFO\] All tests passed/
+
+# lines that represent the start of a section for grouping errors and warnings found after the line; also creates a quick access link.
+start /BUILD|Building /
+start /tycho-surefire-plugin:.+:test \(default-test\).+/
+start /T E S T S/
+start /Tests run:.+/

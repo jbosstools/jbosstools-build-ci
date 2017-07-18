@@ -142,6 +142,11 @@
 									<type>sh</type>
 									<classifier>jbosstools-cleanup</classifier>
 								</artifact>
+								<artifact>
+									<file>util/jbosstools-console-log-parser.txt</file>
+									<type>txt</type>
+									<classifier>jbosstools-console-log-parser</classifier>
+								</artifact>
 							</artifacts>
 						</configuration>
 					</execution>
