@@ -14,12 +14,18 @@ warning /[Ww]arning/
 warning /WARNING/
 warning /.+\[WARNING\].+/
 warning /Connection refused/
+warning /No baseline version/
 
 # quick access links to these console log lines
+info /tycho.testArgLine/
 info /\[INFO\] All tests passed/
+info /Tests run:.+/
+info /BUILD SUCCESS/
+info /Total time/
 
 # lines that represent the start of a section for grouping errors and warnings found after the line; also creates a quick access link.
-start /BUILD|Building /
-start /tycho-surefire-plugin:.+:test \(default-test\).+/
+start /Reactor Build Order/
+start /\[INFO\] Building /
+start /tycho-surefire-plugin:.+:test \(.+test\).+/
 start /T E S T S/
-start /Tests run:.+/
+start /Reactor Summary/
