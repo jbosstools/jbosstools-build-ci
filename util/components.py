@@ -1,3 +1,5 @@
+debug = 'debug' in globals()
+
 ## map from descriptive name to list of JBIDE and/or JBDS components in JIRA.
 JIRA_components = {
     "Aerogear          ": { "aerogear-hybrid", "cordovasim" },
@@ -71,7 +73,31 @@ NN_components = {
     "Webservices / Rest": { "webservices"}
     }
 
-def checkFixVersionsExist (jbide_fixversion, jbds_fixversion, jiraserver, username, password):
+# def checkSprintExists (sprint_name, jiraserver, jirauser, jirapwd):
+#     import requests, re, urllib
+#     from requests.auth import HTTPBasicAuth
+
+#     # should never happen
+#     if sprint_name is None:
+#         print "\n[ERROR] Sprint " + sprint_name + " can not be None\n"
+#         return False
+
+#     testSprintExistsQuery = 'sprint = "' + sprint_name + '"'
+#     # print "\n" + 'Search for sprint ' + sprint_name + ":\n * " + jiraserver + \
+#     #    '/issues/?jql=' + urllib.quote_plus(testSprintExistsQuery) + "\n" + \
+#     #    " * https://issues.stage.jboss.org/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?tempMax=1000&jqlQuery=" + \
+#     #   urllib.quote_plus(testSprintExistsQuery)
+#     q = requests.get(jiraserver + '/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?tempMax=1000&jqlQuery=' + \
+#         urllib.quote_plus(testSprintExistsQuery), \
+#         auth=HTTPBasicAuth(jirauser, jirapwd), verify=False)
+#     # print q.text
+#     if re.search("Sprint with name '" + sprint_name + "' does not exist or you do not have permission to view it", q.text):
+#         print "\n[ERROR] Sprint with name '" + sprint_name + "' does not exist or you do not have permission to view it, on " + jiraserver + "\n"
+#         return None
+#     else:
+#         return getSprintId(sprint_name)
+
+def checkFixVersionsExist (jbide_fixversion, jbds_fixversion, jiraserver, jirauser, jirapwd):
     import requests, re, urllib
     from requests.auth import HTTPBasicAuth
 
@@ -91,7 +117,7 @@ def checkFixVersionsExist (jbide_fixversion, jbds_fixversion, jiraserver, userna
     #   urllib.quote_plus(testFixVersionExistsSearchquery)
     q = requests.get(jiraserver + '/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?tempMax=1000&jqlQuery=' + \
         urllib.quote_plus(testFixVersionsExistQuery), \
-        auth=HTTPBasicAuth(username, password), verify=False)
+        auth=HTTPBasicAuth(jirauser, jirapwd), verify=False)
     # check for string: The value '4.4.7.foo' does not exist for the field 'fixVersion'
     if re.search("The value '" + jbide_fixversion + "' does not exist for the field 'fixVersion'", q.text):
        print "\n[ERROR] JBIDE fixversion " + jbide_fixversion + " does not exist on " + jiraserver + "\n"
@@ -121,3 +147,62 @@ def queryComponentLead (componentList, componentID, nameOrDisplayName):
 # jira = JIRA(options={'server':jiraserver}, basic_auth=(options.usernameJIRA, options.passwordJIRA))
 # print queryComponentLead(jira.project_components(jira.project('JBIDE')), 'build', 0)
 # print queryComponentLead(jira.project_components(jira.project('JBIDE')), 'build', 1)
+
+# result here is pretty-printed XML
+def prettyXML(xml):
+    uglyXml = xml.toprettyxml(indent='  ')
+    text_re = re.compile('>\n\s+([^<>\s].*?)\n\s+</', re.DOTALL)    
+    out = text_re.sub('>\g<1></', uglyXml)
+    return out
+
+def findChildNodeByName(parent, name):
+    for node in parent.childNodes:
+        if node.nodeType == node.ELEMENT_NODE and node.localName == name:
+            return node
+    return None
+
+def getText(nodelist):
+    rc = []
+    for node in nodelist:
+        if node.nodeType == node.TEXT_NODE:
+            rc.append(node.data)
+    return ''.join(rc)
+
+def getSprintId(sprint, jiraserver, jirauser, jirapwd):
+    import sys
+    
+    customfieldvalues = doQuery('sprint ="' + sprint + '"', 'customfield', jiraserver, jirauser, jirapwd, 1)
+    if customfieldvalues != None:
+        for s in customfieldvalues :
+            if getText(findChildNodeByName(s, 'customfieldname').childNodes) == "Sprint":
+                sprintId = findChildNodeByName(findChildNodeByName(s, 'customfieldvalues'), 'customfieldvalue').attributes["id"].value
+                if debug: print "[DEBUG] Found sprintId = " + sprintId
+                return sprintId
+    sys.exit("[ERROR] Sprint '" + sprint + "' does not yet exist. Go bug " + defaultAssignee() + " to get it created.")
+    return None
+
+def getIssuesFromQuery(query, jiraserver, jirauser, jirapwd):
+    return doQuery(query, 'item', jiraserver, jirauser, jirapwd, 1000)
+
+def doQuery(query, field, jiraserver, jirauser, jirapwd, limit):
+    # debug = True
+    import requests, re, urllib
+    from requests.auth import HTTPBasicAuth
+    from xml.dom import minidom
+    queryURL = jiraserver + '/issues/?jql=' + urllib.quote_plus(query)
+    payloadURL = jiraserver + '/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?tempMax='+str(limit)+'&jqlQuery=' + \
+        urllib.quote_plus(query)
+    if debug:
+        print "[DEBUG] " + query
+        print "[DEBUG] " + queryURL
+        print "[DEBUG] " + payloadURL
+    q = requests.get(payloadURL, auth=HTTPBasicAuth(jirauser, jirapwd), verify=False)
+    # print q.text
+    if re.search("does not exist", q.text):
+        return None
+    xml = minidom.parseString(q.text)
+    issuelist = xml.getElementsByTagName(field)
+    numExistingIssues = len(issuelist)
+    if numExistingIssues > 0 : 
+        if debug: print "[DEBUG] Found " + str(numExistingIssues) + " nodes(s) to process"
+    return issuelist
