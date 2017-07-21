@@ -16,6 +16,14 @@ import components
 # 
 # ref: http://stackoverflow.com/questions/12609402/init-got-an-unexpected-keyword-argument-mime-in-python-django
 
+# Example usage:
+# 
+# python -W ignore ./checkUnresolvedIssues.py \
+#  --jira https://issues.stage.jboss.org --jirauser USER --jirapwd PWD \
+#  --jbt 4.5.0.AM2 --jbt_NEXT 4.5.0.Final \
+#  --ds 11.0.0.AM2 --ds_NEXT 11.0.0.GA \
+#  --sprint "devex #134 Jun 2017" --sprint_NEXT "devex #135 July 2017"
+
 usage = "Usage: python -W ignore %prog \\ \n\
   --jbt      <version_jbt>      --ds      <version_ds>      --sprint      <sprint> \\ \n\
   --jbt_NEXT <version_jbt_NEXT> --ds_NEXT <version_ds_NEXT> --sprint_NEXT <sprint_NEXT> \\ \n\
@@ -150,6 +158,3 @@ query = 'resolution = null AND \
 	sprint not IN ("' + sprint_NEXT + '")'
 updateIssues(components.getIssuesFromQuery(query, jiraserver, jirauser, jirapwd), False, \
 	"issues to fixversion = .x")
-
-
-# Sample usage: see checkUnresolvedIssues.py.examples.txt
