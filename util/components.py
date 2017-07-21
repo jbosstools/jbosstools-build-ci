@@ -171,7 +171,8 @@ def getText(nodelist):
 def getSprintId(sprint, jiraserver, jirauser, jirapwd):
     import sys
     
-    customfieldvalues = doQuery('sprint ="' + sprint + '"', 'customfield', jiraserver, jirauser, jirapwd, 1)
+    customfieldvalues = doQuery('sprint ="' + sprint + '"', 'customfield', jiraserver, jirauser, jirapwd, 1, 
+        "Sprint with name '" + sprint + "' does not exist or you do not have permission to view it")
     if customfieldvalues != None:
         for s in customfieldvalues :
             if getText(findChildNodeByName(s, 'customfieldname').childNodes) == "Sprint":
@@ -184,7 +185,7 @@ def getSprintId(sprint, jiraserver, jirauser, jirapwd):
 def getIssuesFromQuery(query, jiraserver, jirauser, jirapwd):
     return doQuery(query, 'item', jiraserver, jirauser, jirapwd, 1000)
 
-def doQuery(query, field, jiraserver, jirauser, jirapwd, limit):
+def doQuery(query, field, jiraserver, jirauser, jirapwd, limit, failcheck = None):
     # debug = True
     import requests, re, urllib
     from requests.auth import HTTPBasicAuth
@@ -198,8 +199,9 @@ def doQuery(query, field, jiraserver, jirauser, jirapwd, limit):
         print "[DEBUG] " + payloadURL
     q = requests.get(payloadURL, auth=HTTPBasicAuth(jirauser, jirapwd), verify=False)
     # print q.text
-    if re.search("does not exist", q.text):
-        return None
+    if failcheck != None:
+        if re.search(failcheck, q.text):
+            return None
     xml = minidom.parseString(q.text)
     issuelist = xml.getElementsByTagName(field)
     numExistingIssues = len(issuelist)

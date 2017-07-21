@@ -135,26 +135,29 @@ def updateIssues(issuelist, NEXTorDOTX, description):
 				if NEXTorDOTX:
 					# move issue to new sprint
 					jira.add_issues_to_sprint(sprintId_NEXT, [key])
+					jira.add_comment(key, "[checkUnresolvedIssues.py] Slip to fixversion = " + fixversion_NEXT + " and sprint " + sprintId_NEXT)
+				else:
+					jira.add_comment(key, "[checkUnresolvedIssues.py] Slip to fixversion = " + fixversion_NEXT)
 
-print "[INFO] [1] Check " + sprint + " + " + sprint_NEXT + ", JBIDE " + version_jbt + " + JBDS " + version_ds + \
+print "\n[INFO] [1] Check " + sprint + " + " + sprint_NEXT + ", JBIDE " + version_jbt + " + JBDS " + version_ds + \
 	", for unresolved blockers/criticals + issues in NEXT sprint: " + \
-	"move to NEXT sprint/milestone"
+	"move to NEXT sprint/milestone\n"
 query = 'resolution = null AND ( \
 	( \
 	( (project = JBIDE AND fixVersion = "' + version_jbt + '") OR (project = JBDS AND fixVersion = "' + version_ds + '") ) \
 	AND \
-	sprint ="' + sprint_NEXT + '") OR \
-	(sprint="' + sprint + '" AND priority in (blocker,critical)) \
+	sprint = "' + sprint_NEXT + '") OR \
+	(sprint = "' + sprint + '" AND priority in (blocker,critical)) \
 	)'
 updateIssues(components.getIssuesFromQuery(query, jiraserver, jirauser, jirapwd), True, \
 	"issues to fixversion = " + version_jbt_NEXT + "/" + version_ds_NEXT + " and sprint = " + sprint_NEXT + " (" + sprintId_NEXT + ")")
 
 # TODO should these be removed from the current sprint?
-print "[INFO] [2] Check JBIDE " + version_jbt + " + JBDS " + version_ds + \
+print "\n[INFO] [2] Check JBIDE " + version_jbt + " + JBDS " + version_ds + \
 	", for unresolved issues NOT in the next sprint: " + \
-	"move to .x"
+	"move to .x\n"
 query = 'resolution = null AND \
 	((project = JBIDE AND fixVersion = "' + version_jbt + '") OR (project = JBDS AND fixVersion = "' + version_ds + '")) AND \
-	sprint not IN ("' + sprint_NEXT + '")'
+	(sprint is null OR sprint != "' + sprint_NEXT + '")'
 updateIssues(components.getIssuesFromQuery(query, jiraserver, jirauser, jirapwd), False, \
 	"issues to fixversion = .x")
