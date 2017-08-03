@@ -16,7 +16,10 @@ usage ()
   echo ""
 
   echo "To compare the generated json file to its published snapshot location:"
-  echo "Usage  : $0 -s \${WORKSPACE}/sources/site/target/repository -t http://download.jboss.org/jbosstools/neon/snapshots/builds/\${JOB_NAME}/latest/all/repo"
+  echo "Usage 1: $0 -s \${WORKSPACE}/sources/site/target/repository -t http://download.jboss.org/jbosstools/neon/snapshots/builds/\${JOB_NAME}/latest/all/repo"
+
+  echo "To compare the workspace's .git/HEAD against published snapshot location:"
+  echo "Usage 2: $0 -s \${WORKSPACE}/sources -t http://download.jboss.org/jbosstools/neon/snapshots/builds/\${JOB_NAME}/latest/all/repo"
 
   echo ""
   echo "If SHAs match, return FALSE."
@@ -37,8 +40,21 @@ while [[ "$#" -gt 0 ]]; do
   shift 1
 done
 
+# SHA from local build; compare to SHA1 from remote
+SHA2=""
+
 # if paths don't already include /buildinfo.json, add it on at the end
-if [[ ${SOURCE_PATH%/buildinfo.json} == ${SOURCE_PATH} ]]; then SOURCE_PATH=${SOURCE_PATH}/buildinfo.json; fi
+if [[ -f ${SOURCE_PATH}/buildinfo.json ]]; then 
+  if [[ ${SOURCE_PATH%/buildinfo.json} == ${SOURCE_PATH} ]]; then SOURCE_PATH=${SOURCE_PATH}/buildinfo.json; fi
+else
+  # or check for a check ${WORKSPACE}/sources/.git/HEAD to get latest SHA
+  for d in ${SOURCE_PATH} ${WORKSPACE}/sources ${WORKSPACE}; do
+    if [[ ! ${SHA2} ]] && [[ -f ${d}/.git/HEAD ]]; then
+      SHA2=$(cat ${d}/.git/HEAD)
+    fi
+  done
+fi
+
 if [[ ${TARGET_PATH%/buildinfo.json} == ${TARGET_PATH} ]]; then TARGET_PATH=${TARGET_PATH}/buildinfo.json; fi
 
 wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate"
@@ -86,7 +102,9 @@ fi
 
 # get SHAs from the buildinfo.json files
 SHA1=""; getSHA "${json}";        if [[ ${getSHAReturn} ]]; then SHA1="${getSHAReturn}"; fi
-SHA2=""; getSHA "${SOURCE_PATH}"; if [[ ${getSHAReturn} ]]; then SHA2="${getSHAReturn}"; fi
+if [[ ! ${SHA2} ]]; then 
+  getSHA "${SOURCE_PATH}"; if [[ ${getSHAReturn} ]]; then SHA2="${getSHAReturn}"; fi
+fi
 
 if [[ ${compareAllSHAs} == 1 ]]; then # compare multiple SHAs, but filter out the lines that are the same so we're only comparing the differences
   for SH in $SHA1; do echo $SH >> $tmpdir/SHA1; done
