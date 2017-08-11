@@ -20,13 +20,14 @@ echo "" | tee -a $log
 # or call it from within promote.sh using
 # 	`jbosstools-cleanup.sh --dirs-to-scan "updates/${BUILD_TYPE}/${TARGET_PLATFORM}/${PARENT_FOLDER}" --regen-metadata-only`
 
-#defauls
+#defaults
+debug=0
 numbuildstokeep=1000 # keep X builds per branch
 numbuildstolink=1000 # link X builds total
 threshholdwhendelete=365 # purge builds more than X days old
 # for JBDS, use --dirs-to-scan "10.0/snapshots/builds 9.0/snapshots/builds" -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio
 dirsToScan="oxygen/snapshots/builds neon/snapshots/builds"
-excludes="sftp>|((\.properties|\.jar|\.zip|\.MD5|\.md5)$)|(^(*.*ml|\.blobstore|web|plugins|features|binary|empty_composite_site|latest)$)" # when dir matching, exclude *.*ml, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
+excludes="sftp>|((\.properties|\.jar|\.zip|\.MD5|\.md5|\.sha256)$)|(^(*.*ml|\.blobstore|web|plugins|features|binary|empty_composite_site|latest)$)" # when dir matching, exclude *.*ml, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
 includes=""; # regex pattern to match within subdirs to make cleanup faster + more restrictive; eg., jbosstools-build-sites.aggregate.earlyaccess-site_master
 delete=1 # if 1, files will be deleted. if 0, files will be listed for delete but not actually removed
 checkTimeStamps=1 # if 1, check for timestamped folders, eg., 2012-09-30_04-01-36-H5622 and deduce the age from name. if 0, skip name-to-age parsing and delete nothing
@@ -59,6 +60,7 @@ while [[ "$#" -gt 0 ]]; do
 		'-R'|'--no-regen-metadata') doRegenMetadata=0; regenMetadataOnly=0; shift 0;;
 		'-N'|'--no-subdirs') noSubDirs=1; shift 0;;
 		'-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., devstudio@filemgmt.jboss.org:/www_htdocs/devstudio
+		'-X') debug=1; shift 0;;
 	esac
 	shift 1
 done
@@ -93,17 +95,17 @@ getSubDirs ()
 		i=0
 		for c in $dirs; do #exclude *.*ml, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
 			# old way... if [[ $i -gt 2 ]] && [[ $c != "sftp>" ]] && [[ ${c##*.} != "" ]] && [[ ${c##*/*.*ml} != "" ]] && [[ ${c##*/*.properties} != "" ]] && [[ ${c##*/*.jar} != "" ]] && [[ ${c##*/*.zip} != "" ]] && [[ ${c##*/*.MD5} != "" ]] && [[ ${c##*/*.md5} != "" ]] && [[ ${c##*/web} != "" ]] && [[ ${c##*/plugins} != "" ]] && [[ ${c##*/features} != "" ]] && [[ ${c##*/binary} != "" ]] && [[ ${c##*/.blobstore} != "" ]]; then
-			#echo -n "$c ..."
+			if [[ $debug -gt 0 ]]; then echo -n "$c ..."; fi
 			if [[ $i -gt 2 ]] && [[ ${c##*.} != "" ]] && [[ ! $(echo "$c" | egrep "${excludes}") ]]; then
 				# if no include pattern set, or pattern matches, include this folder.
-				#echo -n "not excluded ..."
+				if [[ $debug -gt 0 ]]; then echo -n "not excluded ..."; fi
 				if [[ ! $includePattern ]] || [[ $(echo "$c" | egrep "$includePattern")	]]; then 
-					#echo -n "is included ..."
+					if [[ $debug -gt 0 ]]; then echo -n "is included ..."; fi
 					getSubDirsReturn=$getSubDirsReturn" "$c
 				fi
 			fi
 			(( i++ ))
-			#echo ""
+			if [[ $debug -gt 0 ]]; then echo ""; fi
 		done
 		rm -f $tmp
 	fi
