@@ -27,7 +27,7 @@ numbuildstolink=1000 # link X builds total
 threshholdwhendelete=365 # purge builds more than X days old
 # for JBDS, use --dirs-to-scan "10.0/snapshots/builds 9.0/snapshots/builds" -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio
 dirsToScan="oxygen/snapshots/builds neon/snapshots/builds"
-excludes="sftp>|((\.properties|\.jar|\.zip|\.MD5|\.md5|\.sha256)$)|(^(*.*ml|\.blobstore|web|plugins|features|binary|empty_composite_site|latest)$)" # when dir matching, exclude *.*ml, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
+excludes="sftp>|((\.properties|\.jar|\.zip|\.MD5|\.md5|\.sha256|p2.index)$)|(^(*.*ml|\.blobstore|web|plugins|features|binary|empty_composite_site|latest)$)" # when dir matching, exclude *.*ml, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
 includes=""; # regex pattern to match within subdirs to make cleanup faster + more restrictive; eg., jbosstools-build-sites.aggregate.earlyaccess-site_master
 delete=1 # if 1, files will be deleted. if 0, files will be listed for delete but not actually removed
 checkTimeStamps=1 # if 1, check for timestamped folders, eg., 2012-09-30_04-01-36-H5622 and deduce the age from name. if 0, skip name-to-age parsing and delete nothing
