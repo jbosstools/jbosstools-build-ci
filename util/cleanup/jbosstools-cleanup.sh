@@ -55,6 +55,7 @@ while [[ "$#" -gt 0 ]]; do
 		'-a'|'--age-to-delete') threshholdwhendelete="$2"; shift 1;;
 		'-d'|'--dirs-to-scan') dirsToScan="$2"; shift 1;;
 		'-i'|'--include') includes="$2"; shift 1;;
+		'-e'|'--exclude') excludes="${excludes}|$2"; shift 1;;
 		'-S'|'--childFolderSuffix') childFolderSuffix="$2"; shift 1;;
 		'-M'|'--regen-metadata-only') delete=0; checkTimeStamps=0; doRegenMetadata=1; regenMetadataOnly=1; shift 0;;
 		'-R'|'--no-regen-metadata') doRegenMetadata=0; regenMetadataOnly=0; shift 0;;
@@ -191,9 +192,6 @@ clean ()
 			fi
 
 			# generate metadata in the nightly/core/trunk/ folder to composite the remaining sites into one
-			getSubDirs $sd 1; #return #getSubDirsReturn
-			subsubdirs=$getSubDirsReturn
-			#echo $subsubdirs
 			tmp=`mktemp`
 			subdirCount=0;
 			for ssd in $subsubdirs; do
