@@ -200,9 +200,9 @@ if [[ ${versionWithRespin_ds} ]]; then
   version_ds=$(echo ${versionWithRespin_ds} | sed -e '/[abcdwxyz]$/ s/\(^.*\)\(.$\)/\1/')
 
   # check installer build folder [INTERNAL]
-  versionWithRespin_ds_latest_INT=${versionWithRespin_ds_latest} # normally this is a .latest filename
+  versionWithRespin_ds_latest_actual=${versionWithRespin_ds_latest} # normally this is a .latest filename
   if [[ ${qual} == "stable" ]]; then 
-    versionWithRespin_ds_latest_INT=${versionWithRespin_ds} # but for stable, look for .GA
+    versionWithRespin_ds_latest_actual=${versionWithRespin_ds} # but for stable, look for .GA
   fi
 
   # discovery sites
@@ -249,8 +249,8 @@ if [[ ${versionWithRespin_ds} ]]; then
     # zips: only if /stable/ or /staging/
     # if [[ ${qual} != "development" ]]; then
     #   for u in http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
-    #     for f in devstudio-${versionWithRespin_ds_latest_INT}-installer-standalone.jar \
-    #       devstudio-${versionWithRespin_ds_latest_INT}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest_INT}-updatesite-core.zip; do
+    #     for f in devstudio-${versionWithRespin_ds_latest_actual}-installer-standalone.jar \
+    #       devstudio-${versionWithRespin_ds_latest_actual}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest_actual}-updatesite-core.zip; do
     #       for ff in $f ${f}.sha256; do
     #         a=${u}/${ff}
     #         logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
@@ -269,10 +269,17 @@ if [[ ${versionWithRespin_ds} ]]; then
 
     # installer build folder [EXTERNAL]
     for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
-      for f in devstudio-${versionWithRespin_ds_latest}-installer-standalone.jar \
-        devstudio-${versionWithRespin_ds_latest}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest}-updatesite-core.zip; do
+      for f in devstudio-${versionWithRespin_ds_latest_actual}-installer-standalone.jar \
+        devstudio-${versionWithRespin_ds_latest_actual}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest_actual}-updatesite-core.zip; do
         for ff in $f ${f}.sha256; do
-          logn "${u}/${ff} : "; stat=$(curl -I -s ${u}/${ff} | egrep "404 Not Found")
+            a=${u}/${ff}
+            logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
+            if [[ $stat ]]; then # try backup URL (.latest or .GA)
+              #logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"
+              log ""
+              a=${u}/${ff/.latest/.GA}
+              logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
+            fi
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${ff} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
         done
       done
