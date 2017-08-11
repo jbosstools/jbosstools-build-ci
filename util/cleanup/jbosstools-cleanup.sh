@@ -25,7 +25,7 @@ numbuildstokeep=1000 # keep X builds per branch
 numbuildstolink=1000 # link X builds total
 threshholdwhendelete=365 # purge builds more than X days old
 # for JBDS, use --dirs-to-scan "10.0/snapshots/builds 9.0/snapshots/builds" -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio
-dirsToScan="neon/snapshots/builds mars/snapshots/builds builds/staging/CI builds/nightly/core builds/nightly/coretests builds/nightly/soa-tooling builds/nightly/soatests builds/nightly/webtools builds/nightly/hibernatetools builds/nightly/integrationtests"
+dirsToScan="oxygen/snapshots/builds neon/snapshots/builds"
 excludes="sftp>|((\.properties|\.jar|\.zip|\.MD5|\.md5)$)|(^(*.*ml|\.blobstore|web|plugins|features|binary|empty_composite_site|latest)$)" # when dir matching, exclude *.*ml, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
 includes=""; # regex pattern to match within subdirs to make cleanup faster + more restrictive; eg., jbosstools-build-sites.aggregate.earlyaccess-site_master
 delete=1 # if 1, files will be deleted. if 0, files will be listed for delete but not actually removed
