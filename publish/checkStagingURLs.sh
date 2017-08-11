@@ -58,6 +58,24 @@ while [[ "$#" -gt 0 ]]; do
   shift 1
 done
 
+tmpdir=`mktemp -d`
+mkdir -p $tmpdir
+
+checkCompositeXML ()
+{
+    url=$1
+    # echo "Check children of $url ..."
+    # parse the file for <child location="" URLs>
+    urls=$(wget -q --no-check-certificate ${url} -O - | grep "<child location" | sed -e "s#.*location=.\(.\+\).\/>.*#\1#")
+    for a in ${urls}; do
+        if [[ ${a} != "http"* ]]; then # relative path
+            a=${url%/composite*xml}/${a}
+        fi
+        logn " > ${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
+        if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
+    done
+}
+
 norm="\033[0;39m"
 green="\033[1;32m"
 yellow='\e[0;30m\e[1;43m' # yellow reversed
@@ -85,30 +103,38 @@ if [[ ${versionWithRespin_jbt} ]]; then
           if [[ ${f} == "discovery.central" ]] && [[ ${ff/earlyaccess.properties/} != ${ff} ]]; then continue; fi # skip check for central + earlyaccess.properties
           if [[ ${u/builds/} != ${u} ]]; then
             if [[ ${qual} == "snapshots" ]]; then
-              a=${u}/jbosstools-${f}_${versionWithRespin_jbt}/latest/all/repo/${ff} # builds
+              b=${u}/jbosstools-${f}_${versionWithRespin_jbt}/latest/all/repo/${ff} # builds
             else
-              a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/repo/${ff} # builds
+              b=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/repo/${ff} # builds
             fi
           else
-            a=${u}/${f}/${versionWithRespin_jbt}/${ff} # updates
+            b="${u}/${f}/${versionWithRespin_jbt}/${ff} ${u}/${f}/${ff}" # updates
           fi
-          logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
-          if [[ ${ff} == "plugins/" ]]; then
-            jars=$(curl -s ${a} | grep ".jar" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
-            # check jar 404s
-            for j in ${jars}; do
-              logn " + ${j} : "; stat=$(curl -I -s ${a}${j} | egrep "404 Not Found")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
-            done
-          elif [[ ${ff/directory.xml} != ${ff} ]]; then
-            jars=$(curl -s ${a} | grep "url" | sed -e "s#.\+url=\"\([^\"]\+\)\".\+#\1#")
-            # check jar 404s
-            for j in ${jars}; do
-              logn " + ${j} : "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404 Not Found")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
-            done
-          fi
+          for a in ${b}; do
+            if [[ ${ff} == "composite"*".xml" ]] || [[ ${a} == ${u}/${f}/${versionWithRespin_jbt}/${ff} ]] || [[ ${u/builds/} != ${u} ]]; then
+              logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
+            fi
+            if [[ ${ff} == "composite"*".xml" ]]; then
+              checkCompositeXML ${a}
+            elif [[ ${a} == ${u}/${f}/${versionWithRespin_jbt}/${ff} ]] || [[ ${u/builds/} != ${u} ]]; then
+              if [[ ${ff} == "plugins/" ]]; then
+                jars=$(curl -s ${a} | grep ".jar" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
+                # check jar 404s
+                for j in ${jars}; do
+                  logn " + ${j} : "; stat=$(curl -I -s ${a}${j} | egrep "404 Not Found")
+                  if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
+                done
+              elif [[ ${ff/directory.xml} != ${ff} ]]; then
+                jars=$(curl -s ${a} | grep "url" | sed -e "s#.\+url=\"\([^\"]\+\)\".\+#\1#")
+                # check jar 404s
+                for j in ${jars}; do
+                  logn " + ${j} : "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404 Not Found")
+                  if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
+                done
+              fi
+            fi
+          done
         done
       done
       log ""
@@ -214,30 +240,38 @@ if [[ ${versionWithRespin_ds} ]]; then
           if [[ ${f} == "discovery.central" ]] && [[ ${ff/earlyaccess.properties/} != ${ff} ]]; then continue; fi # skip check for central + earlyaccess.properties
           if [[ ${u/builds/} != ${u} ]]; then
             if [[ ${qual} == "snapshots" ]]; then
-              a=${u}/jbosstools-${f}_${versionWithRespin_jbt}/latest/all/repo/${ff} # builds
+              b=${u}/jbosstools-${f}_${versionWithRespin_jbt}/latest/all/repo/${ff} # builds
             else
-              a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/repo/${ff} # builds
+              b=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/repo/${ff} # builds
             fi
           else
-            a=${u}/${f}/${versionWithRespin_ds}/${ff} # updates
+            b="${u}/${f}/${versionWithRespin_ds}/${ff} ${u}/${f}/${ff}" # updates
           fi
-          logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
-          if [[ ${ff} == "plugins/" ]]; then
-            jars=$(curl -s ${a} | grep ".jar" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
-            # check jar 404s
-            for j in ${jars}; do
-              logn " + ${j} : "; stat=$(curl -I -s ${a}${j} | egrep "404 Not Found")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
-            done
-          elif [[ ${ff/directory.xml} != ${ff} ]]; then
-            jars=$(curl -s ${a} | grep "url" | sed -e "s#.\+url=\"\([^\"]\+\)\".\+#\1#")
-            # check jar 404s
-            for j in ${jars}; do
-              logn " + ${j} : "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404 Not Found")
-              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
-            done
-          fi
+          for a in ${b}; do
+            if [[ ${ff} == "composite"*".xml" ]] || [[ ${a} == ${u}/${f}/${versionWithRespin_ds}/${ff} ]] || [[ ${u/builds/} != ${u} ]]; then
+              logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
+              if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
+            fi
+            if [[ ${ff} == "composite"*".xml" ]]; then
+              checkCompositeXML ${a}
+            elif [[ ${a} == ${u}/${f}/${versionWithRespin_ds}/${ff} ]] || [[ ${u/builds/} != ${u} ]]; then
+              if [[ ${ff} == "plugins/" ]]; then
+                jars=$(curl -s ${a} | grep ".jar" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
+                # check jar 404s
+                for j in ${jars}; do
+                  logn " + ${j} : "; stat=$(curl -I -s ${a}${j} | egrep "404 Not Found")
+                  if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
+                done
+              elif [[ ${ff/directory.xml} != ${ff} ]]; then
+                jars=$(curl -s ${a} | grep "url" | sed -e "s#.\+url=\"\([^\"]\+\)\".\+#\1#")
+                # check jar 404s
+                for j in ${jars}; do
+                  logn " + ${j} : "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404 Not Found")
+                  if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
+                done
+              fi
+            fi
+          done
         done
       done
       log ""
