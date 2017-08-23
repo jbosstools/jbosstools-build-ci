@@ -2,6 +2,17 @@
 # for more info see https://plugins.jenkins.io/log-parser
 # if a line matches multiple times, the FIRST match will apply
 
+# to update this file inside Jenkins as a global config file:
+# 1. ssh to you@dev01 (or a host that can connect to Jenkins)
+# 2. if you have permission, switch to the hudson user: sudo su - hudson
+# 3. ssh to jenkins@${JENKINS_HOST}, then run:
+# 4. wget https://github.com/jbosstools/jbosstools-build-ci/raw/master/util/jbosstools-console-log-parser.txt -O /var/lib/jenkins/jbosstools-console-log-parser.txt
+
+# to make the parser script available in Jenkins:
+# 1. go to https://${JENKINS_HOST}/configure
+# 2. search for "Console Output Parsing", and
+# 3. add the path to the log parser file downloaded above into /var/lib/jenkins/
+
 # warnings/errors to ignore
 ok /ignoring option .*PermSize/
 ok /No baseline version/
