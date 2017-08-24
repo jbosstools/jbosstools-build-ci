@@ -111,6 +111,12 @@ if [[ ${versionWithRespin_jbt} ]]; then
             b="${u}/${f}/${versionWithRespin_jbt}/${ff} ${u}/${f}/${ff}" # updates
           fi
           for a in ${b}; do
+
+            # skip checks for staging/updates/discovery.*/composite*.xml
+            if [[ ${a} == *"/staging/updates/discovery.central/composite"*".xml" ]] || [[ ${a} == *"/staging/updates/discovery.earlyaccess/composite"*".xml" ]]; then
+              continue
+            fi
+
             if [[ ${ff} == "composite"*".xml" ]] || [[ ${a} == ${u}/${f}/${versionWithRespin_jbt}/${ff} ]] || [[ ${u/builds/} != ${u} ]]; then
               logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
               if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
