@@ -1,26 +1,39 @@
-import urllib, sys
+import urllib, sys, os
 
 from jira import JIRA
 from optparse import OptionParser
 
 usage = "Creates a New + Noteworthy jira + subtasks for all components.\n\nUsage:   python " + sys.argv[0] + \
-  " -u <jira user> -p <jira pass> -s <jira server> --jbide <jbidefixversion> --jbds <jbdsfixversion>\n" + \
-  "Example: python " + sys.argv[0] + " -u usernameJIRA -p passwordJIRA -s https://issues.stage.jboss.org -i 4.4.3.AM2 -d 10.3.0.AM2"
+  " -s <jira server> --jbide <jbidefixversion> --jbds <jbdsfixversion> --user <JIRA user> --pwd <JIRA pass> \n" + \
+  "Example: python " + sys.argv[0] + " -s https://issues.stage.jboss.org -i 4.5.0.AM2 -d 11.0.0.AM2 -u jirauser -p jirapwd\n\
+\n\
+NOTE: rather than passing in --user and --pwd, you can `export userpass=jirauser:jirapwd`, \n\
+and this script will read those values from the shell"
 # \nRequires you have installed jira-python (See http://jira-python.readthedocs.org/en/latest/ )
 parser = OptionParser(usage)
-parser.add_option("-u", "--user", dest="usernameJIRA", help="JIRA Username")
-parser.add_option("-p", "--pwd", dest="passwordJIRA", help="JIRA Password")
 parser.add_option("-i", "--jbide", dest="jbidefixversion", help="JBIDE fix version")
 parser.add_option("-d", "--jbds", dest="jbdsfixversion", help="JBDS fix version")
+
 parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.org")
+parser.add_option("-u", "--user", dest="jirauser", help="JIRA Username")
+parser.add_option("-p", "--pwd", dest="jirapwd", help="JIRA Password")
+# NOTE: rather than passing in two flags here, you can `export userpass=jirauser:jirapwd`, 
+# and this script will read those values from the shell
 
 (options, args) = parser.parse_args()
 
-if not options.usernameJIRA or not options.passwordJIRA or not options.jbidefixversion or not options.jbdsfixversion:
-	parser.error("Need to specify all commandline options:\n\n" + usage)
+if (not options.jirauser or not options.jirapwd) and os.environ["userpass"]:
+	# check if os.environ["userpass"] is set and use that if defined
+	#sys.exit("Got os.environ[userpass] = " + os.environ["userpass"])
+	userpass_bits = os.environ["userpass"].split(":")
+	options.jirauser = userpass_bits[0]
+	options.jirapwd = userpass_bits[1]
+
+if not options.jirauser or not options.jirapwd or not options.jbidefixversion or not options.jbdsfixversion:
+	parser.error("Must specify ALL required commandline flags")
 	
 jiraserver = options.jiraserver
-jira = JIRA(options={'server':jiraserver}, basic_auth=(options.usernameJIRA, options.passwordJIRA))
+jira = JIRA(options={'server':jiraserver}, basic_auth=(options.jirauser, options.jirapwd))
 CL = jira.project_components(jira.project('JBIDE')) # full list of components in JBIDE
 
 jbide_fixversion = options.jbidefixversion
@@ -28,7 +41,23 @@ jbds_fixversion = options.jbdsfixversion
 
 from components import checkFixVersionsExist, queryComponentLead, defaultAssignee
 
-if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.usernameJIRA, options.passwordJIRA) == True:
+def setComponentLead(theissue,componentLead):
+	try:
+		jira.assign_issue(rootnn, componentLead)
+	except:
+		print "[WARNING] Unexpected error! User {0} tried to assign {1} to {2}: {3}".format(options.jirauser, rootnn, componentLead, sys.exc_info()[0])
+
+
+def setTaskLabel(theissue):
+	try:
+		issue = jira.issue(theissue.key)
+		issue.fields.labels.append(u'task')
+		issue.update(fields={"labels": issue.fields.labels})
+	except:
+		print "[WARNING] Unexpected error! User {0} tried to set label = 'task' on {1}: {2}".format(options.jirauser, theissue, sys.exc_info()[0])
+
+
+if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.jirauser, options.jirapwd) == True:
 	## The jql query across for all N&N - to find issues for which N&N needs to be written
 	nnsearchquery = '((project in (JBDS) and fixVersion = "' + jbds_fixversion + '") or (project in (JBIDE) and fixVersion = "' + jbide_fixversion + '")) AND resolution = Done AND labels = new_and_noteworthy'
 	nnsearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(nnsearchquery)
@@ -49,10 +78,10 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
 		}
 	rootnn = jira.create_issue(fields=rootnn_dict)
 	componentLead = defaultAssignee()
-	try:
-		jira.assign_issue(rootnn, componentLead)
-	except:
-		print "[WARNING] Unexpected error! User {0} tried to assign {1} to {2}: {3}".format(options.usernameJIRA, rootnn, componentLead, sys.exc_info()[0])
+
+	setComponentLead(rootnn,componentLead)
+
+	setTaskLabel(rootnn)
 
 	print("JBoss Tools       : " + jiraserver + '/browse/' + rootnn.key + " => " + componentLead + "")
 
@@ -116,10 +145,11 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
 		}
 
 		child = jira.create_issue(fields=childnn_dict)
-		try:
-			jira.assign_issue(child, componentLead)
-		except:
-			print "[WARNING] Unexpected error! User {0} tried to assign {1} to {2}: {3}".format(options.usernameJIRA, child, componentLead, sys.exc_info()[0])
+
+		setComponentLead(child,componentLead)
+
+		setTaskLabel(child)
+
 		print(name +  ": " + jiraserver + '/browse/' + child.key + " => " + componentLead)
 
 	accept = raw_input("Accept created JIRAs? [Y/n] ")
