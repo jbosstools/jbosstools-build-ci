@@ -3,7 +3,7 @@ import magic
 import urllib, sys
 from optparse import OptionParser
 
-# Requires jira (pip install jira), not jira-python - https://stackoverflow.com/questions/30915236/jira-python-package-in-pip-has-gone
+# Requires jira (`pip install jira python-magic`), not jira-python - https://stackoverflow.com/questions/30915236/jira-python-package-in-pip-has-gone
 # If connection to JIRA server fails with error: "The error message is __init__() got an unexpected keyword argument 'mime'"
 # Then go edit /usr/lib/python2.7/site-packages/jira/client.py 
 # replace 
