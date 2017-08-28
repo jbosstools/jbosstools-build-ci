@@ -73,6 +73,10 @@ toc::[]
 |Convert `buildinfo.json` to CSV format understood by link:util/tagrepos.sh[tagrepos.py].
 |Used when builds done and preparing for repositories to be tagged.
 
+|link:util/checkUnresolvedIssues.py[checkUnresolvedIssues.py]
+|Check for unresolved issues from the specified JBIDE/JBDS fixversions or sprint, then move them to the next fixversion or to the .x backlog.
+|Used to bump unresolved issues to the next fixversion/sprint.
+
 |===
 
 == Composite Sites & Install Tests
