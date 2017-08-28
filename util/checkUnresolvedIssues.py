@@ -18,11 +18,16 @@ import components
 
 # Example usage:
 # 
-# python -W ignore ./checkUnresolvedIssues.py \
-#  --jira https://issues.stage.jboss.org --jirauser USER --jirapwd PWD \
-#  --jbt 4.5.0.AM2 --jbt_NEXT 4.5.0.Final \
-#  --ds 11.0.0.AM2 --ds_NEXT 11.0.0.GA \
-#  --sprint "devex #134 Jun 2017" --sprint_NEXT "devex #135 July 2017"
+#  sprint="devex #136 August 2017"
+#  sprint_NEXT="devex #137 September 2017"
+#  versionWithRespin_jbt=4.5.1.AM1
+#  versionWithRespin_jbt_NEXT=4.5.1.AM2
+#  versionWithRespin_ds=11.1.0.AM1
+#  versionWithRespin_ds_NEXT=11.1.0.AM2
+#  python -W ignore checkUnresolvedIssues.py -S --jira https://issues.jboss.org  \
+#   --jbt ${versionWithRespin_jbt} --jbt_NEXT ${versionWithRespin_jbt_NEXT}   \
+#   --ds ${versionWithRespin_ds} --ds_NEXT ${versionWithRespin_ds_NEXT}   \
+#   --sprint "${sprint}" --sprint_NEXT "${sprint_NEXT}"
 
 usage = "Usage: python -W ignore %prog \\ \n\
   --jbt      <version_jbt>      --ds      <version_ds>      --sprint      <sprint> \\ \n\
@@ -41,8 +46,8 @@ This script will check for unresolved issues from the specified JBIDE/JBDS fixve
 then move them to the next fixversion or to the .x backlog, depending on if they're \n\
 already queued for a future sprint or are blocker/critical."
 parser = OptionParser(usage)
-parser.add_option("--sprint",     dest="sprint",           help="Current Sprint, eg., devex #134 Jun 2017")
-parser.add_option("--sprint_NEXT",dest="sprint_NEXT",      help="Future Sprint, eg., devex #135 July 2017")
+parser.add_option("--sprint",     dest="sprint",           help="Current Sprint, eg., 'devex #134 Jun 2017'")
+parser.add_option("--sprint_NEXT",dest="sprint_NEXT",      help="Future Sprint, eg., 'devex #135 July 2017'")
 parser.add_option("--jbt",        dest="version_jbt",      help="Current JBIDE fix version")
 parser.add_option("--jbt_NEXT",   dest="version_jbt_NEXT", help="Next JBIDE fix version")
 parser.add_option("--ds",         dest="version_ds",       help="Current JBDS fix version")
