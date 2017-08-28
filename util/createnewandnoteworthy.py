@@ -3,13 +3,23 @@ import urllib, sys, os
 from jira import JIRA
 from optparse import OptionParser
 
+# Requires jira (pip install jira), not jira-python - https://stackoverflow.com/questions/30915236/jira-python-package-in-pip-has-gone
+# If connection to JIRA server fails with error: "The error message is __init__() got an unexpected keyword argument 'mime'"
+# Then go edit /usr/lib/python2.7/site-packages/jira/client.py 
+# replace 
+#		 self._magic = magic.Magic(mime=True)
+# with 
+#		 self._magic = magic
+# 
+# ref: http://stackoverflow.com/questions/12609402/init-got-an-unexpected-keyword-argument-mime-in-python-django
+
 usage = "Creates a New + Noteworthy jira + subtasks for all components.\n\nUsage:   python " + sys.argv[0] + \
   " -s <jira server> --jbide <jbidefixversion> --jbds <jbdsfixversion> --user <JIRA user> --pwd <JIRA pass> \n" + \
   "Example: python " + sys.argv[0] + " -s https://issues.stage.jboss.org -i 4.5.0.AM2 -d 11.0.0.AM2 -u jirauser -p jirapwd\n\
 \n\
 NOTE: rather than passing in --user and --pwd, you can `export userpass=jirauser:jirapwd`, \n\
 and this script will read those values from the shell"
-# \nRequires you have installed jira-python (See http://jira-python.readthedocs.org/en/latest/ )
+
 parser = OptionParser(usage)
 parser.add_option("-i", "--jbide", dest="jbidefixversion", help="JBIDE fix version")
 parser.add_option("-d", "--jbds", dest="jbdsfixversion", help="JBDS fix version")
