@@ -62,7 +62,7 @@ parser.add_option("-D",  dest="dryrun", action="store_true", help="If set, just 
 parser.add_option("-X",  dest="debug", action="store_true", help="Debug output")
 (options, args) = parser.parse_args()
 
-if (not options.jirauser or not options.jirapwd) and os.environ["userpass"]:
+if (not options.jirauser or not options.jirapwd) and "userpass" in os.environ:
 	# check if os.environ["userpass"] is set and use that if defined
 	#sys.exit("Got os.environ[userpass] = " + os.environ["userpass"])
 	userpass_bits = os.environ["userpass"].split(":")
