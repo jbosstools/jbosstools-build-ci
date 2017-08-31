@@ -55,7 +55,7 @@ def setComponentLead(theissue,componentLead):
 	try:
 		jira.assign_issue(theissue, componentLead)
 	except:
-		print "[WARNING] Unexpected error! User {0} tried to assign {1} to {2}: {3}".format(options.jirauser, theissuue, componentLead, sys.exc_info()[0])
+		print "[WARNING] Unexpected error! User {0} tried to assign {1} to {2}: {3}".format(options.jirauser, theissue, componentLead, sys.exc_info()[0])
 
 
 def setTaskLabel(theissue):
