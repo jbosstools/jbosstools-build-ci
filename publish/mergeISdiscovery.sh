@@ -5,6 +5,7 @@
 tmpdir=`mktemp -d`
 mkdir -p $tmpdir
 
+# may want to use IP as it's faster than the domain name - 10.5.105.197
 TOOLS=tools@filemgmt.jboss.org:/downloads_htdocs/tools
 JBDS=devstudio@filemgmt.jboss.org:/www_htdocs/devstudio
 
@@ -29,7 +30,7 @@ if [[ $# -lt 1 ]]; then usage; fi
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     '-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., /qa/services/http/binaries/RHDS
-    '-JBDS') DESTINATION="${JBDS}"; shift 0;; # shortcut
+    '-JBDS'|'-ds') DESTINATION="${JBDS}"; shift 0;; # shortcut
     '-v'|'-version') version="$2"; shift 1;;
     '-vr'|'-versionWithRespin') versionWithRespin="$2"; shift 1;;
     '-is') ISsite="$2"; shift 1;;
