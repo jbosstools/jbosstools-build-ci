@@ -10,17 +10,17 @@
 
 # comma-separated list of projects to build
 # -p jbtcentral,jbtearlyaccess
-# -p jbosstools,jbdevstudio
+# -p jbosstools
 
 # OPTIONAL if you want to perform an install test, rather than just ensure that your TP can be validated and resolved locally
 # set path to where you have the latest compatible Eclipse bundle stored locally
 # -z /path/to/eclipse-jee-neon-R-linux-gtk-x86_64.tar.gz
 
-# OPTIONAL if you're testing a TP that's downstream from the jbosstoolstarget or jbdevstudiotarget, eg., Central, Early Access, or Integration Stack
+# OPTIONAL if you're testing a TP that's downstream from the jbosstoolstarget, eg., Central, Early Access, or Integration Stack
 # set URL(s) for JBT / JBT Target so that all Central deps can be resolved; for more than one, separate w/ commas
 # -u file://$HOME/tru/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,http://download.jboss.org/jbosstools/updates/nightly/core/master/
 # for JBDS Central tests, use:
-# -u file://$HOME/tru/jbosstools-target-platforms/jbdevstudio/multiple/target/jbdevstudio-multiple.target.repo/,http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/
+# -u file://$HOME/tru/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/
 
 # OPTIONAL if you want to perform a p2diff between your last version of the TP and the one you're about to build
 # set path to where you have the latest p2diff executable installed
@@ -31,7 +31,7 @@ usage ()
   echo "Usage: $0 -b BASEDIR -p PROJECT1,PROJECT2,... [-z ECLIPSEZIP] [-u UPSTREAM_SITES] [-d P2DIFF] [-x] [-Dflag=value...]"
   echo ""
   echo "Example (JBT/JBDS - include sources): $0 \\"
-  echo "  -b /path/to/jbosstools-target-platforms -p jbosstools,jbdevstudio \\"
+  echo "  -b /path/to/jbosstools-target-platforms -p jbosstools \\"
   echo "  -z /path/to/eclipse-jee-neon-R-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff"
   echo ""
   echo "Example (JBoss Central - eXclude sources): $0 \\"
@@ -75,7 +75,7 @@ LOG_GREP_EXCLUDES="Could not find metadata|Failed to execute goal org.jboss.tool
 #BASEDIR=`pwd`
 #ECLIPSEZIP=${HOME}/tmp/Eclipse_Bundles/eclipse-jee-neon-R-linux-gtk-x86_64.tar.gz
 #UPSTREAM_SITES=file://$HOME/tru/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,http://download.jboss.org/jbosstools/updates/nightly/core/master/
-# for JBDS tests, use UPSTREAM_SITES=file://$HOME/tru/jbosstools-target-platforms/jbdevstudio/multiple/target/jbdevstudio-multiple.target.repo/,http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/
+# for JBDS tests, use UPSTREAM_SITES=file://$HOME/tru/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/
 #P2DIFF=${HOME}/tmp/p2diff/p2diff
 
 # use Eclipse VM from JAVA_HOME if available
