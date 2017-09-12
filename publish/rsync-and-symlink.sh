@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# util script for gercan@ to use to publish something like yaml-language-server-*.tar.gz bits from staging -> stable and generate a latest symlink
+# util script to publish something like yaml-language-server-*.tar.gz bits from staging -> stable and generate a latest symlink
 # must define DESTINATION="user@SERVER_IP:/sftp/path" to define destination (on download.jboss.org server or elsewhere)
 # 
 # assumes you have content in http://download.jboss.org/jbosstools/oxygen/staging/builds/${filePrefix}/
@@ -26,7 +26,7 @@ quiet=""
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
   case $1 in
-	'-DESTINATION') DESTINATION="$2"; shift 1;;
+    '-DESTINATION') DESTINATION="$2"; shift 1;;
     '-ern') eclipseReleaseName="$2"; shift 1;;
     '-prefix') filePrefix="$2"; shift 1;;
     '-suffix') fileSuffix="$2"; shift 1;;
