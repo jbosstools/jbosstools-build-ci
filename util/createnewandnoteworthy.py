@@ -14,7 +14,7 @@ from optparse import OptionParser
 # ref: http://stackoverflow.com/questions/12609402/init-got-an-unexpected-keyword-argument-mime-in-python-django
 
 usage = "Creates a New + Noteworthy jira + subtasks for all components.\n\nUsage:   python " + sys.argv[0] + \
-  " -s <jira server> --jbide <jbidefixversion> --jbds <jbdsfixversion> --user <JIRA user> --pwd <JIRA pass> \n" + \
+  " -s <jira server> --jbide <jbidefixversion> --jbds <jbdsfixversion> --fuse <fusefixversion> --user <JIRA user> --pwd <JIRA pass> \n" + \
   "Example: python " + sys.argv[0] + " -s https://issues.stage.jboss.org -i 4.5.0.AM2 -d 11.0.0.AM2 -u jirauser -p jirapwd\n\
 \n\
 NOTE: rather than passing in --user and --pwd, you can `export userpass=jirauser:jirapwd`, \n\
@@ -23,6 +23,7 @@ and this script will read those values from the shell"
 parser = OptionParser(usage)
 parser.add_option("-i", "--jbide", dest="jbidefixversion", help="JBIDE fix version")
 parser.add_option("-d", "--jbds", dest="jbdsfixversion", help="JBDS fix version")
+parser.add_option("-f", "--fuse", dest="fusefixversion", help="FUSETOOLS fix version (default: JBDS fixversion (a-1).b.c.d")
 
 parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.org")
 parser.add_option("-u", "--user", dest="jirauser", help="JIRA Username")
@@ -32,7 +33,7 @@ parser.add_option("-p", "--pwd", dest="jirapwd", help="JIRA Password")
 
 (options, args) = parser.parse_args()
 
-if (not options.jirauser or not options.jirapwd) and os.environ["userpass"]:
+if (not options.jirauser or not options.jirapwd) and "userpass" in os.environ:
 	# check if os.environ["userpass"] is set and use that if defined
 	#sys.exit("Got os.environ[userpass] = " + os.environ["userpass"])
 	userpass_bits = os.environ["userpass"].split(":")
@@ -42,12 +43,19 @@ if (not options.jirauser or not options.jirapwd) and os.environ["userpass"]:
 if not options.jirauser or not options.jirapwd or not options.jbidefixversion or not options.jbdsfixversion:
 	parser.error("Must specify ALL required commandline flags")
 	
+jbide_fixversion = options.jbidefixversion
+jbds_fixversion = options.jbdsfixversion
+if options.fusefixversion:
+	fuse_fixversion = options.fusefixversion
+else:
+	# set fuse fixversion a.b.c.d = JBDS fixversion (a-1).b.c.d
+	fuse_bits = jbds_fixversion.split(".")
+	fuse_fixversion = str(int(fuse_bits[0]) - 1) + "." + fuse_bits[1] + "." + fuse_bits[2] + "." + fuse_bits[3]
+# sys.exit("jbds_fixversion = " + jbds_fixversion + "\n" + "fuse_fixversion = " + fuse_fixversion) # debug
+
 jiraserver = options.jiraserver
 jira = JIRA(options={'server':jiraserver}, basic_auth=(options.jirauser, options.jirapwd))
 CL = jira.project_components(jira.project('JBIDE')) # full list of components in JBIDE
-
-jbide_fixversion = options.jbidefixversion
-jbds_fixversion = options.jbdsfixversion
 
 from components import checkFixVersionsExist, queryComponentLead, defaultAssignee
 
@@ -69,12 +77,18 @@ def setTaskLabel(theissue):
 
 if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.jirauser, options.jirapwd) == True:
 	## The jql query across for all N&N - to find issues for which N&N needs to be written
-	nnsearchquery = '((project in (JBDS) and fixVersion = "' + jbds_fixversion + '") or (project in (JBIDE) and fixVersion = "' + jbide_fixversion + '")) AND resolution = Done AND labels = new_and_noteworthy'
+	nnsearchquery = '((project in (JBDS) and fixVersion = "' + \
+		jbds_fixversion + '") or (project in (FUSETOOLS) and fixVersion = "' + \
+		fuse_fixversion + '") or (project in (JBIDE) and fixVersion = "' + \
+		jbide_fixversion + '")) AND resolution = Done AND labels = new_and_noteworthy'
 	nnsearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(nnsearchquery)
 
 	# queries to find other created N&N Task issues, not issues for which N&N should be written
-	nnissuesqueryall = 'summary ~ "New and Noteworthy" AND project in (JBIDE, JBDS) ORDER BY key DESC'
-	nnissuesquerythisversion = 'summary ~ "New and Noteworthy" AND ((project in (JBDS) and fixVersion = "' + jbds_fixversion + '") or (project in (JBIDE) and fixVersion = "' + jbide_fixversion + '")) ORDER BY key DESC'
+	nnissuesqueryall = 'summary ~ "New and Noteworthy" AND project in (JBDS, FUSETOOLS, JBIDE) ORDER BY key DESC'
+	nnissuesquerythisversion = 'summary ~ "New and Noteworthy" AND ((project in (JBDS) and fixVersion = "' + \
+		jbds_fixversion + '") or (project in (FUSETOOLS) and fixVersion = "' + \
+		fuse_fixversion + '") or (project in (JBIDE) and fixVersion = "' + \
+		jbide_fixversion + '")) ORDER BY key DESC'
 
 	rootnn_description = 'This [query|' + nnsearch + '] contains the search for all N&N. See subtasks below.'
 	rootnn_dict = {
