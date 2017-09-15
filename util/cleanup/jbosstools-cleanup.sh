@@ -237,12 +237,21 @@ regenProcess ()
 		rm -f $tmp
 		if [[ $subdirCount -gt 0 ]]; then
 			siteName=${sd##*${DEST_PATH}/}
-			echo "Generate metadata for first ${numbuildstolink} of ${subdirCount} subdir(s) in $sd/ (siteName = ${siteName}" | tee -a $log
-			mkdir -p ${tmpdir}/cleanup-fresh-metadata/
-			regenCompositeMetadata "$siteName" "$all" "$numbuildstolink" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "${tmpdir}/cleanup-fresh-metadata/compositeContent.xml"
-			regenCompositeMetadata "$siteName" "$all" "$numbuildstolink" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "${tmpdir}/cleanup-fresh-metadata/compositeArtifacts.xml"
-			rsync --rsh=ssh --protocol=28 -q ${tmpdir}/cleanup-fresh-metadata/composite*.xml ${DEST_SERV}:$sd/
-			rm -fr ${tmpdir}/cleanup-fresh-metadata/
+			# JBIDE-25045 check if the destination folder is a symlink - we don't need (or want) to regen a symlink folder
+			# $➔ rsync --rsh=ssh --protocol=28 ${TOOLS}/neon/stable/updates/windup | egrep "^l"
+			#    lrwxrwxrwx    1 tools    tools           6 May 19 15:21 windup
+			# echo "> Check if $sd is symlink..."
+			isSymlink=$(rsync --rsh=ssh --protocol=28 ${DEST_SERV}:$sd | egrep "^l")
+			if [[ ! ${isSymlink} ]]; then
+				echo "+ Generate metadata for first ${numbuildstolink} of ${subdirCount} subdir(s) in $sd" | tee -a $log
+				mkdir -p ${tmpdir}/cleanup-fresh-metadata/
+				regenCompositeMetadata "$siteName" "$all" "$numbuildstolink" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "${tmpdir}/cleanup-fresh-metadata/compositeContent.xml"
+				regenCompositeMetadata "$siteName" "$all" "$numbuildstolink" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "${tmpdir}/cleanup-fresh-metadata/compositeArtifacts.xml"
+				rsync --rsh=ssh --protocol=28 -q ${tmpdir}/cleanup-fresh-metadata/composite*.xml ${DEST_SERV}:$sd/
+				rm -fr ${tmpdir}/cleanup-fresh-metadata/
+			else
+				echo "- Skip symlinked folder $sd" | tee -a $log
+			fi
 		else
 			echo "No subdirs found in $sd/" | tee -a $log
 			# TODO delete composite*.xml from $sd/ folder if there are no subdirs present
