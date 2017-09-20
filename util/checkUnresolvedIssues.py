@@ -176,7 +176,7 @@ def updateIssues(issuelist, NEXTorDOTX, description):
 						jira.add_issues_to_sprint(sprintId_NEXT, [key])
 						jira.add_comment(key, "[checkUnresolvedIssues.py] Slip to fixversion = *" + fixversion_NEXT + "* and sprint = *" + sprint_NEXT + "*")
 					else:
-						jira.add_comment(key, "[checkUnresolvedIssues.py] Slip to fixversion = " + fixversion_NEXT)
+						jira.add_comment(key, "[checkUnresolvedIssues.py] Slip to fixversion = *" + fixversion_NEXT + "*")
 
 print "\n[INFO] [1] Check " + sprint + " + " + sprint_NEXT + ", JBIDE " + version_jbt + " + JBDS " + version_ds + \
 	", for unresolved blockers/criticals + issues in NEXT sprint: " + \
