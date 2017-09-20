@@ -174,7 +174,7 @@ def updateIssues(issuelist, NEXTorDOTX, description):
 					if NEXTorDOTX:
 						# move issue to new sprint
 						jira.add_issues_to_sprint(sprintId_NEXT, [key])
-						jira.add_comment(key, "[checkUnresolvedIssues.py] Slip to fixversion = " + fixversion_NEXT + " and sprint " + sprintId_NEXT)
+						jira.add_comment(key, "[checkUnresolvedIssues.py] Slip to fixversion = *" + fixversion_NEXT + "* and sprint = *" + sprint_NEXT + "*")
 					else:
 						jira.add_comment(key, "[checkUnresolvedIssues.py] Slip to fixversion = " + fixversion_NEXT)
 
