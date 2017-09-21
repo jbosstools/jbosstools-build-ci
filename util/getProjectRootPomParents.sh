@@ -96,6 +96,16 @@ if [[ ! -f ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} ]] && [[ ${doCrea
   exit 1
 fi
 
+# before running this script, do `export userpass=jirauser:jirapwd` to set these variables in your shell, if not passing them via commandline
+userandpass=""
+if [[ ${userpass} ]]; then
+  JIRA_USER=${userpass%%:*}
+  JIRA_PWD=${userpass##*:}
+fi
+if [[ ${JIRA_USER} ]] && [[ ${JIRA_PWD} ]]; then
+  userandpass="-u ${JIRA_USER} -p ${JIRA_PWD}"
+fi
+
 # backups if not set above
 if [[ ! ${stream_jbt} ]] || [[ ! ${stream_ds} ]]; then
   if [[ $github_branch == "master" ]]; then
@@ -259,7 +269,7 @@ mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MAX} \\n \
 ${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28${version_ds}%29%29%29%20AND%20resolution%20is%20\
 null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next. \\n \
 \" \
--s ${JIRA_HOST} -u ${JIRA_USER} -p ${JIRA_PWD} -J ${componentFlag} ${k}"
+-s ${JIRA_HOST} ${userandpass} -J ${componentFlag} ${k}"
                 # if [[ ${quiet} != "-q" ]]; then echo ${JIRAcmd}; fi
               else # no branching - just update root poms
                 JIRAcmd="python -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds} \\n \
@@ -310,7 +320,7 @@ mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MAX} \\n \
 ${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28${version_ds}%29%29%29%20AND%20resolution%20is%20\
 null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next. \\n \
 \" \
--s ${JIRA_HOST} -u ${JIRA_USER} -p ${JIRA_PWD} -J ${componentFlag} ${k}"
+-s ${JIRA_HOST} ${userandpass} -J ${componentFlag} ${k}"
                 # if [[ ${quiet} != "-q" ]]; then echo ${JIRAcmd}; fi
               fi
               echo "JIRA=\$(${JIRAcmd})" >> ${tskfile}
