@@ -14,9 +14,8 @@ def report(jira,name,reports):
     boards = jira.boards(name=name)
     sboards = [x for x in boards if x.name == name]
     board = sboards[0]
-    sprints = jira.sprints(board.id,maxResults=10000)
-    asprints = [x for x in sprints if x.state == 'active']
-    sprint = asprints[len(asprints) - 1]
+    sprints = jira.sprints(board.id,maxResults=1000,state='active')
+    sprint = sprints[len(sprints) - 1]
     issues = getIssues(jira, board.id, sprint.id)
     for x in issues:
         if x.fields.assignee:
