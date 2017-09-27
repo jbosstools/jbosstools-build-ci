@@ -82,7 +82,7 @@ problemMap["malformed XML"]="XML validity" # eg., https://errata.devel.redhat.co
 #   <a href="/rpmdiff/show/182113?result_id=5027897">XML validity</a>
 #   ...
 # 2. replace discovered ?result_id= URLs in the list of errataURLs to process if the label is what we're looking for
-maxNumErrataURLs=-1 # use -1 to collect all
+maxNumErrataURLs=0 # use -1 to collect all
 
 declare -A errataURLsMap
 for errataURL in ${errataURLs}; do
@@ -128,7 +128,7 @@ done
 totErrata=0
 for errataURL in "${!errataURLsMap[@]}"; do
   let totErrata=totErrata+1
-  logdebug "[DEBUG] [${totErrata}] ${errataURL}"
+  # logdebug "[DEBUG] [${totErrata}] ${errataURL}"
 done
 
 #######
@@ -142,7 +142,7 @@ for errataURL in "${!errataURLsMap[@]}"; do
       break;
     fi 
   done
-  logdebug "[DEBUG] For ${errataURL}, problemValue = ${problemValue}, problem = ${problem}" # got: "XML validity" (value), want: "malformed XML" (key)
+  # logdebug "[DEBUG] For ${errataURL}, problemValue = ${problemValue}, problem = ${problem}" # got: "XML validity" (value), want: "malformed XML" (key)
 
   # compute data as ?result_id=4852505 from the errataURL
   data=${errataURL##*\?}; if [[ ${data} ]]; then data="--data ${data}"; fi
@@ -172,7 +172,7 @@ for errataURL in "${!errataURLsMap[@]}"; do
       rpmsToInstall=$(cat page.html | egrep "NEEDS INSPECTION" -A4 \
         | sed -e "s#--\|.\+<td>.*\|.\+</td>.*\|.\+NEEDS INSPECTION.*##" | sort | uniq)
 
-      rpm=$(cat page.html | egrep "Results for" | sed -e "s#<h1> Results for \(.\+\) compared to .\+#\1#")
+      rpm=$(cat page.html | egrep "Results for" | sed -e "s#<h1>.\+Results for \(.\+\) compared to .\+#\1#")
       rpmInstallList=""
       rpmversion2=${rpm##*-}; # echo $rpmversion2; 
       rpmversion1=${rpm%-${rpmversion2}}; rpmversion1=${rpmversion1##*-}; # echo $rpmversion1
@@ -246,7 +246,7 @@ for errataURL in "${!errataURLsMap[@]}"; do
     fi
 
     # submit waive automatically
-    if [[ ${waive} -eq 1 ]]; then
+    if [[ ${waive} -eq 1 ]] && [[ ${hadError} -eq 0 ]]; then
       data=""
       #data="${data}&utf8=&#x2713;authenticity_token=QeudVj96QLvlX5PPcs8HTUgzwtCFaueiggPn+S3VAwU="
       #data="${data}&errata_id="
@@ -267,7 +267,9 @@ for errataURL in "${!errataURLsMap[@]}"; do
       logdebug "[DEBUG] ${data}"
       curl -s -S -k -X POST -u ${userpass} --data ${data// /%20} ${errataWaiveURL} > ${tmpdir}/page2.html
       log "[INFO] [${numErrata}/${totErrata}] Waived ${errataURL}"
-    else
+    elif [[ ${hadError} -gt 0 ]]; then
+      log "${red}[ERROR]${norm} [${numErrata}/${totErrata}] Cannot auto-waive this result: found ${red}${hadError}${norm} of ${red}${count}${norm} ${problem}s at ${errataURL}"
+    elif [[ ${waive} -eq 0 ]]; then
       log "[INFO] [${numErrata}/${totErrata}] To automatically waive this result, re-run this script with the ${blue}-waive${norm} flag."
     fi
   
