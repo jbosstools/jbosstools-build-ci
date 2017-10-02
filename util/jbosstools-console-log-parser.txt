@@ -66,6 +66,7 @@ error /Problems resolving provisioning plan/
 error /Validation found errors/
 
 error /Cannot complete the install/
+error /one or more required items could not be found/
 error /no installation folders found/
 
 error /Unable to satisfy dependency/
