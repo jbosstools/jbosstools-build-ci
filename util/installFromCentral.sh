@@ -15,9 +15,16 @@
 usage ()
 {
   echo ""
-  echo "Usage: $0 -ECLIPSE /path/to/eclipse-install/ -INSTALL_PLAN \"http://JBT-or-JBDS-update-site;http://JBT-or-JBDS-composite-discovery-site/directory.xml\""
-  echo "Example: $0 -ECLIPSE ${WORKSPACE}/eclipse/ -INSTALL_PLAN \"http://download.jboss.org/jbosstools/neon/snapshots/builds/jbosstools-discovery.central_4.4.neon/latest/all/repo/;http://download.jboss.org/jbosstools/neon/snapshots/builds/jbosstools-discovery.earlyaccess_4.4.neon/latest/all/repo/jbosstools-directory.xml\""
-  echo "Example: $0 -ECLIPSE ${HOME}/eclipse/46clean/eclipse/ -INSTALL_PLAN \"https://devstudio.redhat.com/10.0/snapshots/builds/jbosstools-discovery.central_4.4.neon/latest/all/repo/;https://devstudio.redhat.com/10.0/snapshots/builds/jbosstools-discovery.earlyaccess_4.4.neon/latest/all/repo/devstudio-directory.xml\""
+  echo "Usage: $0 -ECLIPSE /path/to/eclipse-install/ -INSTALL_PLAN \\"
+  echo "  \"http://JBT-or-JBDS-update-site;http://JBT-or-JBDS-composite-discovery-site/directory.xml\""
+  echo ""
+  echo "Example: $0 -ECLIPSE ${WORKSPACE}/eclipse/ -INSTALL_PLAN \\"
+  echo "  \"http://download.jboss.org/jbosstools/neon/snapshots/builds/jbosstools-discovery.central_4.4.neon/latest/all/repo/;\\"
+  echo "http://download.jboss.org/jbosstools/neon/snapshots/builds/jbosstools-discovery.earlyaccess_4.4.neon/latest/all/repo/jbosstools-directory.xml\""
+  echo ""
+  echo "Example: $0 -ECLIPSE ${HOME}/eclipse/46clean/eclipse/ -INSTALL_PLAN \\"
+  echo "  \"https://devstudio.redhat.com/10.0/snapshots/builds/jbosstools-discovery.central_4.4.neon/latest/all/repo/;\\"
+  echo "https://devstudio.redhat.com/10.0/snapshots/builds/jbosstools-discovery.earlyaccess_4.4.neon/latest/all/repo/devstudio-directory.xml\""
   echo ""
   exit 1;
 }
