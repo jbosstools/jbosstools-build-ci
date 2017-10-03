@@ -168,9 +168,9 @@ if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then
   curl -k ${CENTRAL_URL} > ${WORKSPACE}/directory.xml
   PLUGINJARS=`cat ${WORKSPACE}/directory.xml | egrep "org.jboss.tools.central.discovery|com.jboss.jbds.central.discovery" | sed "s#.\+url=\"\(.\+\).jar\".\+#\1.jar#"`
   if [[ ${PLUGINJARS} ]]; then 
-    echo "[INFO] Discovery plugin jars found: ${PLUGINJARS}"
+    echo "[INFO] [C] Discovery plugin jars found: ${PLUGINJARS}"
   else
-    echo "[ERROR] Discovery plugin jars NOT found in ${WORKSPACE}/directory.xml:"
+    echo "[ERROR] [C] Discovery plugin jars NOT found in ${WORKSPACE}/directory.xml:"
     echo "--------------------------------"
     cat ${WORKSPACE}/feature.groups.properties
     echo "--------------------------------"
@@ -248,8 +248,10 @@ XSLT
     rm -f ${WORKSPACE}/plugin.jar ${WORKSPACE}/plugin.xml ${WORKSPACE}/plugin.transformed.xml
   done
 
-  CENTRAL_IUs=${CENTRAL_IUs:1}; #echo CENTRAL_IUs = $CENTRAL_IUs
-  EXTRA_SITES=${EXTRA_SITES:1}; #echo EXTRA_SITES = $EXTRA_SITES
+  CENTRAL_IUs=${CENTRAL_IUs:1}; 
+  echo "[DEBUG] [C] CENTRAL_IUs = $CENTRAL_IUs"
+  EXTRA_SITES=${EXTRA_SITES:1};
+  echo "[DEBUG] [C] EXTRA_SITES = $EXTRA_SITES"
 
     # run scripted installation via p2.director
   ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
