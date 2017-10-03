@@ -140,19 +140,19 @@ if [[ ${BASE_IUs} ]]; then
   echo ""
   echo "--------------------------------"
   date
-  echo "[INFO] FOR INSTALL_PLAN = ${INSTALL_PLAN}"
+  echo "[INFO] [B] FOR INSTALL_PLAN = ${INSTALL_PLAN}"
   installedFeatures1=$(ls ${ECLIPSE}/features | wc -l)
   echo  $(( installedFeatures1 - installedFeatures0 ))" NEW FEATURES INSTALLED ["$(cd $ECLIPSE;du -sh)"]"
-  echo "[INFO] FROM ${SITES}"
+  echo "[INFO] [B] FROM ${SITES}"
   # echo "${BASE_IUs}"
   echo "--------------------------------"
   echo ""
 else
   echo ""
   echo "--------------------------------"
-  echo "[WARNING] NO IUs FOUND FOR"
-  echo "[WARNING] INSTALL_PLAN = ${INSTALL_PLAN}"
-  echo "[WARNING] and SITES = ${SITES}"
+  echo "[WARNING] [B] NO IUs FOUND FOR"
+  echo "[WARNING] [B] INSTALL_PLAN = ${INSTALL_PLAN}"
+  echo "[WARNING] [B] and SITES = ${SITES}"
   echo "--------------------------------"
   cat ${WORKSPACE}/feature.groups.properties
   echo "--------------------------------"
@@ -167,7 +167,16 @@ CENTRAL_URL=${INSTALL_PLAN#*,}; # here, we include discovery.xml
 if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then 
   curl -k ${CENTRAL_URL} > ${WORKSPACE}/directory.xml
   PLUGINJARS=`cat ${WORKSPACE}/directory.xml | egrep "org.jboss.tools.central.discovery|com.jboss.jbds.central.discovery" | sed "s#.\+url=\"\(.\+\).jar\".\+#\1.jar#"`
-  echo "[INFO] Discovery plugin jars found: $PLUGINJARS"
+  if [[ ${PLUGINJARS} ]]; then 
+    echo "[INFO] Discovery plugin jars found: ${PLUGINJARS}"
+  else
+    echo "[ERROR] Discovery plugin jars NOT found in ${WORKSPACE}/directory.xml:"
+    echo "--------------------------------"
+    cat ${WORKSPACE}/feature.groups.properties
+    echo "--------------------------------"
+    exit 1
+  fi
+
   CENTRAL_URL=${SITES#*,}; # this time it excludes discovery.xml
   # echo CENTRAL_URL = $CENTRAL_URL
 
@@ -250,20 +259,20 @@ XSLT
   echo ""
   echo "--------------------------------"
   date
-  echo "[INFO] FOR INSTALL_PLAN = ${INSTALL_PLAN}"
+  echo "[INFO] [C] FOR INSTALL_PLAN = ${INSTALL_PLAN}"
   installedFeatures2=$(ls ${ECLIPSE}/features | wc -l)
   echo  $(( installedFeatures2 - installedFeatures1 ))" NEW FEATURES INSTALLED FROM CENTRAL (and/or EARLYACCESS) ["$(cd $ECLIPSE;du -sh)"]"
-  echo "[INFO] FROM ${SITES},${EXTRA_SITES}"
+  echo "[INFO] [C] FROM ${SITES},${EXTRA_SITES}"
   #echo "${CENTRAL_IUs}"
   echo "--------------------------------"
   echo ""
 else
   echo ""
   echo "--------------------------------"
-  echo "[WARNING] NO CENTRAL DISCOVERY URL FOUND FOR"
-  echo "[WARNING] INSTALL_PLAN = ${INSTALL_PLAN}"
-  echo "[WARNING] FROM SITES = ${SITES}"
-  echo "[WARNING] AND EXTRA_SITES = ${EXTRA_SITES}"
+  echo "[WARNING] [C] NO CENTRAL DISCOVERY URL FOUND FOR"
+  echo "[WARNING] [C] INSTALL_PLAN = ${INSTALL_PLAN}"
+  echo "[WARNING] [C] FROM SITES = ${SITES}"
+  echo "[WARNING] [C] AND EXTRA_SITES = ${EXTRA_SITES}"
   echo "--------------------------------"
   echo ""
 fi
