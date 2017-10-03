@@ -41,9 +41,10 @@ if [[ $# -lt 1 ]]; then
 	echo "Usage: $0 [-k num-builds-to-keep] [-a num-days-at-which-to-delete] [-d dirs-to-scan] [-i subdir-include-pattern] [--regen-metadata-only] [--childFolderSuffix /all/repo/]"
 	echo "Example (Jenkins):    $0 --keep 1 --age-to-delete 2 --childFolderSuffix /all/repo/"
 	echo "Example (publish.sh): $0 -k 5 -a 5 -S /all/repo/"
-	echo "Example (promote.sh): $0 --dirs-to-scan 'updates/integration/indigo/soa-tooling/' --regen-metadata-only"
-	echo "Example (promote.sh): $0 --dirs-to-scan 'updates/integration//locus' --regen-metadata-only --no-subdirs"
+	echo "Example (promote.sh): $0 --regen-metadata-only --dirs-to-scan 'updates/integration/indigo/soa-tooling/'"
+	echo "Example (promote.sh): $0 --regen-metadata-only --no-subdirs --dirs-to-scan 'updates/integration//locus'"
 	echo "Example (rsync.sh):   $0 -k 2 -a 2 -l 5 -S /all/repo/ -d neon/snapshots/builds --include jbosstools-build-sites.aggregate"
+	echo "Example (regen meta): $0 --regen-metadata-only --no-subdirs --link 1 -d oxygen/development/updates/rhamt --exclude composite"
 	exit 1;
 fi
 
