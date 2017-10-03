@@ -81,7 +81,7 @@ checkLogForErrors ()
   if [[ $errors ]]; then
     echo ""
     echo "--------------------------------"
-    echo "INSTALL FAILED"
+    echo "[ERROR] INSTALL FAILED"
     echo ""
     echo "$errors"
     echo "--------------------------------"
@@ -93,9 +93,9 @@ checkLogForErrors ()
 echo ""
 echo "--------------------------------"
 date
-echo "FOR ECLIPSE = ${ECLIPSE}"
+echo "[INFO] FOR ECLIPSE = ${ECLIPSE}"
 installedFeatures0=$(ls ${ECLIPSE}/features | wc -l)
-echo "${installedFeatures0} BASE FEATURES INSTALLED ["$(cd $ECLIPSE;du -sh)"]"
+echo "[INFO] ${installedFeatures0} BASE FEATURES INSTALLED ["$(cd $ECLIPSE;du -sh)"]"
 echo "--------------------------------"
 echo ""
 
@@ -109,18 +109,18 @@ checkLogForErrors ${WORKSPACE}/installFromCentral_log.1.txt
 BASE_IUs=""
 if [[ -f ${WORKSPACE}/feature.groups.properties ]]; then 
   FEATURES=`cat ${WORKSPACE}/feature.groups.properties | grep ".feature.group=" | sed "s#\(.\+.feature.group\)=.\+#\1#" | sort | uniq`
-  if [[ ${EXCLUDES} ]]; then echo "[B] EXCLUDES = $EXCLUDES"; fi
+  if [[ ${EXCLUDES} ]]; then echo "[INFO] [B] EXCLUDES = $EXCLUDES"; fi
   for f in $FEATURES; do
     include=1
     if [[ ${EXCLUDES} ]]; then 
       # only add the found features if they're NOT matched by the EXCLUDE rule
       for e in ${EXCLUDES//,/ }; do
         if [[ ${e} != ${e//\*/} ]] && [[ $(echo ${f} | egrep "${e}") ]]; then # using a * wildcard & matched grep pattern
-          echo "[B] Exclude ${f} by ${e}"
+          echo "[INFO] [B] Exclude ${f} by ${e}"
           include=0
           break
         elif [[ ${f/.feature.group/} == ${e/.feature.group/} ]]; then # matched exact IU (without .feature.group suffix)
-          echo "[B] Exclude ${f}"
+          echo "[INFO] [B] Exclude ${f}"
           include=0
           break
         fi
@@ -131,21 +131,34 @@ if [[ -f ${WORKSPACE}/feature.groups.properties ]]; then
   BASE_IUs=${BASE_IUs:1}
 fi
 
-# run scripted installation via p2.director
-${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
--DsourceSites=${SITES} -Dinstall=${BASE_IUs} | tee ${WORKSPACE}/installFromCentral_log.2.txt
-checkLogForErrors ${WORKSPACE}/installFromCentral_log.2.txt
+if [[ ${BASE_IUs} ]]; then 
+  # run scripted installation via p2.director
+  ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
+  -DsourceSites=${SITES} -Dinstall=${BASE_IUs} | tee ${WORKSPACE}/installFromCentral_log.2.txt
+  checkLogForErrors ${WORKSPACE}/installFromCentral_log.2.txt
 
-echo ""
-echo "--------------------------------"
-date
-echo "FOR INSTALL_PLAN = ${INSTALL_PLAN}"
-installedFeatures1=$(ls ${ECLIPSE}/features | wc -l)
-echo  $(( installedFeatures1 - installedFeatures0 ))" NEW FEATURES INSTALLED ["$(cd $ECLIPSE;du -sh)"]"
-echo "FROM ${SITES}"
-# echo "${BASE_IUs}"
-echo "--------------------------------"
-echo ""
+  echo ""
+  echo "--------------------------------"
+  date
+  echo "[INFO] FOR INSTALL_PLAN = ${INSTALL_PLAN}"
+  installedFeatures1=$(ls ${ECLIPSE}/features | wc -l)
+  echo  $(( installedFeatures1 - installedFeatures0 ))" NEW FEATURES INSTALLED ["$(cd $ECLIPSE;du -sh)"]"
+  echo "[INFO] FROM ${SITES}"
+  # echo "${BASE_IUs}"
+  echo "--------------------------------"
+  echo ""
+else
+  echo ""
+  echo "--------------------------------"
+  echo "[WARNING] NO IUs FOUND FOR"
+  echo "[WARNING] INSTALL_PLAN = ${INSTALL_PLAN}"
+  echo "[WARNING] and SITES = ${SITES}"
+  echo "--------------------------------"
+  cat ${WORKSPACE}/feature.groups.properties
+  echo "--------------------------------"
+  echo ""
+  installedFeatures1=0
+fi
 
 # get a list of IUs to install from the Central site (based on the discovery.xml -> plugin.jar -> plugin.xml)
 CENTRAL_URL=${INSTALL_PLAN#*,}; # here, we include discovery.xml
@@ -154,7 +167,7 @@ CENTRAL_URL=${INSTALL_PLAN#*,}; # here, we include discovery.xml
 if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then 
   curl -k ${CENTRAL_URL} > ${WORKSPACE}/directory.xml
   PLUGINJARS=`cat ${WORKSPACE}/directory.xml | egrep "org.jboss.tools.central.discovery|com.jboss.jbds.central.discovery" | sed "s#.\+url=\"\(.\+\).jar\".\+#\1.jar#"`
-  echo "Discovery plugin jars found: $PLUGINJARS"
+  echo "[INFO] Discovery plugin jars found: $PLUGINJARS"
   CENTRAL_URL=${SITES#*,}; # this time it excludes discovery.xml
   # echo CENTRAL_URL = $CENTRAL_URL
 
@@ -198,18 +211,18 @@ XSLT
 
     # parse the list of features from plugin.transformed.xml
     FEATURES=`cat ${WORKSPACE}/plugin.transformed.xml | grep "iu id" | sed "s#.\+id=\"\(.\+\)\"\ */>#\1#" | sort | uniq`
-    if [[ ${EXCLUDES} ]]; then echo "[C] EXCLUDES = $EXCLUDES"; fi
+    if [[ ${EXCLUDES} ]]; then echo "[INFO] [C] EXCLUDES = $EXCLUDES"; fi
     for f in $FEATURES; do
       include=1
       # only add the found features if they're NOT matched by the EXCLUDE rule
       if [[ ${EXCLUDES} ]]; then 
         for e in ${EXCLUDES//,/ }; do
           if [[ ${e} != ${e/*/} ]] && [[ $(echo ${f} | egrep "${e}") ]]; then # using a * wildcard & matched grep pattern
-            echo "[C] Exclude ${f} by ${e}"
+            echo "[INFO] [C] Exclude ${f} by ${e}"
             include=0
             break
           elif [[ ${f/.feature.group/} == ${e/.feature.group/} ]]; then # matched exact IU (without .feature.group suffix)
-            echo "[C] Exclude ${f}"
+            echo "[INFO] [C] Exclude ${f}"
             include=0
             break
           fi
@@ -221,7 +234,7 @@ XSLT
     # parse the list of 3rd party siteUrl values from plugin.transformed.xml; exclude jboss.discovery.site.url entries
     EXTRA_URLS=`cat ${WORKSPACE}/plugin.transformed.xml | grep -i siteUrl | egrep -v "jboss.discovery.site.url|jboss.discovery.earlyaccess.site.url" | sed "s#.\+siteUrl=\"\(.\+\)\"\ *>#\1#" | sort | uniq`
     for e in $EXTRA_URLS; do 
-      if [[ ${e/http/} != ${e} ]] || [[ ${e/ftp:/} != ${e} ]]; then EXTRA_SITES="${EXTRA_SITES},${e}"; else echo "[WARN] Skip EXTRA_SITE = $e"; fi
+      if [[ ${e/http/} != ${e} ]] || [[ ${e/ftp:/} != ${e} ]]; then EXTRA_SITES="${EXTRA_SITES},${e}"; else echo "[WARNING] Skip EXTRA_SITE = $e"; fi
     done
     rm -f ${WORKSPACE}/plugin.jar ${WORKSPACE}/plugin.xml ${WORKSPACE}/plugin.transformed.xml
   done
@@ -237,18 +250,20 @@ XSLT
   echo ""
   echo "--------------------------------"
   date
-  echo "FOR INSTALL_PLAN = ${INSTALL_PLAN}"
+  echo "[INFO] FOR INSTALL_PLAN = ${INSTALL_PLAN}"
   installedFeatures2=$(ls ${ECLIPSE}/features | wc -l)
   echo  $(( installedFeatures2 - installedFeatures1 ))" NEW FEATURES INSTALLED FROM CENTRAL (and/or EARLYACCESS) ["$(cd $ECLIPSE;du -sh)"]"
-  echo "FROM ${SITES},${EXTRA_SITES}"
+  echo "[INFO] FROM ${SITES},${EXTRA_SITES}"
   #echo "${CENTRAL_IUs}"
   echo "--------------------------------"
   echo ""
 else
   echo ""
   echo "--------------------------------"
-  echo "NO CENTRAL DISCOVERY URL FOUND FOR"
-  echo "INSTALL_PLAN = ${INSTALL_PLAN}"
+  echo "[WARNING] NO CENTRAL DISCOVERY URL FOUND FOR"
+  echo "[WARNING] INSTALL_PLAN = ${INSTALL_PLAN}"
+  echo "[WARNING] FROM SITES = ${SITES}"
+  echo "[WARNING] AND EXTRA_SITES = ${EXTRA_SITES}"
   echo "--------------------------------"
   echo ""
 fi
