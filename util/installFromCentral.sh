@@ -172,7 +172,7 @@ CENTRAL_URL=${INSTALL_PLAN#*,}; # here, we include discovery.xml
 #echo CENTRAL_URL = ${CENTRAL_URL}
 
 if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then 
-  curl -k ${CENTRAL_URL} > ${WORKSPACE}/directory.xml
+  curl -s -k ${CENTRAL_URL} > ${WORKSPACE}/directory.xml
   PLUGINJARS=`cat ${WORKSPACE}/directory.xml | egrep "org.jboss.tools.central.discovery|com.jboss.jbds.central.discovery" | sed "s#.\+url=\"\(.\+\).jar\".\+#\1.jar#"`
   if [[ ${PLUGINJARS} ]]; then 
     echo "[INFO] [C] Discovery plugin jars found: ${PLUGINJARS}"
@@ -218,7 +218,7 @@ XSLT
 
   # for each Central Discover plugin
   for PLUGINJAR in $PLUGINJARS; do 
-    curl -k ${CENTRAL_URL}/${PLUGINJAR} > ${WORKSPACE}/plugin.jar
+    curl -s -k ${CENTRAL_URL}/${PLUGINJAR} > ${WORKSPACE}/plugin.jar
     unzip -oq -d ${WORKSPACE} ${WORKSPACE}/plugin.jar plugin.xml
 
     ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} \
