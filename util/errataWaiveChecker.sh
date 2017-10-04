@@ -53,6 +53,7 @@ neverWaiveMap["stripped"]="Binary stripping" # eg., https://errata.devel.redhat.
 neverWaiveMap["Requires"]="RPM requires/provides" # eg., https://errata.devel.redhat.com/rpmdiff/show/182407?result_id=5038024
 neverWaiveMap["Provides"]="RPM requires/provides" # eg., https://errata.devel.redhat.com/rpmdiff/show/182407?result_id=5038024
 neverWaiveMap["GNU_STACK"]="Execshield" # eg., https://errata.devel.redhat.com/rpmdiff/show/182196?result_id=5030668
+neverWaiveMap["patch"]="Patches" # eg., https://errata.devel.redhat.com/rpmdiff/show/182120?result_id=5028122
 
 # load both types of problems into the allProblemsMap
 for p in "${!rpmInstallProblemMap[@]}"; do # foreach key
