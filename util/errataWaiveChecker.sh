@@ -156,11 +156,11 @@ for errataURL in ${errataURLs}; do
     if [[ $(cat ${tmpdir}/page2.html | tr -d '[:space:]') ]]; then
       # echo -n "["; cat ${tmpdir}/page2.html; echo "]"
       unwaivedIssuesAll="$(cat ${tmpdir}/page2.html | sed -e "s#.\+href=\"\(.\+\)\">\(.\+\)</a>.*#\2:\1#" | \
-      	sed '/^$/d' | sed -e 's/^[ \t]*//' | sed -e "s# #_#")" # remove empty lines, trim whitespace, and replace spaves with underscores 
-      	# -->  "RPM_requires/provides:/rpmdiff/show/182461?result_id=5039915"
+        sed '/^$/d' | sed -e 's/^[ \t]*//' | sed -e "s# #_#")" # remove empty lines, trim whitespace, and replace spaves with underscores 
+        # -->  "RPM_requires/provides:/rpmdiff/show/182461?result_id=5039915"
       unwaivedIssues=""
       for uni in ${unwaivedIssuesAll}; do
-      	u=${uni//_/ }; nwCheck=${u%%:*}
+        u=${uni//_/ }; nwCheck=${u%%:*}
           collectThis=$u
           for p in "${!neverWaiveMap[@]}"; do # echo "check: [$nwCheck] vs "${neverWaiveMap[$p]}
             if [[ "${nwCheck}" == "${neverWaiveMap[$p]}" ]]; then collectThis=""; break; fi # found a never-waive item
@@ -207,99 +207,109 @@ for errataURL in "${!errataURLsMap[@]}"; do
   mkdir -p ${tmpdir} && pushd ${tmpdir} >/dev/null
   curl -s -S -k -X POST -u ${userpass} ${data} ${errataURL} > ${tmpdir}/page.html
 
-  # determine the type of problem to check - look for <b>*Symlinks*</b> - page must include the correct string, 
-  # and that must map to one of the problems we're processing
-  if [[ $(cat ${tmpdir}/page.html | egrep "<b>\*${allProblemsMap[$problem]}\*<\/b>") ]]; then # ok to proceed
-    count=0
-    # list of false positive problems to just skip w/o needing further processing
-    if [[ ${falsePositiveProblemMap[${problem}]+keyExists} ]]; then
-      rpmsToInstall=$(cat ${tmpdir}/page.html | egrep "NEEDS INSPECTION" -A4 \
-        | sed -e "s#--\|.\+<td>.*\|.\+</td>.*\|.\+NEEDS INSPECTION.*##" | sort | uniq)
+  # check if already waived before doing anything else
+  previousWaiveReasons="$(egrep "This change is ok because" ${tmpdir}/page.html | sed -e "s#.\+This change is ok because ##" | \
+    sed -e "s#I ran https://github.com/jbosstools/jbosstools-build-ci/blob/master/util/errataWaiveChecker.sh and ##" | \
+    sed -e "s#\(.\+\)</pre># * \1#" | sort | uniq)"
+  if [[ $(echo ${previousWaiveReasons} | egrep "revert-waive-text|Revert|textarea") ]]; then previousWaiveReasons=""; fi
+  if [[ ${previousWaiveReasons} ]]; then
+    let numErrata=numErrata+1
+    log "[INFO] [${numErrata}/${totErrata}] Already waived ${blue}${errataURL}${norm} with reason:"
+    log "${previousWaiveReasons}"
+  else
+    # determine the type of problem to check - look for <b>*Symlinks*</b> - page must include the correct string, 
+    # and that must map to one of the problems we're processing
+    if [[ ! ${previousWaiveReasons} ]] && [[ $(cat ${tmpdir}/page.html | egrep "<b>\*${allProblemsMap[$problem]}\*<\/b>") ]]; then # ok to proceed
+      count=0
+      # list of false positive problems to just skip w/o needing further processing
+      if [[ ${falsePositiveProblemMap[${problem}]+keyExists} ]]; then
+        rpmsToInstall=$(cat ${tmpdir}/page.html | egrep "NEEDS INSPECTION" -A4 \
+          | sed -e "s#--\|.\+<td>.*\|.\+</td>.*\|.\+NEEDS INSPECTION.*##" | sort | uniq)
 
-      if [[ ${rpmsToInstall} ]]; then
-        for f in ${rpmsToInstall}; do let count=count+1; done
-      fi
-    # list of problems that require installing RPMs to verify
-    elif [[ ${rpmInstallProblemMap[${problem}]+keyExists} ]]; then
-      # TODO: add more checks here if required
-      filesToCheck=$(cat ${tmpdir}/page.html | egrep "is a ${problem} \(to " | sed \
-          -e "s#.\+This change is ok because.\+##" \
-          -e "s#.\+<pre>File ##" \
-          -e "s#.\+<pre>New file ##" \
-          -e "s# is.\+${problem}.\+to #:#" \
-          -e "s#) on.\+</pre>##")
-      rpmsToInstall=$(cat ${tmpdir}/page.html | egrep "NEEDS INSPECTION" -A4 \
-        | sed -e "s#--\|.\+<td>.*\|.\+</td>.*\|.\+NEEDS INSPECTION.*##" | sort | uniq)
-
-      rpm=$(cat ${tmpdir}/page.html | egrep "Results for" | sed -e "s#<h1>.\+Results for \(.\+\) compared to .\+#\1#")
-      rpmInstallList=""
-      rpmversion2=${rpm##*-}; # echo $rpmversion2; 
-      rpmversion1=${rpm%-${rpmversion2}}; rpmversion1=${rpmversion1##*-}; # echo $rpmversion1
-      for anrpm in ${rpmsToInstall}; do
-        if [[ ${installAnyVersion} -eq 1 ]]; then
-          rpmInstallList="${rpmInstallList} ${anrpm}"
-        else
-          rpmInstallList="${rpmInstallList} ${anrpm}-${rpmversion1}-${rpmversion2}"
+        if [[ ${rpmsToInstall} ]]; then
+          for f in ${rpmsToInstall}; do let count=count+1; done
         fi
-      done
+      # list of problems that require installing RPMs to verify
+      elif [[ ${rpmInstallProblemMap[${problem}]+keyExists} ]]; then
+        # TODO: add more checks here if required
+        filesToCheck=$(cat ${tmpdir}/page.html | egrep "is a ${problem} \(to " | sed \
+            -e "s#.\+This change is ok because.\+##" \
+            -e "s#.\+<pre>File ##" \
+            -e "s#.\+<pre>New file ##" \
+            -e "s# is.\+${problem}.\+to #:#" \
+            -e "s#) on.\+</pre>##")
+        rpmsToInstall=$(cat ${tmpdir}/page.html | egrep "NEEDS INSPECTION" -A4 \
+          | sed -e "s#--\|.\+<td>.*\|.\+</td>.*\|.\+NEEDS INSPECTION.*##" | sort | uniq)
 
-      if [[ $uninstallRPMsBefore -eq 1 ]]; then
-        doInstall remove "${rpmInstallList}"
-      fi
-      doInstall install "${rpmInstallList}"
-
-      if [[ ${filesToCheck} ]]; then
-        for f in ${filesToCheck}; do # echo f = $f
-          let count=count+1
-          logdebug ""
-          logdebug "[DEBUG] pair = $f"
-          alink=/${f%:*}
-          if [[ ${f#*:} = "/"* ]]; then
-            afile=${f#*:}
+        rpm=$(cat ${tmpdir}/page.html | egrep "Results for" | sed -e "s#<h1>.\+Results for \(.\+\) compared to .\+#\1#")
+        rpmInstallList=""
+        rpmversion2=${rpm##*-}; # echo $rpmversion2; 
+        rpmversion1=${rpm%-${rpmversion2}}; rpmversion1=${rpmversion1##*-}; # echo $rpmversion1
+        for anrpm in ${rpmsToInstall}; do
+          if [[ ${installAnyVersion} -eq 1 ]]; then
+            rpmInstallList="${rpmInstallList} ${anrpm}"
           else
-            afile=${alink%/*}/${f#*:}
-          fi
-          status=""
-          logdebug "[DEBUG] alink = $alink"
-          logdebug "[DEBUG] afile = $afile"
-          if [[ ! -f "${afile}" ]] && [[ ! -d "${afile}" ]]; then
-            # echo "[WARNING] ${afile} not found - check symlink"
-            error=""
-            if [[ -L "${afile}" ]]; then
-              error=$(file "${afile}" | grep "broken symbolic link")
-              if [[ ${error} ]]; then
-                status="${red}[ERROR] Can't find ${norm}'${red}${afile}${norm}'"
-                let hadError=hadError+1
-              fi
-            else
-              if [[ ${alink} != "/opt/rh"* ]] || [[ ${afile} != "/opt/rh"* ]]; then
-                cat ${tmpdir}/page.html | egrep -A5 -B5 "${f}"
-                log "${red}[ERROR] Parser error reading${norm} ${errataURL} - ${red}script must exit${norm}!"
-                log "Look in ${tmpdir}/page.html for problems and fix this script."
-                if [[ ${failNever} -eq 0 ]]; then exit 1; fi
-              fi
-              status="${red}[ERROR] Can't find ${norm}'${red}${alink}${norm}' -> '${red}${afile}${norm}'"
-              let hadError=hadError+1
-            fi
-          fi
-          if [[ ${status} ]]; then
-            log "${status}"
-          else
-            logdebug "[INFO] ${green}OK${norm}: ${alink} -> ${afile}"
+            rpmInstallList="${rpmInstallList} ${anrpm}-${rpmversion1}-${rpmversion2}"
           fi
         done
+
+        if [[ $uninstallRPMsBefore -eq 1 ]]; then
+          doInstall remove "${rpmInstallList}"
+        fi
+        doInstall install "${rpmInstallList}"
+
+        if [[ ${filesToCheck} ]]; then
+          for f in ${filesToCheck}; do # echo f = $f
+            let count=count+1
+            logdebug ""
+            logdebug "[DEBUG] pair = $f"
+            alink=/${f%:*}
+            if [[ ${f#*:} = "/"* ]]; then
+              afile=${f#*:}
+            else
+              afile=${alink%/*}/${f#*:}
+            fi
+            status=""
+            logdebug "[DEBUG] alink = $alink"
+            logdebug "[DEBUG] afile = $afile"
+            if [[ ! -f "${afile}" ]] && [[ ! -d "${afile}" ]]; then
+              # echo "[WARNING] ${afile} not found - check symlink"
+              error=""
+              if [[ -L "${afile}" ]]; then
+                error=$(file "${afile}" | grep "broken symbolic link")
+                if [[ ${error} ]]; then
+                  status="${red}[ERROR] Can't find ${norm}'${red}${afile}${norm}'"
+                  let hadError=hadError+1
+                fi
+              else
+                if [[ ${alink} != "/opt/rh"* ]] || [[ ${afile} != "/opt/rh"* ]]; then
+                  cat ${tmpdir}/page.html | egrep -A5 -B5 "${f}"
+                  log "${red}[ERROR] Parser error reading${norm} ${errataURL} - ${red}script must exit${norm}!"
+                  log "Look in ${tmpdir}/page.html for problems and fix this script."
+                  if [[ ${failNever} -eq 0 ]]; then exit 1; fi
+                fi
+                status="${red}[ERROR] Can't find ${norm}'${red}${alink}${norm}' -> '${red}${afile}${norm}'"
+                let hadError=hadError+1
+              fi
+            fi
+            if [[ ${status} ]]; then
+              log "${status}"
+            else
+              logdebug "[INFO] ${green}OK${norm}: ${alink} -> ${afile}"
+            fi
+          done
+        fi
       fi
+    else
+      logdebug "Skip processing ${problem} - ${tmpdir}/page.html" # should never get here
     fi
-  else
-    logdebug "Skip processing ${problem} - ${tmpdir}/page.html" # should never get here
-  fi
 
-  if [[ $uninstallRPMsAfter -eq 1 ]]; then
-    doInstall remove "${rpmInstallList}"
-  fi
+    if [[ $uninstallRPMsAfter -eq 1 ]]; then
+      doInstall remove "${rpmInstallList}"
+    fi
 
-  log ""
-  let numErrata=numErrata+1
+    log ""
+    let numErrata=numErrata+1
     if [[ ${falsePositiveProblemMap[${problem}]+keyExists} ]]; then
       log "[INFO] [${numErrata}/${totErrata}] Found ${green}${hadError}${norm} of ${green}${count}${norm} ${problem}s at ${errataURL}"
     elif [[ ${rpmInstallProblemMap[${problem}]+keyExists} ]]; then
@@ -310,13 +320,8 @@ for errataURL in "${!errataURLsMap[@]}"; do
       fi
     fi
 
-    # submit waive automatically, but check if errata is already waived - don't waive more than once
-    previousWaiveReasons="$(egrep "This change is ok because" ${tmpdir}/page.html | sed -e "s#.\+This change is ok because ##" | \
-      sed -e "s#I ran https://github.com/jbosstools/jbosstools-build-ci/blob/master/util/errataWaiveChecker.sh and ##" | sed -e "s#\(.\+\)</pre># * \1#" | sort | uniq)"
-    if [[ ${previousWaiveReasons} ]]; then
-      log "[INFO] [${numErrata}/${totErrata}] Already waived ${blue}${errataURL}${norm} with reason:"
-      log "${previousWaiveReasons}"
-    elif [[ ${waive} -eq 1 ]] && [[ ${hadError} -eq 0 ]]; then
+    # submit waive automatically
+    if [[ ${waive} -eq 1 ]] && [[ ${hadError} -eq 0 ]]; then
       data=""
       #data="${data}&utf8=&#x2713;authenticity_token=QeudVj96QLvlX5PPcs8HTUgzwtCFaueiggPn+S3VAwU="
       #data="${data}&errata_id="
@@ -349,6 +354,7 @@ for errataURL in "${!errataURLsMap[@]}"; do
       log "[INFO] [${numErrata}/${totErrata}] To automatically waive this result, re-run this script with the ${blue}-waive${norm} flag."
     fi
   
+  fi
   logdebug ""
 
   popd >/dev/null
