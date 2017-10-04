@@ -261,8 +261,8 @@ for errataURL in "${!errataURLsMap[@]}"; do
         if [[ ${filesToCheck} ]]; then
           for f in ${filesToCheck}; do # echo f = $f
             let count=count+1
-            logdebug ""
-            logdebug "[DEBUG] pair = $f"
+            #logdebug ""
+            #logdebug "[DEBUG] pair = $f"
             alink=/${f%:*}
             if [[ ${f#*:} = "/"* ]]; then
               afile=${f#*:}
@@ -270,8 +270,8 @@ for errataURL in "${!errataURLsMap[@]}"; do
               afile=${alink%/*}/${f#*:}
             fi
             status=""
-            logdebug "[DEBUG] alink = $alink"
-            logdebug "[DEBUG] afile = $afile"
+            #logdebug "[DEBUG] alink = $alink"
+            #logdebug "[DEBUG] afile = $afile"
             if [[ ! -f "${afile}" ]] && [[ ! -d "${afile}" ]]; then
               # echo "[WARNING] ${afile} not found - check symlink"
               error=""
@@ -295,7 +295,8 @@ for errataURL in "${!errataURLsMap[@]}"; do
             if [[ ${status} ]]; then
               log "${status}"
             else
-              logdebug "[INFO] ${green}OK${norm}: ${alink} -> ${afile}"
+              #logdebug "[INFO] ${green}OK${norm}: ${alink} -> ${afile}"
+              continue
             fi
           done
         fi
