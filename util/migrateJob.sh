@@ -88,7 +88,7 @@ pushd ${jbdevstudio_ci_folder}
 
 echo "[INFO] [$i/$tot] Fetch latest OLD job ${JOB_NAME} from Jenkins"
 # requires: https://github.com/nickboldt/maven-plugins/tree/master/hudson-job-sync-plugin
-~/bin/hudpull.sh -DhudsonURL=https://${SOURCE_JENKINS}/ -DviewFilter=${SOURCE_PATH} -DregexFilter="${JOB_NAME}" \
+~/bin/hudpull.sh -DhudsonURL=https://${SOURCE_JENKINS}/ -sj ${SOURCE_JENKINS} -DviewFilter=${SOURCE_PATH} -DregexFilter="${JOB_NAME}" \
   | egrep "SUCCESS|FAIL|${JOB_NAME}" 
 echo ""; (( i++ ))
 
@@ -116,7 +116,7 @@ echo ""; (( i++ ))
 
 echo "[INFO] [$i/$tot] Fetch latest NEW job from Jenkins (after creating it)"
 # requires: https://github.com/nickboldt/maven-plugins/tree/master/hudson-job-sync-plugin
-~/bin/hudpull-centralCI.sh -DhudsonURL=https://${TARGET_JENKINS}/ -DviewFilter=${TARGET_PATH} -DregexFilter="${JOB_NAME}" \
+~/bin/hudpull.sh -DhudsonURL=https://${TARGET_JENKINS}/ -sj ${TARGET_JENKINS} -DviewFilter=${TARGET_PATH} -DregexFilter="${JOB_NAME}" \
   | egrep "SUCCESS|FAIL|${JOB_NAME}" 
 echo ""; (( i++ ))
 
