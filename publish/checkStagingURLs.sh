@@ -408,8 +408,8 @@ done
 
 ##################################
 
-log "[INFO] [${quals}] URLs found: ${OK} (${OPTIONS})"
+log "[INFO] [${quals} ] URLs found: ${OK} (${OPTIONS})"
 if [[ ${notOK} -gt 0 ]]; then 
-  logerr "" "[ERROR] [${quals}] URLs missing: ${notOK} (${OPTIONS})"
+  logerr "" "[ERROR] [${quals} ] URLs missing: ${notOK} (${OPTIONS})"
   exit $notOK
 fi
