@@ -57,7 +57,6 @@ if [[ ${TARGET_PLATFORM_VERSION_MAX} ]]; then
     static="";
     for u in http://download.jboss.org/jbosstools/${static}targetplatforms/jbosstoolstarget \
              https://devstudio.jboss.com/${static}targetplatforms/jbdevstudiotarget; do
-      t=${u%%/}; t=${t##*/}; # echo $t; # jbosstoolstarget or jbdevstudiotarget      
       for f in ${TARGET_PLATFORM_VERSION_MAX} ${TARGET_PLATFORM_VERSION_MAX}/REPO; do
         a=${u}/${f}
         logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
@@ -79,7 +78,8 @@ if [[ ${TARGET_PLATFORM_VERSION_MAX} ]]; then
   # check that the main site is in place, whether it's a .Final under /static/targetplatforms/ or a SNAPSHOT under /targetplatforms/
   for u in http://download.jboss.org/jbosstools/${static}targetplatforms/jbosstoolstarget \
            https://devstudio.jboss.com/${static}targetplatforms/jbdevstudiotarget; do
-    t=${u%%/}; t=${t##*/}; # echo $t; # jbosstoolstarget or jbdevstudiotarget
+    #t=${u%%/}; t=${t##*/}; # echo $t; # jbosstoolstarget or jbdevstudiotarget
+    t=jbosstoolstarget # all zips are called jbosstoolstarget now   
 
     for f in ${TARGET_PLATFORM_VERSION_MAX} ${TARGET_PLATFORM_VERSION_MAX}/REPO; do
       a=${u}/${f}
