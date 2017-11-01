@@ -18,6 +18,7 @@ ok /ignoring option .*PermSize/
 ok /No baseline version/
 ok /Could not transfer metadata org.jboss.tools:parent/
 ok /Failure to transfer org.jboss.tools:parent/
+ok /Couldn't create directory: Failure/
 
 # section starts: these are used to group errors and warnings found after the line; also creates a quick access link.
 start /Reactor Build Order/
@@ -26,6 +27,7 @@ start /tycho-surefire-plugin:.+:test \(.+test\).+/
 start /T E S T S/
 start /Reactor Summary/
 start /checkLatestPublishedSHA.sh/ 
+start /found ID = /
 
 # quick access links to these console log lines
 info /tycho\.testArgLine/
@@ -33,6 +35,9 @@ info /\[INFO\] All tests passed/
 info /Tests run:.+/
 info /BUILD SUCCESS/
 info /Total time/
+info /Latest build for /
+info /rsync -arz --rsh=ssh --protocol=28/
+info /\[INFO\] .+ DONE: .+/
 
 # warnings
 warning /.+\[WARNING\].+/
@@ -47,6 +52,7 @@ warning /Unable to read repository/
 warning /Connection closed by remote host/
 warning /Connection reset by peer/
 warning /Couldn't read packet/
+warning /ln: failed to create symbolic link/
 
 # errors
 error /HTTPError/
