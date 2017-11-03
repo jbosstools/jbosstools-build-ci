@@ -155,6 +155,16 @@ def prettyXML(xml):
     out = text_re.sub('>\g<1></', uglyXml)
     return out
 
+def findChildNodeByNameCheckData(parent, name, dataMatch):
+    for node in parent.childNodes:
+        if node.nodeType == node.ELEMENT_NODE and node.localName == name:
+            if debug: print "[DEBUG] Check this Sprint node: " + node.toxml()
+            for n in node.childNodes:
+                if n.nodeType == n.TEXT_NODE:
+                    if n.data == dataMatch:
+                        return node
+    return None
+
 def findChildNodeByName(parent, name):
     for node in parent.childNodes:
         if node.nodeType == node.ELEMENT_NODE and node.localName == name:
@@ -176,8 +186,10 @@ def getSprintId(sprint, jiraserver, jirauser, jirapwd):
     if customfieldvalues != None:
         for s in customfieldvalues :
             if getText(findChildNodeByName(s, 'customfieldname').childNodes) == "Sprint":
-                sprintId = findChildNodeByName(findChildNodeByName(s, 'customfieldvalues'), 'customfieldvalue').attributes["id"].value
-                if debug: print "[DEBUG] Found sprintId = " + sprintId
+                sprintNode = findChildNodeByNameCheckData(findChildNodeByName(s, 'customfieldvalues'), 'customfieldvalue',sprint)
+                if debug: print "[DEBUG] Found sprint node matching " + sprintNode.childNodes[0].data
+                sprintId = sprintNode.attributes["id"].value
+                if debug: print "[DEBUG] Found sprintId = " + sprintId + " in " + sprintNode.toxml()
                 return sprintId
     sys.exit("[ERROR] Sprint '" + sprint + "' does not yet exist. Go bug " + defaultAssignee() + " to get it created.")
     return None
