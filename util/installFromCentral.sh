@@ -192,7 +192,7 @@ if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then
 
   # extract the <iu id=""> and <connectorDescriptor siteUrl=""> properties, excluding commented out stuff
   # DO NOT INDENT the next lines after cat
-  cat << XSLT > ${WORKSPACE}/get-ius-and-siteUrls.xsl
+  cat << EOXSLT > ${WORKSPACE}/get-ius-and-siteUrls.xsl
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
   <xsl:output omit-xml-declaration="yes"/>
@@ -214,7 +214,7 @@ if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then
     </xsl:copy>
   </xsl:template>
 </xsl:stylesheet>
-XSLT
+EOXSLT
 
   # for each Central Discover plugin
   for PLUGINJAR in $PLUGINJARS; do 
