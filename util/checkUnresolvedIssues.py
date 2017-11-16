@@ -22,8 +22,8 @@ import components
 #  sprint_NEXT="devex #137 September 2017"
 #  versionWithRespin_jbt=4.5.1.AM1
 #  versionWithRespin_jbt_NEXT=4.5.1.AM2
-#  versionWithRespin_ds=11.1.0.AM1
-#  versionWithRespin_ds_NEXT=11.1.0.AM2
+#  versionWithRespin_ds=11.2.0.AM1
+#  versionWithRespin_ds_NEXT=11.2.0.AM2
 #  python -W ignore checkUnresolvedIssues.py -S --jira https://issues.jboss.org  \
 #   --jbt ${versionWithRespin_jbt} --jbt_NEXT ${versionWithRespin_jbt_NEXT}   \
 #   --ds ${versionWithRespin_ds} --ds_NEXT ${versionWithRespin_ds_NEXT}   \
