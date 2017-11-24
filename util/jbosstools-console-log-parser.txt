@@ -40,6 +40,7 @@ info /rsync -arz --rsh=ssh --protocol=28/
 info /\[INFO\] .+ DONE: .+/
 
 # warnings
+warning /\[p2.mirror\] .+/ 
 warning /.+\[WARNING\].+/
 warning /[Ww]arning/
 warning /WARNING/
