@@ -75,6 +75,8 @@ checkCompositeXML ()
     # parse the file for <child location="" URLs>
     checkurl=$1
     indent=$2
+    checkurl_PREV=$3
+    indent_PREV=$4
 	if [[ $debug -eq 1 ]]; then
 	    echo "[DEBUG] Check children of $checkurl"
 	fi
@@ -109,10 +111,27 @@ checkCompositeXML ()
 	countItems "${urls}"
 	(( numUrls = numUrls + itemCount ))
 
+	newurls=""
     for a in ${urls}; do
         if [[ ${a} != "http"* ]]; then # relative path
             a=${checkurl%/composite*xml}/${a}
         fi
+	    newurls="${newurls} ${a}"
+    done
+    urls=${newurls}
+
+	if [[ $debug -eq 1 ]]; then
+		echo "[DEBUG] Got urls:"
+		echo "[DEBUG] ------------"
+		cnt=0
+		for url in $urls; do 
+			(( cnt = cnt + 1 ))
+			echo "[$cnt] $url"
+		done
+		echo "[DEBUG] ------------"
+	fi
+ 
+    for a in ${urls}; do
 		((num = num + 1 ))
         logn "{${checkurlnum}/${checkurltot}} [${num}/${numUrls}]${indent} ${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
         if [[ ! $stat ]]; then 
@@ -120,11 +139,14 @@ checkCompositeXML ()
         	let OK+=1
 			stat=$(curl -I -s ${a}/compositeContent.xml | egrep "404 Not Found")
 			if [[ ! $stat ]]; then # exists
-				checkCompositeXML ${a}/compositeContent.xml " >"
-				indent=""
+				checkCompositeXML ${a}/compositeContent.xml "${indent_PREV} >" ${checkurl} ${indent}
 			fi
         else 
-        	logerr "{${checkurlnum}/${checkurltot}} [${num}/${numUrls}]${indent} ${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"
+        	if [[ $quiet == 0 ]]; then 
+	        	logerr "{${checkurlnum}/${checkurltot}} [${num}/${numUrls}]${indent} ${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"
+	        else
+    	    	logerr "{${checkurlnum}/${checkurltot}} [${num}/${numUrls}]${indent} ${a} : " "${red}NO${norm}"
+    	    fi
         	let notOK+=1
         fi
     done
@@ -139,8 +161,9 @@ for checkurl in ${checkurls}; do
 	if [[ ! $checkurl == *"/compositeContent.xml" ]]; then checkurl="${checkurl}/compositeContent.xml"; fi
 	baseurl=${checkurl%/compositeContent.xml}
 
-	echo "[INFO] Checking for valid children in: $checkurl"
-	echo
+	log
+	log "[INFO] Checking for valid children in: $checkurl"
+	log
 
 	tmpdir=${WORKSPACE}/${0##*/}_tmp; mkdir -p $tmpdir
 	if [[ $debug -eq 1 ]]; then
@@ -152,15 +175,16 @@ for checkurl in ${checkurls}; do
 		(( checkurlnum = checkurlnum + 1 ))
 		num=0
 		numUrls=0
-		checkCompositeXML ${checkurl} "" ${checkurlnum}
+		checkCompositeXML ${checkurl} "" 
 	else
-		echo "[ERROR] Could not read ${checkurl} ! "
+		logerr "" "[ERROR] Could not read ${checkurl} ! "
 		rm -fr ${tmpdir}
 		exit 1
 	fi
 	rm -fr ${tmpdir}
 done
 
+log 
 log "[INFO] URLs found: ${OK}"
 if [[ ${notOK} -gt 0 ]]; then 
   logerr "" "[ERROR] URLs missing: ${notOK}"
