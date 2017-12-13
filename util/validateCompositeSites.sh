@@ -4,11 +4,14 @@
 usage ()
 {
 	echo "Usage	: $0 url_to_check1 url_to_check2"
-	echo "Example: $0 \\"
-	echo "  http://download.jboss.org/jbosstools/builds/staging/_composite_/core/master" \\ 
+	echo "Example (good URLs): $0 \\"
 	echo "  http://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/master \\"
 	echo "  http://download.jboss.org/jbosstools/oxygen/stable/updates/ \\"
-	echo "  http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.71.0.Final/REPO \\"
+	echo "  http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.71.0.Final/REPO"
+	echo "Example (obsolete URL): $0 \\"
+	echo "  http://download.jboss.org/jbosstools/builds/staging/_composite_/core/master"
+	echo "Example (bad URLs): $0 \\"
+	echo "  http://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/4.5.oxygen \\"
 	echo "  http://download.jboss.org/jbosstools/oxygen/development/updates/integration-stack/discovery/earlyaccess/"
 	exit 1
 
