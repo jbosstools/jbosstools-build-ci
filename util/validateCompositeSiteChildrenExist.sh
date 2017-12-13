@@ -30,12 +30,14 @@ countItems ()
 
 if [[ $# -lt 1 ]]; then usage; fi
 
+debug=0
 failnever=0
 sleep=0m
 maxsleeps=0
 # read commandline args
 while [[ "$#" -gt 0 ]]; do
 	case $1 in
+		'-X') debug=1; shift 0;;
 		'-fn') failnever=1; shift 0;; # if 1 (true), process all 404s, rather than stopping on the first one
 		'-sleep') sleep="$2"; shift 1;; # duration of each sleep. see `man sleep` for syntax, eg., 5m = 5 minutes
 		'-maxsleeps') maxsleeps="$2"; shift 1;; # number of sleeps before giving up, eg., 6 = 30 mins (if sleep = 5m)
@@ -44,6 +46,8 @@ while [[ "$#" -gt 0 ]]; do
 	esac
 	shift 1
 done
+
+if [[ ! ${WORKSPACE} ]]; then WORKSPACE=/tmp; fi
 
 if [[ ! $checkurls ]]; then usage; fi
 
@@ -59,7 +63,7 @@ for checkurl in ${checkurls}; do
 	echo "[INFO] $checkurl"
 	echo
 
-	tmpdir=`mktemp -d`
+	tmpdir=`mktemp -p ${WORKSPACE} -d`
 	# echo "[DEBUG] tmpdir: ${tmpdir}"
 
 	curl -s ${checkurl} > ${tmpdir}/composite.xml
@@ -68,8 +72,24 @@ for checkurl in ${checkurls}; do
 		rm -fr ${tmpdir}
 		exit 1
 	fi
+	if [[ $debug -gt 0 ]]; then
+		echo "[DEBUG] ${tmpdir}/composite.xml"
+		echo "[DEBUG] ------------"
+		cat ${tmpdir}/composite.xml
+		echo "[DEBUG] ------------"
+	fi
 	countsleeps=0
-	urls="$(cat ${tmpdir}/composite.xml | grep "<child " | egrep -v "<\!--" | sed -e "s#.*<child location=[\'\"]\([^\'\"]\+\)[\'\"]/>#\1#")"
+	urls="$(cat ${tmpdir}/composite.xml | egrep "<child " | egrep -v "<\!--" | sed -e "s#.*<child location=[\'\"]\([^\'\"]\+\)[\'\"]/>#\1#")"
+	if [[ $debug -gt 0 ]]; then
+		echo "[DEBUG] Got urls:"
+		echo "[DEBUG] ------------"
+		cnt=0
+		for url in $urls; do 
+			(( cnt = cnt + 1 ))
+			echo "[$cnt] $url"
+		done
+		echo "[DEBUG] ------------"
+	fi
 
 	countItems "${urls}"
 	numUrls=$itemCount
