@@ -63,7 +63,7 @@ for checkurl in ${checkurls}; do
 	echo "[INFO] $checkurl"
 	echo
 
-	tmpdir=${WORKSPACE}/${0##*/}; mkdir -p $tmpdir
+	tmpdir=${WORKSPACE}/${0##*/}_tmp; mkdir -p $tmpdir
 	if [[ $debug -gt 0 ]]; then
 		echo "[DEBUG] tmpdir: ${tmpdir}"
 	fi
