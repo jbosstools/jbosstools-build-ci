@@ -220,12 +220,13 @@ for checkurl in ${checkurls}; do
 		checkCompositeXML ${checkurl} 0
 	else
 		curl -s ${checkurl%composite*.xml} > ${tmpdir}/index.html
+		(( checkurlnum = checkurlnum + 1 ))
 		if [[ ! -f ${tmpdir}/index.html ]] || [[ $(egrep "404 Not Found" ${tmpdir}/index.html) ]]; then
-			logerr "[ERROR] Could not read ${checkurl} ! "
-			rm -fr ${tmpdir}
-			exit 1
+			checkurl=${checkurl%composite*.xml}
+			logn "{${checkurlnum}/${checkurltot}} [0/0]${indent} ${checkurl} : "
+			logerr "{${checkurlnum}/${checkurltot}} [0/0]${indent} ${checkurl} : " "${red}NO${norm}"
+			let notOK+=1
 		else
-			(( checkurlnum = checkurlnum + 1 ))
 			num=0
 			numUrls=0
 			checkCompositeXML ${checkurl} 0
