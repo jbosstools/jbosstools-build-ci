@@ -6,11 +6,24 @@ usage ()
 	echo "Usage	: $0 url_to_check1 url_to_check2"
 	echo "Example (good URLs): $0 \\"
 	echo "  http://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/master \\"
+ 	echo "  http://download.jboss.org/jbosstools/oxygen/snapshots/updates/discovery.earlyaccess/master \\"
+ 	echo "  \\"
+
+ 	echo "  http://download.jboss.org/jbosstools/oxygen/development/updates/ \\"
+ 	echo "  http://download.jboss.org/jbosstools/oxygen/development/updates/discovery.earlyaccess \\"
+ 	echo "  \\"
+
 	echo "  http://download.jboss.org/jbosstools/oxygen/stable/updates/ \\"
-	echo "  http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.71.0.Final/REPO"
-	echo "Example (obsolete URL): $0 \\"
-	echo "  http://download.jboss.org/jbosstools/builds/staging/_composite_/core/master"
-	echo "Example (bad URLs): $0 \\"
+ 	echo "  http://download.jboss.org/jbosstools/oxygen/stable/updates/discovery.earlyaccess"
+ 	echo ""
+
+	echo "Example (good URLs): $0 \\"
+ 	echo "  https://devstudio.redhat.com/11/stable/updates \\"
+ 	echo "  https://devstudio.redhat.com/11/stable/updates/discovery.earlyaccess"
+	echo ""
+
+	echo "Example (bad/obsolete URLs): $0 \\"
+	echo "  http://download.jboss.org/jbosstools/builds/staging/_composite_/core/master \\"
 	echo "  http://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/4.5.oxygen \\"
 	echo "  http://download.jboss.org/jbosstools/oxygen/development/updates/integration-stack/discovery/earlyaccess/"
 	exit 1
@@ -74,9 +87,7 @@ checkCompositeXML ()
 {
     # parse the file for <child location="" URLs>
     checkurl=$1
-    indent=$2
-    checkurl_PREV=$3
-    indent_PREV=$4
+    indentNum=$2
 	if [[ $debug -eq 1 ]]; then
 	    echo "[DEBUG] Check children of $checkurl"
 	fi
@@ -133,15 +144,24 @@ checkCompositeXML ()
  
     for a in ${urls}; do
 		((num = num + 1 ))
+
+		indent=""
+		if [[ $indentNum -gt 0 ]]; then
+			for i in `seq 1 ${indentNum}`; do
+				indent="${indent} >"
+			done
+		fi
         logn "{${checkurlnum}/${checkurltot}} [${num}/${numUrls}]${indent} ${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
         if [[ ! $stat ]]; then 
         	log "${green}OK${norm}"
         	let OK+=1
 			stat=$(curl -I -s ${a}/compositeContent.xml | egrep "404 Not Found")
 			if [[ ! $stat ]]; then # exists
-				checkCompositeXML ${a}/compositeContent.xml "${indent_PREV} >" ${checkurl} ${indent}
-			fi
-        else 
+				(( indentNum = indentNum + 1 ))
+				checkCompositeXML ${a}/compositeContent.xml ${indentNum}
+				(( indentNum = indentNum - 1 ))
+    		fi
+	    else 
         	if [[ $quiet == 0 ]]; then 
 	        	logerr "{${checkurlnum}/${checkurltot}} [${num}/${numUrls}]${indent} ${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"
 	        else
@@ -175,7 +195,7 @@ for checkurl in ${checkurls}; do
 		(( checkurlnum = checkurlnum + 1 ))
 		num=0
 		numUrls=0
-		checkCompositeXML ${checkurl} "" 
+		checkCompositeXML ${checkurl} 0
 	else
 		logerr "" "[ERROR] Could not read ${checkurl} ! "
 		rm -fr ${tmpdir}
