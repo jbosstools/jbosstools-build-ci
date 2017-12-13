@@ -11,8 +11,9 @@
 
 usage ()
 {
-	echo "Usage	: $0 -sleep duration -maxsleeps num -url url_to_check"
-	echo "Example	: $0 -sleep 5m -maxsleeps 6 -url http://www.qa.jboss.com/binaries/RHDS/discovery/nightly/core/4.1.kepler/compositeContent.xml"
+	echo "Usage	: $0 url_to_check [-fn (fail never - report ALL 404s instead of stopping after first)]"
+	echo "Example	: $0 http://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/master/"
+	echo "Example 2 : $0 http://download.jboss.org/jbosstools/builds/staging/_composite_/core/master/compositeContent.xml -fn"
 	exit 1
 
 }
@@ -38,8 +39,8 @@ while [[ "$#" -gt 0 ]]; do
 		'-fn') failnever=1; shift 0;; # if 1 (true), process all 404s, rather than stopping on the first one
 		'-sleep') sleep="$2"; shift 1;; # duration of each sleep. see `man sleep` for syntax, eg., 5m = 5 minutes
 		'-maxsleeps') maxsleeps="$2"; shift 1;; # number of sleeps before giving up, eg., 6 = 30 mins (if sleep = 5m)
-		'-url') checkurls="$2"; shift 1;; # URL to read, eg., http://www.qa.jboss.com/binaries/RHDS/discovery/nightly/core/4.1.kepler/compositeContent.xml
-		*) checkurls="${checkurls} $1"; shift 0;; # URL to read, eg., http://www.qa.jboss.com/binaries/RHDS/discovery/nightly/core/4.1.kepler/compositeContent.xml
+		'-url') checkurls="$2"; shift 1;; # URL to read, eg., http://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/master/
+		*) checkurls="${checkurls} $1"; shift 0;; # URL to read, eg., http://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/master/
 	esac
 	shift 1
 done
@@ -59,9 +60,14 @@ for checkurl in ${checkurls}; do
 	echo
 
 	tmpdir=`mktemp -d`
+	# echo "[DEBUG] tmpdir: ${tmpdir}"
 
-	wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate"
-	wget ${wgetParams} ${checkurl} -O ${tmpdir}/composite.xml -q
+	curl -s ${checkurl} > ${tmpdir}/composite.xml
+	if [[ ! -f ${tmpdir}/composite.xml ]] || [[ $(egrep "404 Not Found" ${tmpdir}/composite.xml) ]]; then
+		echo "[ERROR] Could not read ${checkurl} ! "
+		rm -fr ${tmpdir}
+		exit 1
+	fi
 	countsleeps=0
 	urls="$(cat ${tmpdir}/composite.xml | grep "<child " | egrep -v "<\!--" | sed -e "s/\([\t ]\+\)<child location='\|'\/>//g")"
 
@@ -85,7 +91,8 @@ for checkurl in ${checkurls}; do
 			fi
 			((num = num + 1 ))
 			echo -n "[INFO] [${num}/${numUrls}] $url/ ... "
-			if [[ `wget ${wgetParams} ${url}/ -O ${tmpdir}/testfile 2>&1 | egrep "ERROR 404"` ]]; then #invalid URL, so sleep and loop
+			stat=$(curl -I -s ${url} | egrep "404 Not Found")
+			if [[ $stat ]]; then # 404
 				if [[ ${countsleeps} -lt ${maxsleeps} ]]; then
 					echo "not found. Sleeping for $sleep"
 					sleep ${sleep}
@@ -105,7 +112,6 @@ for checkurl in ${checkurls}; do
 				echo "found."
 				(( numgood = numgood + 1 ))
 			fi
-			rm -fr ${tmpdir}/testfile
 		done
 		(( numtotal = numgood + numbad ))
 		if [[ ${numtotal} -eq ${numUrls} ]]; then
