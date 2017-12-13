@@ -105,7 +105,7 @@ checkCompositeXML ()
 		echo "[DEBUG] ------------"
 	fi
 	cat ${tmpdir}/composite.xml | egrep "<child " | egrep -v "<\!--" | egrep "location" \
-	  | sed -e "s#.*<child location=[\'\"]\+\([^\'\"]\+\)[\'\"]\+\/>.*#\1#" > ${tmpdir}/composite.txt
+	  | sed -e "s#.*<child location=[\'\"]\+\([^\'\"]\+\)[\'\"]\+.*\/>.*#\1#" > ${tmpdir}/composite.txt
 	urls=$(cat ${tmpdir}/composite.txt)
 	if [[ $debug -eq 1 ]]; then
 		echo "[DEBUG] Got urls (in ${tmpdir}/composite.txt ):"
