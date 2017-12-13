@@ -83,6 +83,7 @@ blue="\033[1;34m"
 red="\033[1;31m"
 OK=0
 notOK=0
+warnOK=0
 
 checkCompositeXML ()
 {
@@ -103,7 +104,8 @@ checkCompositeXML ()
 			exit 1
 		else
 			checkurl=${checkurl%/composite*.xml}
-			log "[WARNING] ${checkurl} is not a composite site ! "
+			logerr "" "{${checkurlnum}/${checkurltot}} [${num}/${numUrls}]${indent} ${checkurl} is not a composite site: ${blue}OK${norm}"
+			let warnOK+=1
 		fi
 	fi
 	if [[ -f ${tmpdir}/composite.xml ]]; then
@@ -141,7 +143,7 @@ checkCompositeXML ()
 		newurls=""
 		for a in ${urls}; do
 			if [[ ${a} == "/"* ]]; then # absolute path
-				prot=${checkurl%%/*}; server=${checkurl##${prot}//}; server=${server%%/*}; echo $prot $server
+				prot=${checkurl%%/*}; server=${checkurl##${prot}//}; server=${server%%/*}; # echo $prot $server
 				a=${prot}//${server}${a}
 			elif [[ ${a} != "http"* ]]; then # relative path
 				a=${checkurl%/composite*xml}/${a}
@@ -223,8 +225,10 @@ for checkurl in ${checkurls}; do
 			rm -fr ${tmpdir}
 			exit 1
 		else
-			checkurl=${checkurl%/composite*.xml}
-			log "[WARNING] ${checkurl} is not a composite site: ${blue}OK${norm}"
+			(( checkurlnum = checkurlnum + 1 ))
+			num=0
+			numUrls=0
+			checkCompositeXML ${checkurl} 0
 		fi
 	fi
 	rm -fr ${tmpdir}
@@ -232,6 +236,9 @@ done
 
 log 
 log "[INFO] URLs found: ${OK}"
+if [[ $warnOK -gt 0 ]]; then
+	logerr "" "[WARNING] Non-composite URLs found: ${warnOK}"
+fi
 if [[ ${notOK} -gt 0 ]]; then 
   logerr "" "[ERROR] URLs missing: ${notOK}"
   exit $notOK
