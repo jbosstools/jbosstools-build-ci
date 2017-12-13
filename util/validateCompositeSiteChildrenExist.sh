@@ -69,7 +69,7 @@ for checkurl in ${checkurls}; do
 		exit 1
 	fi
 	countsleeps=0
-	urls="$(cat ${tmpdir}/composite.xml | grep "<child " | egrep -v "<\!--" | sed -e "s/\([\t ]\+\)<child location='\|'\/>//g")"
+	urls="$(cat ${tmpdir}/composite.xml | grep "<child " | egrep -v "<\!--" | sed -e "s#.*<child location=[\'\"]\([^\'\"]\+\)[\'\"]/>#\1#")"
 
 	countItems "${urls}"
 	numUrls=$itemCount
