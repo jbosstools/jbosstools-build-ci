@@ -81,7 +81,7 @@ for checkurl in ${checkurls}; do
 		echo "[DEBUG] ------------"
 	fi
 	countsleeps=0
-	cat ${tmpdir}/composite.xml | egrep "<child " | egrep -v "<\!--" | egrep "location" | sed -e "s#.*<child location=[\'\"]\+\([^\'\"]\+\)[\'\"]\+\/>#\1#" > ${tmpdir}/composite.txt
+	cat ${tmpdir}/composite.xml | egrep "<child " | egrep -v "<\!--" | egrep "location" | sed -e "s#.*<child location=[\'\"]\+\([^\'\"]\+\)[\'\"]\+.*\/>#\1#" > ${tmpdir}/composite.txt
 	urls=$(cat ${tmpdir}/composite.txt)
 	if [[ $debug -gt 0 ]]; then
 		echo "[DEBUG] Got urls:"
