@@ -63,8 +63,10 @@ for checkurl in ${checkurls}; do
 	echo "[INFO] $checkurl"
 	echo
 
-	tmpdir=`mktemp -p ${WORKSPACE} -d`
-	# echo "[DEBUG] tmpdir: ${tmpdir}"
+	tmpdir=${WORKSPACE}/${0##*/}; mkdir -p $tmpdir
+	if [[ $debug -gt 0 ]]; then
+		echo "[DEBUG] tmpdir: ${tmpdir}"
+	fi
 
 	curl -s ${checkurl} > ${tmpdir}/composite.xml
 	if [[ ! -f ${tmpdir}/composite.xml ]] || [[ $(egrep "404 Not Found" ${tmpdir}/composite.xml) ]]; then
