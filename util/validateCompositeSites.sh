@@ -140,7 +140,10 @@ checkCompositeXML ()
 
 		newurls=""
 		for a in ${urls}; do
-			if [[ ${a} != "http"* ]]; then # relative path
+			if [[ ${a} == "/"* ]]; then # absolute path
+				prot=${checkurl%%/*}; server=${checkurl##${prot}//}; server=${server%%/*}; echo $prot $server
+				a=${prot}//${server}${a}
+			elif [[ ${a} != "http"* ]]; then # relative path
 				a=${checkurl%/composite*xml}/${a}
 			fi
 			newurls="${newurls} ${a}"
