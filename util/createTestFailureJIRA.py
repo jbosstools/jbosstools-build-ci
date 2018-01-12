@@ -15,7 +15,7 @@ from requests.auth import HTTPBasicAuth
 # ref: http://stackoverflow.com/questions/12609402/init-got-an-unexpected-keyword-argument-mime-in-python-django
 
 usage = "Usage: %prog --affected <jbide version> --component <jbide component> --jira <JIRA server> --jirauser <JIRA user> --jirapwd <JIRA pwd> \
---test https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/<job_name>/<build_num>/testReport/ --testuser <user for test server> --testpwd <pwd for test server>  \n\n\
+--test https://dev-platform-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/<job_name>/<build_num>/testReport/ --testuser <user for test server> --testpwd <pwd for test server>  \n\n\
 This script will create 1 JBIDE JIRA for the specified component, reporting the test failure from the Test Server testReport URL"
 parser = OptionParser(usage)
 parser.add_option("-a", "--affected", dest="jbideversion", help="JBIDE Affected Version, eg., 4.1.1.Alpha1")
@@ -25,7 +25,7 @@ parser.add_option("-j", "--jira", dest="jiraserver", help="JIRA server, eg., htt
 parser.add_option("-k", "--jirauser", dest="usernameJIRA", help="JIRA Username")
 parser.add_option("-l", "--jirapwd", dest="passwordJIRA", help="JIRA Password")
 
-parser.add_option("-t", "--test", dest="testurl", help="URL of the test failure(s), eg., https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-server_41/113/testReport/")
+parser.add_option("-t", "--test", dest="testurl", help="URL of the test failure(s), eg., https://dev-platform-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/jbosstools-server_41/113/testReport/")
 parser.add_option("-u", "--testuser", dest="usernameTestServer", help="Test Server Username, eg., shortname")
 parser.add_option("-v", "--testpwd", dest="passwordTestServer", help="Test Server Password, eg., kerberos pwd")
 
