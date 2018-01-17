@@ -36,18 +36,18 @@ usage ()
   echo ""
   echo "Example (JBoss Central - eXclude sources): $0 \\"
   echo "  -b /path/to/jbosstools-discovery -p jbtcentral -x \\"
-  echo "  -DTARGET_PLATFORM_VERSION_MAX=4.70.1.Final \\"
+  echo "  -DTARGET_PLATFORM_VERSION_MAX=4.72.0.Final \\"
   echo "  -z /path/to/eclipse-jee-neon-R-linux-gtk-x86_64.tar.gz  -d /path/to/executable/p2diff \\"
-  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.70.1.Final/"
+  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.72.0.Final/"
   echo "          or, use locally built sites"
   echo "  -u file:///path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/"
   echo ""
   echo "Example (JBoss Central Early Access - eXclude sources): $0 \\"
   echo "  -b /path/to/jbosstools-discovery -p jbtearlyaccess -x \\"
-  echo "  -DTARGET_PLATFORM_VERSION_MAX=4.70.1.Final \\"
+  echo "  -DTARGET_PLATFORM_VERSION_MAX=4.72.0.Final \\"
   echo "  -z /path/to/eclipse-jee-neon-R-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff \\"
-  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.70.1.Final/,\\
-http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.70.0.Final-SNAPSHOT/" # always a -SNAPSHOT version
+  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.72.0.Final/,\\
+http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.72.0.Final-SNAPSHOT/" # always a -SNAPSHOT version
   echo "          or, use locally built sites"
   echo "  -u file:///path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,\\
 file:///path/to/jbosstools-discovery/jbtcentraltarget/multiple/target/jbtcentral-multiple.target.repo/"
@@ -66,7 +66,7 @@ fi
 # defaults
 MVN="mvn"
 MRL="" # placeholder for -Dmaven.repo.local, if used
-Dflags="" # placeholer for additional -D flags to pass to maven, eg., -DTARGET_PLATFORM_VERSION_MAX=4.62.0.AM1-SNAPSHOT
+Dflags="" # placeholer for additional -D flags to pass to maven, eg., -DTARGET_PLATFORM_VERSION_MAX=4.72.0.Final-SNAPSHOT
 includeSources="-Dmirror-target-to-repo.includeSources=true" # by default, include sources
 INSTALLSCRIPT=/tmp/installFromTarget.sh
 LOG_GREP_INCLUDES="BUILD FAILURE|Only one of the following|Missing requirement|Unresolved requirement|IllegalArgumentException|Could not resolve|could not be found|being installed|Cannot satisfy dependency|FAILED"
