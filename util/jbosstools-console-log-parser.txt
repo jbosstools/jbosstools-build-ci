@@ -54,6 +54,7 @@ warning /Connection closed by remote host/
 warning /Connection reset by peer/
 warning /Couldn't read packet/
 warning /ln: failed to create symbolic link/
+warning /.settings\/org.eclipse.jdt.core.prefs/
 
 # errors
 error /HTTPError/
