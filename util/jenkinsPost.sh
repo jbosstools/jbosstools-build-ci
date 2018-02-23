@@ -35,6 +35,7 @@ while [[ "$#" -gt 0 ]]; do
     '-p') jenkinsPass="$2"; shift 1;;
     '-s') jenkinsURL="$2"; shift 1;;
     '-d') data="--data \"&"${2// /%20}"&\""; shift 1;;
+	'-c') crumb="$2"; shift 1;;
     '-q') quiet="1"; shift 0;;
   esac
   shift 1
@@ -46,12 +47,21 @@ fi
 
 if [[ ${userpass} = ":" ]] || [[ ! ${job} ]] || [[ ! ${task} ]]; then usage; fi
 
+if [[ ! ${crumb} ]]; then
+	# due to redirection, curl won't work -- wrong crumb returned
+	crumb=$(curl -s -S -L --location-trusted -s ${jenkinsURL//\/job/}/crumbIssuer/api/xml?xpath=//crumb | sed "s#<crumb>\([0-9a-f]\+\)</crumb>#\1#")
+	# so use wget
+	crumb=$(wget -q --auth-no-challenge --user ${jenkinsUser} --password "${jenkinsPass}" --output-document - "${jenkinsURL//\/job/}/crumbIssuer/api/xml?xpath=//crumb" \
+	  | sed "s#<crumb>\([0-9a-f]\+\)</crumb>#\1#")
+fi
+log "Crumb:  / ${crumb}"
+
 logn "["
 prevJob=$(curl -s -S -L --location-trusted -s ${jenkinsURL/https/http}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
 log "${prevJob}] POST: ${jenkinsURL}/${job}/${task} $data"
 if [[ $quiet == 1 ]] && [[ $task != "build"* ]]; then echo ${prevJob}; fi
 
-curl -s -S -k -X POST -u ${userpass} ${data} ${jenkinsURL}/${job}/${task}
+curl -s -S -k -X POST -u ${userpass} -H "Jenkins-Crumb:${crumb}" ${data} ${jenkinsURL}/${job}/${task}
 
 if [[ $task == "build"* ]]; then # build or buildWithParameters
 	sleep 10s
