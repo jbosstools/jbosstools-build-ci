@@ -66,6 +66,7 @@ fi
 # defaults
 MVN="mvn"
 MRL="" # placeholder for -Dmaven.repo.local, if used
+skipUpdateIUs=0
 Dflags="" # placeholer for additional -D flags to pass to maven, eg., -DTARGET_PLATFORM_VERSION_MAX=4.72.0.Final-SNAPSHOT
 includeSources="-Dmirror-target-to-repo.includeSources=true" # by default, include sources
 INSTALLSCRIPT=/tmp/installFromTarget.sh
@@ -94,6 +95,7 @@ while [[ "$#" -gt 0 ]]; do
     '-V') targetplatformutilsversion="$2"; shift 1;;
     '-vm') VM="-vm $2"; shift 1;;
     '-mrl') MRL="-Dmaven.repo.local=$2"; shift 1;;
+    '-skipUpdateIUs') skipUpdateIUs=1; shift 0;;
     '-D'*) Dflags="${Dflags} $1"; shift 1;;
   esac
   shift 1
@@ -159,22 +161,27 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
     mv ${WORKDIR}/target/${REPODIR}/ /tmp/${REPODIR}_${NOW} && touch /tmp/${REPODIR}_${NOW}
   fi
 
-  echo ""
-  echo "Step 1: Merge changes in new target file produce corrected/updated target file,"
-  echo "        replacing any 0.0.0 or obsolete versions with latest versions ..."
-  echo ""
-  pushd ${WORKDIR}
-
-  for tf in *.target; do
-    if [[ ${tf/_fixedVersion.target} == ${tf} ]]; then 
-      logfile=/tmp/fix-versions_${tf}_log_${PROJECT}_${NOW}.txt
-      echo "${MVN} ${MRL} ${Dflags} -U org.jboss.tools.tycho-plugins:target-platform-utils:${targetplatformutilsversion}:fix-versions -DtargetFile=${tf}" | tee $logfile
-      ${MVN} ${MRL} ${Dflags} -U -c org.jboss.tools.tycho-plugins:target-platform-utils:${targetplatformutilsversion}:fix-versions -DtargetFile=${tf} | tee -a $logfile
-      egrep -i -v "$LOG_GREP_EXCLUDES" $logfile | egrep -i -A2 "$LOG_GREP_INCLUDES"; if [[ "$?" == "0" ]]; then break 2; fi
-      if [[ -f ${tf}_fixedVersion.target ]]; then rm -f ${tf} *_update_hints.txt; mv -f ${tf}{_fixedVersion.target,}; fi
-    fi
-  done
-  popd
+  if [[ ${skipUpdateIUs} == 1 ]]; then
+    echo ""
+    echo "Step 1: IU version updates :: SKIPPED."
+    echo ""
+  else
+    echo ""
+    echo "Step 1: Merge changes in new target file produce corrected/updated target file,"
+    echo "        replacing any 0.0.0 or obsolete versions with latest versions ..."
+    echo ""
+    pushd ${WORKDIR}
+      for tf in *.target; do
+        if [[ ${tf/_fixedVersion.target} == ${tf} ]]; then 
+          logfile=/tmp/fix-versions_${tf}_log_${PROJECT}_${NOW}.txt
+          echo "${MVN} ${MRL} ${Dflags} -U org.jboss.tools.tycho-plugins:target-platform-utils:${targetplatformutilsversion}:fix-versions -DtargetFile=${tf}" | tee $logfile
+          ${MVN} ${MRL} ${Dflags} -U -c org.jboss.tools.tycho-plugins:target-platform-utils:${targetplatformutilsversion}:fix-versions -DtargetFile=${tf} | tee -a $logfile
+          egrep -i -v "$LOG_GREP_EXCLUDES" $logfile | egrep -i -A2 "$LOG_GREP_INCLUDES"; if [[ "$?" == "0" ]]; then break 2; fi
+          if [[ -f ${tf}_fixedVersion.target ]]; then rm -f ${tf} *_update_hints.txt; mv -f ${tf}{_fixedVersion.target,}; fi
+        fi
+      done
+    popd
+  fi
 
   echo ""
   if [[ ${includeSources} ]]; then
@@ -188,8 +195,8 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
   # TODO: if you removed IUs, be sure to do a `mvn clean install`, rather than just a `mvn install`; process will be much longer but will guarantee metadata is correct
   pushd ${WORKSPACE}
   logfile=/tmp/resolve_log_${PROJECT}_${NOW}.txt
-  echo "${MVN} ${MRL} ${Dflags} -U install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources} -X" | tee $logfile
-  ${MVN} ${MRL} ${Dflags} install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources} -X | tee -a $logfile
+  echo "${MVN} ${MRL} ${Dflags} -U install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources}" | tee $logfile
+  ${MVN} ${MRL} ${Dflags} install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources} | tee -a $logfile
   egrep -i -v "$LOG_GREP_EXCLUDES" $logfile | egrep -i -A2 "$LOG_GREP_INCLUDES|$LOG_GREP_INCLUDES2"; if [[ "$?" == "0" ]]; then break 2; fi
 
   popd
