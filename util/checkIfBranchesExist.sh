@@ -5,9 +5,9 @@ debug=0
 usage ()
 {
   echo "Usage: $0 -b newbranchname [project1] [project2] [project3] ..."
-  echo "Example1: $0 -b jbosstools-4.4.0.x aerogear arquillian base browsersim build build-ci build-sites \\"
+  echo "Example1: $0 -b jbosstools-4.4.0.x aerogear base browsersim build build-ci build-sites \\"
   echo " central devdoc discovery download.jboss.org forge fuse fuse-extras hibernate integration-tests javaee jst \\"
-  echo " livereload maven-plugins openshift server versionwatch vpe webservices" # freemarker portlet playground
+  echo " livereload maven-plugins openshift server versionwatch vpe webservices"
   echo "Use -s to report similar branches (eg., for 4.4.x, search for *Alpha1x)"
   echo "Example2: $0 -b jbosstools-4.4.0.x -g jbdevstudio/jbdevstudio- devdoc product website"
   exit 1;
@@ -19,7 +19,8 @@ fi
 
 # projects to check if branched
 # JBIDE-24484 remove freemarker, portlet, playground
-# projects="aerogear arquillian base browsersim build build-ci build-sites central devdoc discovery download.jboss.org forge fuse fuse-extras hibernate integration-tests javaee jst livereload maven-plugins openshift server versionwatch vpe webservices"
+# JBIDE-25736 remove arquillian
+# projects="aerogear base browsersim build build-ci build-sites central devdoc discovery download.jboss.org forge fuse fuse-extras hibernate integration-tests javaee jst livereload maven-plugins openshift server versionwatch vpe webservices"
 
 quiet=0
 checkAlternatives=0

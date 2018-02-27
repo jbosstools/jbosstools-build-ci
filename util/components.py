@@ -1,9 +1,11 @@
 debug = 'debug' in globals()
 
+# JBIDE-24484 remove freemarker, portlet, playground
+# JBIDE-25736 remove arquillian
+
 ## map from descriptive name to list of JBIDE and/or JBDS components in JIRA.
 JIRA_components = {
     "Aerogear          ": { "aerogear-hybrid", "cordovasim" },
-    "Arquillian        ": { "arquillian" },
     # "Error Reporting " : {"aeri"},
     "Base              ": { "common", "foundation", "usage" },
     # "Batch           ": { "batch"},
@@ -15,9 +17,7 @@ JIRA_components = {
     "Discovery         ": { "central-update" },
     # "Docker          ": { "docker" },
     "dl.j.o, devdoc    ": { "website" },
-    # "Easymport       ": { "easymport" },
     "Forge             ": { "forge" },
-    #"Freemarker        ": { "freemarker" },
     "Fuse Tooling      ": { "fusetools" },
     "Fuse Tooling Extras":{ "fusetools-extras" },
     "Hibernate         ": { "hibernate"},
@@ -40,7 +40,6 @@ JIRA_components = {
 # # first component listed in the set will be the one used to assign the JIRA
 NN_components = {
     "Aerogear          ": { "aerogear-hybrid", "cordovasim" },
-    "Arquillian        ": { "arquillian" },
     "Error Reporting   " : {"aeri"},
     "Base              ": { "common", "foundation", "usage" },
     "Batch             ": { "batch"},
@@ -54,7 +53,6 @@ NN_components = {
     # "dl.j.o, devdoc  ": { "website" },
     "Easymport         ": { "easymport" },
     "Forge             ": { "forge"},
-    #"Freemarker        ": {"freemarker"},
     "Fuse Tools        ": { "fusetools", "fusetools-extras" },
     "Hibernate         ": { "hibernate"},
     # "Integration-Tests": { "qa" },

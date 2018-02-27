@@ -20,8 +20,8 @@ usage ()
     echo ""
     # for a list of projects, find any unbuilt commits
     echo "Example 2: $0 -branch jbosstools-4.4.x -jbtstream 4.4.neon -jbdsstream 10.0.neon -ju nboldt -jp j_pwd \\"
-    echo "            -gu nickboldt@gmail.com -gp g_pwd -jbds product -jbt aerogear,arquillian,base,browsersim,central,discovery,\\"
-    echo "forge,fuse,fuse-extras,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices" # freemarker
+    echo "            -gu nickboldt@gmail.com -gp g_pwd -jbds product -jbt aerogear,base,browsersim,central,discovery,\\"
+    echo "forge,fuse,fuse-extras,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices"
     exit 1;
 }
 
@@ -31,8 +31,9 @@ fi
 
 #defaults
 toggleJenkinsJobs=~/truu/jbdevstudio-ci/bin/toggleJenkinsJobs.py
-# JBIDE-24484 remove freemarker
-#JBTPROJECT="aerogear,arquillian,base,browsersim,central,discovery,forge,fuse,fuse-extras,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices"
+# JBIDE-24484 remove freemarker, portlet, playground
+# JBIDE-25736 remove arquillian
+#JBTPROJECT="base,browsersim,central,discovery,forge,fuse,fuse-extras,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices"
 JBTPROJECT=""
 #JBDSPROJECT="product"
 JBDSPROJECT=""
@@ -96,7 +97,6 @@ fi
 
 declare -A projectMap=(
   ["aerogear-hybrid"]="aerogear"
-  ["arquillian"]="arquillian"
   ["build"]="build.parent"
   ["cdi"]="javaee"
   ["cdi-extensions"]="javaee"

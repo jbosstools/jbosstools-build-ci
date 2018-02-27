@@ -11,6 +11,9 @@ g = Github(sys.argv[1], sys.argv[2])
 
 org = g.get_organization("jbosstools")
 
+# JBIDE-24484 remove freemarker, portlet, playground
+# JBIDE-25736 remove arquillian
+
 #repos not following jbt tagging cycle
 nondevrepos = [
 	"jbosstools-gwt",
@@ -31,7 +34,6 @@ nondevrepos = [
 	"jbosstools-integration-tests",
 	 "jbosstools-integration-stack",
 	"jboss-wfk-quickstarts",
-	#"jbosstools-playground",
 	"contacts-mobile-basic-cordova",
 	"m2e-polyglot-poc",
 	"jbosstools-bpel",
@@ -60,16 +62,13 @@ since = {
 	"jbosstools-javaee" : "",
 	"jbosstools-jst" : "",
 	"jbosstools-openshift" : "jbosstools-4.1",
-	# "jbosstools-portlet" : "jbosstools-4",
 	"jbosstools-server" : "",
 	"jbosstools-vpe" : "",
 	"jbosstools-webservices" : "jbosstools-4",
-	# "jbosstools-freemarker" : "",
 	"jbosstools-hibernate" : "",
 	"jbosstools-aerogear" : "jbosstools-4.1.0.Alpha2",
 	"jbosstools-discovery" : "jbosstools-4",
 	"jbosstools-livereload" : "jbosstools-4.2",
-	"jbosstools-arquillian" : "jbosstools-4.2",
 	"jbosstools-browsersim" : "jbosstools-4.2.0.Beta1"
 }
 	
