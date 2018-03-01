@@ -54,7 +54,7 @@ if [[ ! ${crumb} ]]; then
 	crumb=$(wget -q --auth-no-challenge --user ${jenkinsUser} --password "${jenkinsPass}" --output-document - "${jenkinsURL//\/job/}/crumbIssuer/api/xml?xpath=//crumb" \
 	  | sed "s#<crumb>\([0-9a-f]\+\)</crumb>#\1#")
 fi
-log "Crumb:  / ${crumb}"
+if [[ $quiet == 0 ]]; then log "Crumb: ${crumb}"; fi
 
 logn "["
 prevJob=$(curl -s -S -L --location-trusted -s ${jenkinsURL/https/http}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
