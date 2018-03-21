@@ -46,7 +46,7 @@ NN_components = {
     # "BrowserSim        ": { "browsersim" },
     # "build, ci, maven-plugins": { "build" },
     # "build-sites     ": { "updatesite" },
-    # "Central           ": { "central", "maven", "project-examples" },
+    "Central           ": { "central", "maven", "project-examples" },
     "CDI               ": { "cdi"},
     # "Discovery       ": { "central-update" },
     "Docker            ": { "docker" },
@@ -56,7 +56,7 @@ NN_components = {
     "Fuse Tools        ": { "fusetools", "fusetools-extras" },
     "Hibernate         ": { "hibernate"},
     # "Integration-Tests": { "qa" },
-    # "JavaEE          ": { "jsf", "seam2", "cdi", "cdi-extensions" },
+    "JavaEE          ": { "jsf", "seam2", "cdi", "cdi-extensions" },
     # "Javascript        ": { "javascript", "nodejs"},
     # "JSF               ": { "jsp/jsf/xml/html-source-editing", "jsf"},
     # "JST               ": { "jst"},
@@ -68,7 +68,7 @@ NN_components = {
     # "Usage Analytics   " : { "usage"},
     # "versionwatch    ": { "versionwatch" },
     # "Visual Editor     ": { "visual-page-editor-core", "visual-page-editor-templates"},
-    # "Webservices / Rest": { "webservices"}
+    "Webservices / Rest": { "webservices"}
     }
 
 # def checkSprintExists (sprint_name, jiraserver, jirauser, jirapwd):
