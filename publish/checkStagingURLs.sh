@@ -156,7 +156,7 @@ for qual in $quals; do
     if [[ ${onlydiscovery} -lt 1 ]]; then 
       # build folders
       for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
-        for f in coretests central earlyaccess integration-tests core; do
+        for f in coretests central integration-tests core; do
           for ff in repo/artifacts.xml.xz repo/content.xml.xz repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
             a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
             logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
@@ -205,7 +205,7 @@ for qual in $quals; do
 
       # update sites
       for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
-        for f in fuse-extras coretests central earlyaccess integration-tests core; do
+        for f in fuse-extras coretests central integration-tests core; do
           for ff in artifacts.xml.xz content.xml.xz category.xml buildinfo.json; do
             a=${u}/${f}/${versionWithRespin_jbt}/${ff}
             logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
@@ -339,7 +339,7 @@ for qual in $quals; do
 
       # build folders
       for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds; do
-        for f in central earlyaccess; do
+        for f in central; do
           for ff in repo/artifacts.xml.xz repo/content.xml.xz repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
             a=${u}/devstudio-${versionWithRespin_ds}-build-${f}/latest/all/${ff}
             logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
@@ -359,28 +359,10 @@ for qual in $quals; do
         done
       done
 
-      # yum repo for rpm: only if /stable/ or /staging/
-      # https://devstudio.jboss.com/10.0/staging/builds/devstudio-10.2.0.GA-build-rpm/latest/x86_64/
-      # https://devstudio.jboss.com/static/10.0/stable/rpms/x86_64/
-      if [[ ${qual} == "staging" ]]; then
-        u=https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-rpm/latest
-      else
-        u=https://devstudio.jboss.com/${static}${devstudioReleaseVersion}/${qual}/rpms
-      fi
-      if [[ ${qual} != "development" ]]; then
-        for ff in x86_64/README.html x86_64/repodata/repomd.xml; do
-          a=${u}/${ff}
-          logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
-          if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
-        done
-      fi
-      log ""
-
       # zips
       for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
         for f in core/devstudio-${versionWithRespin_ds}-updatesite-core.zip          core/devstudio-${versionWithRespin_ds}-target-platform.zip \
-            central/devstudio-${versionWithRespin_ds}-updatesite-central.zip         core/devstudio-${versionWithRespin_ds}-target-platform-central.zip \
-            earlyaccess/devstudio-${versionWithRespin_ds}-updatesite-earlyaccess.zip core/devstudio-${versionWithRespin_ds}-target-platform-earlyaccess.zip; do
+            central/devstudio-${versionWithRespin_ds}-updatesite-central.zip         core/devstudio-${versionWithRespin_ds}-target-platform-central.zip; do
           for ff in $f ${f}.sha256; do
             logn "${u}/${ff} : "; stat=$(curl -I -s ${u}/${ff} | egrep "404 Not Found")
             if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${ff} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
@@ -391,7 +373,7 @@ for qual in $quals; do
 
       # check update sites
       for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
-        for f in fuse-extras core central earlyaccess; do
+        for f in fuse-extras core central; do
           for ff in artifacts.xml.xz content.xml.xz category.xml buildinfo.json; do
             a=${u}/${f}/${versionWithRespin_ds}/${ff}
             logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
