@@ -176,33 +176,6 @@ for qual in $quals; do
         done
       done
 
-      # browsersim-standalone.zip in browsersim (parent) folder
-      for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
-        fp=browsersim
-        f=browsersim-standalone
-        for ff in jbosstools-${version_jbt}-${f}.zip jbosstools-${version_jbt}-${f}.zip.sha256; do
-          a=${u}/jbosstools-${versionWithRespin_jbt}-build-${fp}/latest/
-          logn "${a}${ff} : "; stat=$(curl -I -s ${a}${ff} | egrep "404 Not Found")
-          if [[ ! $stat ]]; then
-            log "${green}OK${norm}"; let OK+=1
-          else
-            # could be running with respin suffix or we're mock building so this might be OK. Check folder for children instead.
-            ext=".zip"${ff##*.zip}
-            zips=$(curl -s ${a} | grep "${ext}\"" | sed -e "s#.\+href=\"\([^\"]\+\)\".\+#\1#")
-            if [[ ! ${zips} ]]; then
-              logerr "${a} : " "${red}NO ${ext} FOUND${norm} : $(curl -I -s ${a})"; let notOK+=1;
-            else
-              log "${yellow}WARNING${norm}"
-              for j in ${zips}; do
-                logn " => ${j} : "; stat=$(curl -I -s ${a}${j} | egrep "404 Not Found")
-                if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a}${j})"; let notOK+=1; fi
-              done
-            fi
-          fi
-        done
-      done
-      log ""
-
       # update sites
       for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
         for f in fuse-extras coretests central integration-tests core; do
@@ -218,7 +191,7 @@ for qual in $quals; do
       # released artifacts linked from tools.jboss.org
       if [[ $qual != "staging" ]]; then 
         for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates/core; do
-          for f in browsersim-standalone src updatesite-core; do
+          for f in src updatesite-core; do
             for ff in jbosstools-${version_jbt}-${f}.zip jbosstools-${version_jbt}-${f}.zip.sha256; do
               a=${u}/${ff}
               logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
