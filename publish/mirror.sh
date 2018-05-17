@@ -18,6 +18,9 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
   # get the build scripts
   ${RSYNC} --delete ${WORKSPACE}/sources/jbosstools/updates/requirements/* ${WORKSPACE}/updates/requirements/
 
+  # by default, don't ignore errors (unless Jenkins job explicitly asks for it)
+  ignoreErrors=false
+
   # if running on 32-bit slave
   if [[ ! `uname -a | grep 64` ]]; then ECLIPSE=${ECLIPSE/-x86_64/}; fi
 
@@ -49,7 +52,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
   date; time ${JDK8}/bin/java -cp ${WORKSPACE}/eclipse/plugins/org.eclipse.equinox.launcher_*.jar \
       org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp \
       -application org.eclipse.ant.core.antRunner -f ${SCRIPTNAME} -Dversion=${VERSION} ${SOURCE_URL_PARAM} ${TASK} \
-      -vmargs -Declipse.p2.mirrors=false | tee ${logFile}
+      -DignoreErrors=${ignoreErrors} -vmargs -Declipse.p2.mirrors=false | tee ${logFile}
 
   if [[ -f ${logFile} ]]; then 
     echo "[INFO] Log file: ${logFile}"
