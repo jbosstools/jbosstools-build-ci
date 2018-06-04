@@ -23,11 +23,11 @@ toc::[]
 
 |link:publish/stage.sh[stage.sh]
 |Script to stage a CI build to staging or a staging build to developement or stable.
-|Used to publish JBoss Tools and Red Hat JBoss Developer Studio to a stable path for testing or release.
+|Used to publish JBoss Tools and Red Hat Developer Studio to a stable path for testing or release.
 
 |link:publish/checkStagingURLs.sh[checkStagingURLs.sh]
 |Script to verify a run of stage.sh was successful and that all expected artifacts have been created.
-|Used to verify JBoss Tools and Red Hat JBoss Developer Studio exists in a stable path for testing or release.
+|Used to verify JBoss Tools and Red Hat Developer Studio exists in a stable path for testing or release.
 
 |_link:publish/publish.sh[publish.sh]_
 |_Script to publish and generate build-time metadata for JBoss Tools projects, JBoss Tools aggregates, and JBDS. Requires link:util/cleanup/jbosstools-cleanup.sh[jbosstools cleanup.sh]_
