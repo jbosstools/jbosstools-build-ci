@@ -57,6 +57,7 @@ warning /Couldn't read packet/
 warning /ln: failed to create symbolic link/
 warning /.settings\/org.eclipse.jdt.core.prefs/
 warning /Error sending IPC message:/
+warning /The application has not been initialized/
 
 # errors
 error /HTTPError/
