@@ -212,7 +212,7 @@ def doQuery(query, field, jiraserver, jirauser, jirapwd, limit, failcheck = None
     if failcheck != None:
         if re.search(failcheck, q.text):
             return None
-    xml = minidom.parseString(q.text)
+    xml = minidom.parseString(q.text.encode('utf-8'))
     issuelist = xml.getElementsByTagName(field)
     numExistingIssues = len(issuelist)
     if numExistingIssues > 0 : 
