@@ -16,6 +16,7 @@ numbuildstokeep=2
 numbuildstolink=2
 threshholdwhendelete=2 # in days
 regenMetadataFlag=""; # set to ' -R' to suppress regenerating metadata entirely (no composite site will be produced)
+regenMetadataForce=0
 
 # use this to pass in rsync flags
 # eg., use --del -n to PREVIEW what obsolete files might be deleted from target folder while pushing new ones
@@ -63,7 +64,8 @@ while [[ "$#" -gt 0 ]]; do
 		'-k'|'--keep') numbuildstokeep="$2"; shift 1;;
 		'-l'|'--link') numbuildstolink="$2"; shift 1;;
 		'-a'|'--age-to-delete') threshholdwhendelete="$2"; shift 1;;
-		'-R'|'--no-regen-metadata') regenMetadataFlag=" -R"; shift 0;;
+		'-R'|'--no-regen-metadata') regenMetadataForce=0;  regenMetadataFlag=" -R"; shift 0;;
+		'-FR'|'--force-regen-metadata') regenMetadataForce=1; regenMetadataFlag=""; shift 0;;
 		*) RSYNCFLAGS="${RSYNCFLAGS} $1"; shift 0;;
 	esac
 	shift 1
@@ -132,7 +134,7 @@ fi
 # for published builds on download.jboss.org ONLY!
 # regenerate http://download.jboss.org/jbosstools/builds/${TARGET_PATH}/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
 if [[ ${WORKSPACE} ]] && [[ -f ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh ]]; then
-	if [[ ${TARGET_PATH/builds\//} != ${TARGET_PATH} ]] || [[ ${TARGET_PATH/pulls\//} != ${TARGET_PATH} ]]; then
+	if [[ ${regenMetadataForce} -eq 1 ]] || [[ ${TARGET_PATH/builds\//} != ${TARGET_PATH} ]] || [[ ${TARGET_PATH/pulls\//} != ${TARGET_PATH} ]]; then
 		# given neon/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master return neon/snapshots/builds
 		PARENT_PARENT_PATH=$(echo $PARENT_PATH | sed -e "s#\(.\+\)/[^/]\+#\1#")
 		chmod +x ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh
