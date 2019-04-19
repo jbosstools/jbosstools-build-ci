@@ -40,7 +40,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
   # put a copy of ant-contrib.jar in ${WORKDIR}/..
   if [[ $(grep ant-contrib ${SCRIPTNAME}) ]]; then
     M2_HOME=/qa/tools/opt/apache-maven-3.2.5/
-    $M2_HOME/bin/mvn dependency:copy -DtrimVersion=true -Dmdep.stripClassifier=true -Dmdep.stripVersion=true \
+    $M2_HOME/bin/mvn -B dependency:copy -DtrimVersion=true -Dmdep.stripClassifier=true -Dmdep.stripVersion=true \
       -DoutputDirectory=${WORKSPACE}/updates/requirements/ -Dartifact=ant-contrib:ant-contrib:1.0b3:jar
   fi
 
