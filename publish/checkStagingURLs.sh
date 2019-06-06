@@ -293,8 +293,8 @@ for qual in $quals; do
 
       # installer build folder [EXTERNAL]
       for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds/devstudio-${versionWithRespin_ds}-build-product/latest/all; do
-        for f in devstudio-${versionWithRespin_ds_latest_actual}-installer-standalone.jar \
-          devstudio-${versionWithRespin_ds_latest_actual}-updatesite-central.zip devstudio-${versionWithRespin_ds_latest_actual}-updatesite-core.zip; do
+        for f in codereadystudio-${versionWithRespin_ds_latest_actual}-installer-standalone.jar \
+          codereadystudio-${versionWithRespin_ds_latest_actual}-updatesite-central.zip codereadystudio-${versionWithRespin_ds_latest_actual}-updatesite-core.zip; do
           for ff in $f ${f}.sha256; do
               a=${u}/${ff}
               logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404 Not Found")
