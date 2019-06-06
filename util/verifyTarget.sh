@@ -279,7 +279,7 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
     echo ""
     echo "Step 4: produce p2diff report ..."
     echo ""
-    ${P2DIFF} /tmp/${REPODIR}_${NOW} file://${WORKDIR}/target/${REPODIR}/ | tee /tmp/p2diff_log_${PROJECT}_${NOW}.txt
+    ${P2DIFF} file:///tmp/${REPODIR}_${NOW} file://${WORKDIR}/target/${REPODIR}/ | tee /tmp/p2diff_log_${PROJECT}_${NOW}.txt
   elif [[ ! -d /tmp/${REPODIR}_${NOW} ]]; then
     echo ""
     echo "Step 4: previous target platform does not exist in /tmp/${REPODIR}_${NOW} - nothing to diff."
