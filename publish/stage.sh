@@ -118,7 +118,7 @@ if [[ ! ${SRC_DIR} ]] && [[ ${DESTDIR} ]]; then SRC_DIR="${DESTDIR}"; fi
 
 if [[ ${DESTINATION/devstudio/} != ${DESTINATION} ]] || [[ ${DESTINATION/RHDS/} != ${DESTINATION} ]]; then
   PRODUCT="devstudio"
-  ZIPPREFIX="devstudio-"
+  ZIPPREFIX="codereadystudio-"
 fi
 
 for site in ${sites}; do
