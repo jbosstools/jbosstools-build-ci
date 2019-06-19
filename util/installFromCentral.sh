@@ -37,7 +37,7 @@ fi
 EXCLUDES=""
 
 #director.xml script is used with Eclipse's AntRunner to launch p2.director
-DIRECTORXML="http://download.jboss.org/jbosstools/updates/scripted-install/director.xml"
+DIRECTORXML="https://download.jboss.org/jbosstools/updates/scripted-install/director.xml"
 
 # use Eclipse VM from JAVA_HOME if available
 if [[ -x ${JAVA_HOME}/bin/java ]]; then VM="-vm ${JAVA_HOME}/bin/java"; fi
