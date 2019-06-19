@@ -30,7 +30,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
     pushd ${WORKSPACE}
       # if we don't have this Eclipse, get it
       echo "wget ${ECLIPSE} ..."
-      if [[ ! -f ${ECLIPSEDIR}/${ECLIPSE##*/} ]]; then wget -nc -q ${ECLIPSE} -O ${ECLIPSEDIR}/${ECLIPSE##*/}; fi
+      if [[ ! -f ${ECLIPSEDIR}/${ECLIPSE##*/} ]]; then wget -nc ${ECLIPSE} -O ${ECLIPSEDIR}/${ECLIPSE##*/}; fi
       # then unpack it
       echo "Unpack ${ECLIPSEDIR}/${ECLIPSE##*/} ..."
       tar xzf ${ECLIPSEDIR}/${ECLIPSE##*/}
