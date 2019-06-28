@@ -335,7 +335,7 @@ for qual in $quals; do
       # zips
       for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
         for f in core/codereadystudio-${versionWithRespin_ds}-updatesite-core.zip          core/devstudio-${versionWithRespin_ds}-target-platform.zip \
-            central/devstudio-${versionWithRespin_ds}-updatesite-central.zip         core/devstudio-${versionWithRespin_ds}-target-platform-central.zip; do
+            central/codereadystudio-${versionWithRespin_ds}-updatesite-central.zip         core/devstudio-${versionWithRespin_ds}-target-platform-central.zip; do
           for ff in $f ${f}.sha256; do
             logn "${u}/${ff} : "; stat=$(curl -I -s ${u}/${ff} | egrep "404 Not Found")
             if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${u}/${ff} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
