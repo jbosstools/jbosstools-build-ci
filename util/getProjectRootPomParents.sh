@@ -121,6 +121,18 @@ if [[ ! ${WORKSPACE2} ]]; then
   WORKSPACE2=${WORKSPACE1}
 fi
 
+PYTHON_CMD = ""
+if [[ -x /usr/bin/python ]]; then 
+  PYTHON_CMD="python";
+  elif [[ -x /usr/bin/python2 ]]; then
+    PYTHON_CMD="python2";
+fi
+
+if [[ ! ${PYTHON_CMD} ]]; then
+  echo "[ERROR] Could not find a python client. please install python/python2 on your system."
+  exit 1
+fi
+
 gitUpdate () {
   ghb=$1
   # if [[ ${quiet} != "-q" ]]; then echo "[INFO] Stash any changes, checkout, reset, rebase, pull changes... "; fi
@@ -210,7 +222,7 @@ checkProjects () {
               # create new JIRA using createTaskJIRAs.py, then pass that into the commit comment below
               # if component does not exist, JIRA will be nullstring
               if [[ ${doCreateBranch} -gt 0 ]]; then # update root poms then branch
-                JIRAcmd="python -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds} \\n \
+                JIRAcmd="${PYTHON_CMD} -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds} \\n \
 --task \"Prepare for ${version_jbt} / ${version_ds}\" --taskfull \"Please perform the following tasks: \\n \
  \\n \
 0. Make sure your component has no remaining unresolved JIRAs set for fixVersion = ${version_jbt} or ${version_ds} \\n \
@@ -273,7 +285,7 @@ null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20
 -s ${JIRA_HOST} ${userandpass} -J ${componentFlag} ${k}"
                 # if [[ ${quiet} != "-q" ]]; then echo ${JIRAcmd}; fi
               else # no branching - just update root poms
-                JIRAcmd="python -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds} \\n \
+                JIRAcmd="${PYTHON_CMD} -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds} \\n \
 --task \"Prepare for ${version_jbt} / ${version_ds}\" --taskfull \"Please perform the following tasks: \\n \
  \\n \
 1. Check out your existing *{color:orange}${github_branch}{color}* branch: \\n \
