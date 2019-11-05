@@ -121,7 +121,7 @@ if [[ ! ${WORKSPACE2} ]]; then
   WORKSPACE2=${WORKSPACE1}
 fi
 
-PYTHON_CMD = ""
+PYTHON_CMD=""
 if [[ -x /usr/bin/python ]]; then 
   PYTHON_CMD="python";
   elif [[ -x /usr/bin/python2 ]]; then
