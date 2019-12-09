@@ -227,7 +227,7 @@ checkProjects () {
  \\n \
 0. Make sure your component has no remaining unresolved JIRAs set for fixVersion = ${version_jbt} or ${version_ds} \\n \
 
-[Unresolved JIRAs with fixVersion = ${version_jbt}, ${version_ds}|https://issues.redhat.com//issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and\
+[Unresolved JIRAs with fixVersion = ${version_jbt}, ${version_ds}|https://issues.redhat.com/issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and\
 %20fixVersion%20in%20%28${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28\
 ${version_ds}%29%29%29%20and%20resolution%20%3D%20Unresolved] \\n \
  \\n \
@@ -278,7 +278,7 @@ mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MAX} \\n \
  \\n \
 5. Close (do not resolve) this JIRA when done. \\n \
  \\n \
-6. If you have any outstanding [New + Noteworthy JIRAs|https://issues.redhat.com//issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28\
+6. If you have any outstanding [New + Noteworthy JIRAs|https://issues.redhat.com/issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28\
 ${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28${version_ds}%29%29%29%20AND%20resolution%20is%20\
 null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next. \\n \
 \" \
@@ -329,7 +329,7 @@ mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MAX} \\n \
  \\n \
 5. Close (do not resolve) this JIRA when done. \\n \
  \\n \
-6. If you have any outstanding [New + Noteworthy JIRAs|https://issues.redhat.com//issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28\
+6. If you have any outstanding [New + Noteworthy JIRAs|https://issues.redhat.com/issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28\
 ${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28${version_ds}%29%29%29%20AND%20resolution%20is%20\
 null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next. \\n \
 \" \
