@@ -55,7 +55,7 @@ parser.add_option("--ds_NEXT",    dest="version_ds_NEXT",  help="Next JBDS fix v
 
 parser.add_option("--skipLabels", dest="skipLabels",       help="To skip processing if a label is set, list label(s) to skip, eg., 'task, releasework'")
 
-parser.add_option("--jira",     dest="jiraserver", help="JIRA server, eg., https://issues.stage.redhat.com/ or https://issues.redhat.com/")
+parser.add_option("--jira",     dest="jiraserver", help="JIRA server, eg., https://issues.stage.redhat.com or https://issues.redhat.com")
 parser.add_option("--jirauser", dest="jirauser",   help="JIRA Username")
 parser.add_option("--jirapwd",  dest="jirapwd",    help="JIRA Password")
 # NOTE: rather than passing in two flags here, you can `export userpass=jirauser:jirapwd`, 
