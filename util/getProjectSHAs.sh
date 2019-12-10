@@ -12,7 +12,7 @@ usage ()
     echo "Usage:     $0 -branch GITHUBBRANCH -jbtstream JENKINSSTREAM -jbdsstream JENKINSSTREAM -ju JENKINSUSER -jp JENKINSPWD \\"
     echo "             -gu GITHUBUSER -gp GITHUBPWD -jbt JBOSSTOOLS-PROJECT1,JBOSSTOOLS-PROJECT2,JBOSSTOOLS-PROJECT3,... \\"
     echo "             -jbds JBDEVSTUDIO-PROJECT1,JBDEVSTUDIO-PROJECT2 \\"
-    echo "             -iu issues.jboss.org_USER -ip issues.jboss.org_PWD -jbtm 4.2.0.MILESTONE -jbdsm 8.0.0.MILESTONE -respin a|b|c..."
+    echo "             -iu issues.redhat.com_USER -ip issues.redhat.com_PWD -jbtm 4.2.0.MILESTONE -jbdsm 8.0.0.MILESTONE -respin a|b|c..."
     echo ""
     # for the milestone, find the related JIRAs and get the associated projects
     echo "Example 1: $0 -branch jbosstools-4.4.x -jbtstream 4.4.neon -jbdsstream 10.0.neon -ju nboldt -jp j_pwd \\"
@@ -51,7 +51,7 @@ while [[ "$#" -gt 0 ]]; do
     '-gu') g_user="$2"; shift 1;;
     '-gp') g_password="$2"; shift 1;;
 
-    # issues.jboss.org credentials
+    # issues.redhat.com credentials
     '-iu') i_user="$2"; shift 1;;
     '-ip') i_password="$2"; shift 1;;
 
@@ -135,8 +135,8 @@ if [[ ${jbtm} ]]; then
   if [[ ${respin} ]]; then query=${query}"%20and%20labels%20in%20%28%22respin-${respin}%22%29"; fi
   # echo $query
 
-  # https://issues.jboss.org/rest/api/2/search?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28%224.2.0.CR2%22%2C%20%224.2.0.Final%22%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28%228.0.0.CR2%22%2C%228.0.0.GA%22%29%29%29%20and%20resolution%20!%3D%20%22Unresolved%22%20and%20labels%20in%20%28%22respin-a%22%29&fields=key,components
-  wget --user=${i_user} --password="${i_password}" --no-check-certificate "https://issues.jboss.org/rest/api/2/search?fields=key,components&jql=${query}" -q -O /tmp/json.txt
+  # https://issues.redhat.com/rest/api/2/search?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28%224.2.0.CR2%22%2C%20%224.2.0.Final%22%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28%228.0.0.CR2%22%2C%228.0.0.GA%22%29%29%29%20and%20resolution%20!%3D%20%22Unresolved%22%20and%20labels%20in%20%28%22respin-a%22%29&fields=key,components
+  wget --user=${i_user} --password="${i_password}" --no-check-certificate "https://issues.redhat.com/rest/api/2/search?fields=key,components&jql=${query}" -q -O /tmp/json.txt
 
   json=`cat /tmp/json.txt`
   cp /tmp/json.txt /tmp/json-jbt.txt
@@ -150,7 +150,7 @@ if [[ ${jbtm} ]]; then
     # echo $projects :: $name
     if [[ ${components##* ${name}*} == $components ]] && [[ $name != "," ]]; then components="${components} ${name}"; fi
   done
-  #echo "Got these issues.jboss.org components:${components}"
+  #echo "Got these issues.redhat.com components:${components}"
 
   if [[ $components ]]; then
     projects=""
@@ -191,8 +191,8 @@ if [[ ${jbdsm} ]]; then
   if [[ ${respin} ]]; then query=${query}"%20and%20labels%20in%20%28%22respin-${respin}%22%29"; fi
   # echo $query
 
-  # https://issues.jboss.org/rest/api/2/search?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28%224.2.0.CR2%22%2C%20%224.2.0.Final%22%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28%228.0.0.CR2%22%2C%228.0.0.GA%22%29%29%29%20and%20resolution%20!%3D%20%22Unresolved%22%20and%20labels%20in%20%28%22respin-a%22%29&fields=key,components
-  wget --user=${i_user} --password="${i_password}" --no-check-certificate "https://issues.jboss.org/rest/api/2/search?fields=key,components&jql=${query}" -q -O /tmp/json.txt
+  # https://issues.redhat.com/rest/api/2/search?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28%224.2.0.CR2%22%2C%20%224.2.0.Final%22%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20in%20%28%228.0.0.CR2%22%2C%228.0.0.GA%22%29%29%29%20and%20resolution%20!%3D%20%22Unresolved%22%20and%20labels%20in%20%28%22respin-a%22%29&fields=key,components
+  wget --user=${i_user} --password="${i_password}" --no-check-certificate "https://issues.redhat.com/rest/api/2/search?fields=key,components&jql=${query}" -q -O /tmp/json.txt
 
   json=`cat /tmp/json.txt`
   rm -f /tmp/json.txt
@@ -205,7 +205,7 @@ if [[ ${jbdsm} ]]; then
     # echo $projects :: $name
     if [[ ${components##* ${name}*} == $components ]] && [[ $name != "," ]]; then components="${components} ${name}"; fi
   done
-  #echo "Got these issues.jboss.org components:${components}"
+  #echo "Got these issues.redhat.com components:${components}"
 
   projects=""
   if [[ $components ]]; then

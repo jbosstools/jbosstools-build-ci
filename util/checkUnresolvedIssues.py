@@ -24,7 +24,7 @@ import components
 #  versionWithRespin_jbt_NEXT=4.5.1.AM2
 #  versionWithRespin_ds=11.2.0.AM1
 #  versionWithRespin_ds_NEXT=11.2.0.AM2
-#  python -W ignore checkUnresolvedIssues.py -S --jira https://issues.jboss.org  \
+#  python -W ignore checkUnresolvedIssues.py -S --jira https://issues.redhat.com  \
 #   --jbt ${versionWithRespin_jbt} --jbt_NEXT ${versionWithRespin_jbt_NEXT}   \
 #   --ds ${versionWithRespin_ds} --ds_NEXT ${versionWithRespin_ds_NEXT}   \
 #   --sprint "${sprint}" --sprint_NEXT "${sprint_NEXT}"
@@ -55,7 +55,7 @@ parser.add_option("--ds_NEXT",    dest="version_ds_NEXT",  help="Next JBDS fix v
 
 parser.add_option("--skipLabels", dest="skipLabels",       help="To skip processing if a label is set, list label(s) to skip, eg., 'task, releasework'")
 
-parser.add_option("--jira",     dest="jiraserver", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.org")
+parser.add_option("--jira",     dest="jiraserver", help="JIRA server, eg., https://issues.stage.redhat.com or https://issues.redhat.com")
 parser.add_option("--jirauser", dest="jirauser",   help="JIRA Username")
 parser.add_option("--jirapwd",  dest="jirapwd",    help="JIRA Password")
 # NOTE: rather than passing in two flags here, you can `export userpass=jirauser:jirapwd`, 

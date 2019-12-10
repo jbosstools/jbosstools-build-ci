@@ -25,7 +25,7 @@ parser.add_option("-i", "--jbide", dest="jbidefixversion", help="JBIDE fix versi
 parser.add_option("-d", "--jbds", dest="jbdsfixversion", help="JBDS fix version")
 parser.add_option("-f", "--fuse", dest="fusefixversion", help="FUSETOOLS fix version (default: JBDS fixversion (a-1).b.c.d")
 
-parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.org")
+parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues.stage.redhat.com or https://issues.redhat.com")
 parser.add_option("-u", "--user", dest="jirauser", help="JIRA Username")
 parser.add_option("-p", "--pwd", dest="jirapwd", help="JIRA Password")
 # NOTE: rather than passing in two flags here, you can `export userpass=jirauser:jirapwd`, 

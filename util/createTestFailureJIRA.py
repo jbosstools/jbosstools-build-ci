@@ -21,7 +21,7 @@ parser = OptionParser(usage)
 parser.add_option("-a", "--affected", dest="jbideversion", help="JBIDE Affected Version, eg., 4.1.1.Alpha1")
 parser.add_option("-c", "--component", dest="component", help="JBIDE component, eg., server, seam2, openshift")
 
-parser.add_option("-j", "--jira", dest="jiraserver", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.org")
+parser.add_option("-j", "--jira", dest="jiraserver", help="JIRA server, eg., https://issues.stage.redhat.com or https://issues.redhat.com")
 parser.add_option("-k", "--jirauser", dest="usernameJIRA", help="JIRA Username")
 parser.add_option("-l", "--jirapwd", dest="passwordJIRA", help="JIRA Password")
 

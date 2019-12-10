@@ -45,7 +45,7 @@ parser.add_option("-C", "--componentjbds", dest="componentjbds", help="JBDS comp
 parser.add_option("-A", "--auto-accept", dest="autoaccept", action="store_true", help="if set, automatically accept created issues")
 parser.add_option("-J", "--jiraonly", dest="jiraonly", action="store_true", help="if set, only return the JIRA ID; implies --auto-accept")
 
-parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.org")
+parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues.stage.redhat.com or https://issues.redhat.com")
 parser.add_option("-u", "--user", dest="jirauser", help="JIRA Username")
 parser.add_option("-p", "--pwd", dest="jirapwd", help="JIRA Password")
 # NOTE: rather than passing in two flags here, you can `export userpass=jirauser:jirapwd`, 

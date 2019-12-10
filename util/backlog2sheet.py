@@ -100,7 +100,7 @@ usage = 'Usage: %prog -u <user> -p <pass> [-s <JIRA server>] [-f client_secret f
 parser = OptionParser(usage)
 parser.add_option("-u", "--user", dest="usernameJIRA", help="JIRA Username")
 parser.add_option("-p", "--pwd", dest="passwordJIRA", help="JIRA Password")
-parser.add_option("-s", "--server", dest="jiraserver", default="https://issues.jboss.org", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.org")
+parser.add_option("-s", "--server", dest="jiraserver", default="https://issues.redhat.com", help="JIRA server, eg., https://issues.stage.redhat.com or https://issues.redhat.com")
 parser.add_option("-l", "--length", dest="length", default=25, help="length, take the n top items from the baclog defaults to 25")
 parser.add_option("-f", "--client_secret", dest="client_secret", default=CLIENT_SECRET_FILE, help="client secret file, eg. client_secret.json")
 parser.add_option("-i", "--spreadsheet", dest="spreadsheetId", default=SPREADSHEET_ID, help="spreadsheet id")

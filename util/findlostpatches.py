@@ -23,7 +23,7 @@ then create \nsub-tasks of the JBIDE JIRA for each of the JBIDE components with 
 parser = OptionParser(usage)
 parser.add_option("-u", "--user", dest="usernameJIRA", help="JIRA Username")
 parser.add_option("-p", "--pwd", dest="passwordJIRA", help="JIRA Password")
-parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues.stage.jboss.org or https://issues.jboss.org")
+parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues.stage.redhat.com or https://issues.redhat.com")
 parser.add_option("-b", "--branch", dest="frombranch", help="The branch containing commits that should be in master (ie, our maintenance branch, jbosstools-4.3.x")
 parser.add_option("-i", "--jbide", dest="jbidefixversion", help="JBIDE Fix Version, eg., 4.1.0.qualifier")
 parser.add_option("-d", "--jbds", dest="jbdsfixversion", help="JBDS Fix Version, eg., 7.0.0.qualifier")
