@@ -10,17 +10,17 @@
 usage ()
 {
     echo "Usage:     $0 -branch GITHUBBRANCH -jbtstream JENKINSSTREAM -jbdsstream JENKINSSTREAM -ju JENKINSUSER -jp JENKINSPWD \\"
-    echo "             -gu GITHUBUSER -gp GITHUBPWD -jbt JBOSSTOOLS-PROJECT1,JBOSSTOOLS-PROJECT2,JBOSSTOOLS-PROJECT3,... \\"
+    echo "             -gt GITHUBTOKEN -jbt JBOSSTOOLS-PROJECT1,JBOSSTOOLS-PROJECT2,JBOSSTOOLS-PROJECT3,... \\"
     echo "             -jbds JBDEVSTUDIO-PROJECT1,JBDEVSTUDIO-PROJECT2 \\"
     echo "             -iu issues.redhat.com_USER -ip issues.redhat.com_PWD -jbtm 4.2.0.MILESTONE -jbdsm 8.0.0.MILESTONE -respin a|b|c..."
     echo ""
     # for the milestone, find the related JIRAs and get the associated projects
     echo "Example 1: $0 -branch jbosstools-4.4.x -jbtstream 4.4.neon -jbdsstream 10.0.neon -ju nboldt -jp j_pwd \\"
-    echo "             -gu nickboldt@gmail.com -gp g_pwd -iu nickboldt -ip i_pwd -jbtm 4.4.0.Final -jbdsm 10.0.0.GA -respin a"
+    echo "             -gt xxxxxx -iu nickboldt -ip i_pwd -jbtm 4.4.0.Final -jbdsm 10.0.0.GA -respin a"
     echo ""
     # for a list of projects, find any unbuilt commits
     echo "Example 2: $0 -branch jbosstools-4.4.x -jbtstream 4.4.neon -jbdsstream 10.0.neon -ju nboldt -jp j_pwd \\"
-    echo "            -gu nickboldt@gmail.com -gp g_pwd -jbds product -jbt aerogear,base,browsersim,central,discovery,\\"
+    echo "            -gt xxxxxx -jbds product -jbt aerogear,base,browsersim,central,discovery,\\"
     echo "forge,fuse,fuse-extras,hibernate,javaee,jst,livereload,openshift,server,vpe,webservices"
     exit 1;
 }
@@ -48,8 +48,7 @@ quiet="" # or "" or "-q"
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     # github credentials
-    '-gu') g_user="$2"; shift 1;;
-    '-gp') g_password="$2"; shift 1;;
+    '-gt') g_token="$2"; shift 1;;
 
     # issues.redhat.com credentials
     '-iu') i_user="$2"; shift 1;;
@@ -254,14 +253,14 @@ checkProjects () {
       echo "== ${g_project} =="
     fi
 
-    GITHUBUSERPASS=""
-    if [[ ${g_user} ]] && [[ ${g_password} ]]; then GITHUBUSERPASS="-u ${g_user}:${g_password}"; fi
+    GITHUBTOKEN=""
+    if [[ ${g_token} ]]; then GITHUBTOKEN="${g_token}"; fi
 
     if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [1] curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch}"; fi
     tmp=`mktemp`
-    curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} ${GITHUBUSERPASS} -s -S > ${tmp}
+    curl -H \"Authorization: token ${GITHUBTOKEN}\" https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -s -S > ${tmp}
     if [[ $(cat $tmp | grep "Bad credentials") ]]; then
-      echo "[ERROR] Bad credentials: curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} ${GITHUBUSERPASS} -s -S"
+      echo "[ERROR] Bad credentials: curl -H \"Authorization: token ${GITHUBTOKEN}\" https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -s -S"
       exit 1
     fi
 
