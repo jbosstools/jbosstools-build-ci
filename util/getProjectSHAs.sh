@@ -258,7 +258,7 @@ checkProjects () {
 
     if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [1] curl https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch}"; fi
     tmp=`mktemp`
-    curl -H \"Authorization: token ${GITHUBTOKEN}\" https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -s -S > ${tmp}
+    curl -H "Authorization: token ${GITHUBTOKEN}" https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -s -S > ${tmp}
     if [[ $(cat $tmp | grep "Bad credentials") ]]; then
       echo "[ERROR] Bad credentials: curl -H \"Authorization: token ${GITHUBTOKEN}\" https://api.github.com/repos/${g_project_prefix}${g_project}/commits/${branch} -s -S"
       exit 1
@@ -346,7 +346,7 @@ checkProjects "${JBTPROJECTS}"  jbosstools/jbosstools-   http://download.jboss.o
 checkProjects "${JBDSPROJECTS}" jbdevstudio/jbdevstudio- http://www.qa.jboss.com/binaries/RHDS/${jbdspath}/ devstudio. "${jbdsstream}"
 
 if [[ ${jobsToCheck} ]]; then
-  echo "Run the following to build incomplete jobs:"
+  echo "Run the following command locally to build incomplete jobs:"
   echo ""
   echo "google-chrome ${jobsToCheck}"
   if [[ ${launchBrowser} == 1 ]]; then 
