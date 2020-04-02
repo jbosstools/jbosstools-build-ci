@@ -145,7 +145,7 @@ clean ()
 			#echo $subsubdirs
 			tmp=`mktemp`
 			for ssd in $subsubdirs; do
-				if [[ ${ssd##$sd/201*} == "" ]] || [[ $checkTimeStamps -eq 0 ]]; then # a build dir
+				if [[ ${ssd##$sd/20*} == "" ]] || [[ $checkTimeStamps -eq 0 ]]; then # a build dir
 					buildid=${ssd##*/}; 
 					echo $buildid >> $tmp
 				fi
@@ -197,7 +197,7 @@ clean ()
 			subdirCount=0;
 			for ssd in $subsubdirs; do
 				#echo "ssd = $ssd, sd = $sd"
-				if [[ $(echo $ssd | sed "s#^$sd/[0-9]\+-B[0-9]\+##") == "" ]] || [[ ${ssd##$sd/201*} == "" ]] || [[ $checkTimeStamps -eq 0 ]]; then # a build dir
+				if [[ $(echo $ssd | sed "s#^$sd/[0-9]\+-B[0-9]\+##") == "" ]] || [[ ${ssd##$sd/20*} == "" ]] || [[ $checkTimeStamps -eq 0 ]]; then # a build dir
 					# make sure all dirs contain content; if not, remove them
 					thisDirsContents="something"
 					thisDirsContents=$(echo "ls" | sftp $DEST_SERV:$sd/${ssd} 2>&1 | egrep -v "sftp|Connected to|Changing to") # will be "" if nothing found
