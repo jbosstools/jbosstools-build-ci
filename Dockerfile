@@ -9,7 +9,7 @@ RUN rpm -iUvh https://dl.fedoraproject.org/pub/epel/7/x86_64/Packages/e/epel-rel
 
 RUN yum install -y python-pip git gcc python-devel
 
-RUN pip install python-magic jira PyGitHub
+RUN pip install 'setuptools==44' python-magic jira PyGitHub
 
 WORKDIR /tmp/
 
