@@ -234,7 +234,7 @@ regenProcess ()
 		subdirCount=$1
 		sd=$2
 		numbuildstolink=$3
-		all=$(cat $tmp | sort -r | head -$numbuildstolink) # link only the latest $numbuildstolink builds
+		all=$(cat $tmp | sort -Vr | head -$numbuildstolink) # link only the latest $numbuildstolink builds using natural sort of (version) numbers within text 
 		rm -f $tmp
 		if [[ $subdirCount -gt 0 ]]; then
 			siteName=${sd##*${DEST_PATH}/}
