@@ -20,6 +20,7 @@ ok /Could not transfer metadata org.jboss.tools:parent/
 ok /Failure to transfer org.jboss.tools:parent/
 ok /Couldn't create directory: Failure/
 ok /Checksum validation failed, no checksums available from .*repository/
+ok /Warning: Nashorn engine is planned to be removed from a future JDK release/
 
 # section starts: these are used to group errors and warnings found after the line; also creates a quick access link.
 start /Reactor Build Order/
