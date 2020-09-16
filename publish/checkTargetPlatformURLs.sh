@@ -49,6 +49,7 @@ green="\033[1;32m"
 red="\033[1;31m"
 OK=0
 notOK=0
+curl_script="curl -I -s -o /dev/null -w \"%{http_code}\""
 
 if [[ ${TARGET_PLATFORM_VERSION_MAX} ]]; then
 
@@ -59,10 +60,10 @@ if [[ ${TARGET_PLATFORM_VERSION_MAX} ]]; then
              https://devstudio.jboss.com/${static}targetplatforms/jbdevstudiotarget; do
       for f in ${TARGET_PLATFORM_VERSION_MAX} ${TARGET_PLATFORM_VERSION_MAX}/REPO; do
         a=${u}/${f}
-        logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
+        logn "${a} : "; stat=$($curl_script ${a} | egrep "404")
         if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm}"; let notOK+=1; fi
         for j in compositeArtifacts.xml compositeContent.xml p2.index; do
-          logn " + [0] ${a}/${j} : "; stat=$(curl -I -s ${a}/${j} | egrep "404")
+          logn " + [0] ${a}/${j} : "; stat=$($curl_script ${a}/${j} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + [0] ${a}/${j} : " "${red}NO${norm}"; let notOK+=1; fi
         done
       done
@@ -83,17 +84,17 @@ if [[ ${TARGET_PLATFORM_VERSION_MAX} ]]; then
 
     for f in ${TARGET_PLATFORM_VERSION_MAX} ${TARGET_PLATFORM_VERSION_MAX}/REPO; do
       a=${u}/${f}
-      logn "${a} : "; stat=$(curl -I -s ${a} | egrep "404")
+      logn "${a} : "; stat=$($curl_script ${a} | egrep "404")
       if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr "${a} : " "${red}NO${norm}"; let notOK+=1; fi
 
       if [[ ${f} == *"/REPO" ]]; then
         for j in artifacts.jar binary content.jar features plugins; do
-          logn " + [2] ${a}/${j} : "; stat=$(curl -I -s ${a}/${j} | egrep "404")
+          logn " + [2] ${a}/${j} : "; stat=$($curl_script ${a}/${j} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + [2] ${a}/${j} : " "${red}NO${norm}"; let notOK+=1; fi
         done
       else
         for j in compositeArtifacts.xml compositeContent.xml ${t}-${TARGET_PLATFORM_VERSION_MAX}.zip ${t}-${TARGET_PLATFORM_VERSION_MAX}.zip.sha256; do
-          logn " + [1] ${a}/${j} : "; stat=$(curl -I -s ${a}/${j} | egrep "404")
+          logn " + [1] ${a}/${j} : "; stat=$($curl_script ${a}/${j} | egrep "404")
           if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + [1] ${a}/${j} : " "${red}NO${norm}"; let notOK+=1; fi
         done
       fi
@@ -101,7 +102,6 @@ if [[ ${TARGET_PLATFORM_VERSION_MAX} ]]; then
     log ""
   done
 fi
-
 
 ##################################
 
