@@ -24,7 +24,7 @@ local latest=-1
 local latestStr=""
 for i in `ls $1`
 do
-    local modif=`stat -c %Y $1/$i`
+    local modif=`stat -c %Y "$1/$i"`
     if ((modif > latest)); then
         latest=$modif
         latestStr=$1/$i
@@ -45,8 +45,8 @@ for i in "${modules[@]}"
 do
     rc=$(getLatest "$WORKSPACE/djo-ssh/$root/stable/$i")
     if [[ $dry -eq 1 ]]; then
-        find "$WORKSPACE/djo-ssh/$root/snapshots/$i" -maxdepth 1 ! -newer $rc -print
+        find "$WORKSPACE/djo-ssh/$root/snapshots/$i" -maxdepth 1 ! -newer "$rc" -print
     else
-        find "$WORKSPACE/djo-ssh/$root/snapshots/$i" -maxdepth 1 ! -newer $rc -print -delete
+        find "$WORKSPACE/djo-ssh/$root/snapshots/$i" -maxdepth 1 ! -newer "$rc" -print -delete
     fi
 done
