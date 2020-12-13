@@ -22,7 +22,7 @@ done
 getLatest() {
 local latest=-1
 local latestStr=""
-for i in `ls $1`
+for i in `IFS='\n' ls -1 $1`
 do
     local modif=`stat -c %Y "$1/$i"`
     if ((modif > latest)); then
