@@ -22,6 +22,9 @@ ok /Couldn't create directory: Failure/
 ok /Checksum validation failed, no checksums available from .*repository/
 ok /Warning: Nashorn engine is planned to be removed from a future JDK release/
 
+# avoid false positive of UI Bot Test logs
+ok /TRACE [main][WorkbenchPartLookup]/
+
 # section starts: these are used to group errors and warnings found after the line; also creates a quick access link.
 start /Reactor Build Order/
 start /\[INFO\] Building /
@@ -62,7 +65,7 @@ warning /The application has not been initialized/
 
 # errors
 error /HTTPError/
-error / \[ERROR\] /
+error / \[ERROR\] /TRACE [main][WorkbenchPartLookup]
 error /BUILD FAILED/
 error /No latest build found/
 
