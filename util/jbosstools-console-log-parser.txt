@@ -23,9 +23,9 @@ ok /Checksum validation failed, no checksums available from .*repository/
 ok /Warning: Nashorn engine is planned to be removed from a future JDK release/
 
 # avoid false positive of UI Bot Test logs
-ok /TRACE [main][WorkbenchPartLookup]/
-ok /INFO [WorkbenchTestable]/
-ok /DEBUG [WorkbenchTestable]/
+ok /TRACE \[main\]\[WorkbenchPartLookup\]/
+ok /INFO \[WorkbenchTestable\]/
+ok /DEBUG \[WorkbenchTestable\]/
 
 # section starts: these are used to group errors and warnings found after the line; also creates a quick access link.
 start /Reactor Build Order/
