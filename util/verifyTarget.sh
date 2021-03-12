@@ -68,7 +68,6 @@ MVN="mvn"
 MRL="" # placeholder for -Dmaven.repo.local, if used
 skipUpdateIUs=0
 Dflags="" # placeholer for additional -D flags to pass to maven, eg., -DTARGET_PLATFORM_VERSION_MAX=4.72.0.Final-SNAPSHOT
-includeSources="-Dmirror-target-to-repo.includeSources=true" # by default, include sources
 INSTALLSCRIPT=/tmp/installFromTarget.sh
 LOG_GREP_INCLUDES="BUILD FAILURE|Only one of the following|Missing requirement|Unresolved requirement|IllegalArgumentException|Could not resolve|could not be found|being installed|Cannot satisfy dependency|FAILED"
 LOG_GREP_INCLUDES2="TargetDefinitionResolutionException|Could not find"
@@ -184,7 +183,8 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
   fi
 
   echo ""
-  if [[ ${includeSources} ]]; then
+  if [[ ! ${includeSources} ]]; then
+    includeSources="-Dmirror-target-to-repo.includeSources=true" # by default, include sources
     echo "Step 2: Resolve target platform (including sources). This may take"
   else
     echo "Step 2: Resolve target platform (EXCLUDING sources). This may take"
@@ -196,7 +196,7 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
   pushd ${WORKSPACE}
   logfile=/tmp/resolve_log_${PROJECT}_${NOW}.txt
   echo "${MVN} ${MRL} ${Dflags} -U install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources}" | tee $logfile
-  ${MVN} ${MRL} ${Dflags} install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources} | tee -a $logfile
+  ${MVN} ${MRL} ${Dflags} -U install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources} | tee -a $logfile
   egrep -i -v "$LOG_GREP_EXCLUDES" $logfile | egrep -i -A2 "$LOG_GREP_INCLUDES|$LOG_GREP_INCLUDES2"; if [[ "$?" == "0" ]]; then break 2; fi
 
   popd
