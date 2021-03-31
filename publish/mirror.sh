@@ -8,8 +8,8 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
   # Jenkins-specific variables
   # where to store downloaded Eclipse zips
   ECLIPSEDIR=/home/hudson/static_build_env/jbds/tools/sources
-  # path to JDK8
-  JDK8=${NATIVE_TOOLS}${SEP}jdk1.8.0_last
+  # path to JDK
+  JDK_HOME=${NATIVE_TOOLS}${SEP}jdk11_last
   # shorthand for rsync
   RSYNC="rsync -arzq --protocol=28"
 
@@ -51,7 +51,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
 
   # get the mirror
   if [[ ${SOURCE_URL} ]]; then SOURCE_URL_PARAM="-DURL=${SOURCE_URL}"; else SOURCE_URL_PARAM=""; fi
-  date; time ${JDK8}/bin/java -cp ${WORKSPACE}/eclipse/plugins/org.eclipse.equinox.launcher_*.jar \
+  date; time ${JDK_HOME}/bin/java -cp ${WORKSPACE}/eclipse/plugins/org.eclipse.equinox.launcher_*.jar \
       org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp \
       -application org.eclipse.ant.core.antRunner -f ${SCRIPTNAME} -Dversion=${VERSION} ${SOURCE_URL_PARAM} ${TASK} \
       -DignoreErrors=${ignoreErrors} -vmargs -Declipse.p2.mirrors=false | tee ${logFile}
