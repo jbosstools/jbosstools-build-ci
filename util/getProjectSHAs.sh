@@ -235,8 +235,7 @@ fi
 
 jobsToCheck=""
 checkProjects () {
-  jenkins_prefix1="https://fusesource-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/"
-  jenkins_prefix2="https://dev-platform-jenkins.rhev-ci-vms.eng.rdu2.redhat.com/job/"
+  jenkins_prefix="https://studio-jenkins-csb-codeready.apps.ocp4.prod.psi.redhat.com/job/Studio/job/Engineering/job/build_master/job/"
   PROJECTS="$1" # ${JBTPROJECTS} or ${JBDSPROJECTS}
   g_project_prefix="$2" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
   staging_url="$3" # http://download.jboss.org/jbosstools/${jbtpath}/ or http://www.qa.jboss.com/binaries/RHDS/${jbdspath}/
@@ -301,16 +300,14 @@ checkProjects () {
       jenkinshash=`wget -q --no-check-certificate ${staging_url}${jobname_prefix}${j2}_${stream}/latest/all/repo/buildinfo.json -O - | \
         grep HEAD | grep -v currentBranch | head -1 | sed -e "s/.\+\"HEAD\" : \"\(.\+\)\",/\1/"`
     fi
-    for jenkins_prefix in $jenkins_prefix1 $jenkins_prefix2 ; do
-      if [[ ! ${jenkinshash} ]]; then # try Jenkins XML API instead
-        jenkinshash=`wget -q --no-check-certificate --user=${j_user} --password="${j_password}" ${jenkins_prefix}${jobname_prefix}${j}_${stream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1 -O - | \
-          sed "s#<SHA1>\(.\+\)</SHA1>#\1#"`
-        if [[ ${jenkinshash} ]]; then
-          echo "backup: $jenkinshash from ${jenkins_prefix}${jobname_prefix}${j}_${stream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1"
-          continue
-        fi
+    if [[ ! ${jenkinshash} ]]; then # try Jenkins XML API instead
+      jenkinshash=`wget -q --no-check-certificate --user=${j_user} --password="${j_password}" ${jenkins_prefix}${jobname_prefix}${j}_${stream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1 -O - | \
+        sed "s#<SHA1>\(.\+\)</SHA1>#\1#"`
+      if [[ ${jenkinshash} ]]; then
+        echo "backup: $jenkinshash from ${jenkins_prefix}${jobname_prefix}${j}_${stream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1"
+        continue
       fi
-    done
+    fi
 
     if [[ ! ${githash} ]] || [[ ! ${jenkinshash} ]]; then 
       if [[ ! ${githash} ]]; then
