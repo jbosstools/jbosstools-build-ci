@@ -24,7 +24,7 @@ local latest=-1
 local latestStr=""
 local OLDIFS=$IFS
 IFS=$'\t\n'
-for i in `ls -1 $1`
+for i in `ls -1 -p $1 | grep -v /`
 do
     local modif=`stat -c %Y "$1/$i"`
     if ((modif > latest)); then
