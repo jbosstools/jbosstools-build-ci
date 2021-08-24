@@ -47,9 +47,11 @@ shift
 for i in "${modules[@]}"
 do
     rc=$(getLatest "$WORKSPACE/djo-ssh/$root/stable/$i")
-    if [[ $dry -eq 1 ]]; then
-        find "$WORKSPACE/djo-ssh/$root/snapshots/$i" -maxdepth 1 ! -newer "$rc" -print
-    else
-        find "$WORKSPACE/djo-ssh/$root/snapshots/$i" -maxdepth 1 ! -newer "$rc" -print -delete
+    if [[ ! -z "$rc" ]]; then
+        if [[ $dry -eq 1 ]]; then
+            find "$WORKSPACE/djo-ssh/$root/snapshots/$i" -maxdepth 1 -type f ! -newer "$rc" -print
+        else
+            find "$WORKSPACE/djo-ssh/$root/snapshots/$i" -maxdepth 1 -type f ! -newer "$rc" -print -delete
+        fi
     fi
 done
