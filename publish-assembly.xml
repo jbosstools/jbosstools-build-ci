@@ -24,6 +24,7 @@
 	      <include>util/verifyTarget.sh</include>
 	      <include>util/cleanup/jbosstools-cleanup.sh</include>
 	      <include>util/jbosstools-console-log-parser.txt</include>
+	      <include>mirror/pom.xml</include>
 	    </includes>
 	    <fileMode>755</fileMode>
 	  </fileSet>

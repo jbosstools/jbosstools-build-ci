@@ -146,6 +146,11 @@
 									<type>txt</type>
 									<classifier>jbosstools-console-log-parser</classifier>
 								</artifact>
+								<artifact>
+									<file>mirror/pom.xml</file>
+									<type>xml</type>
+									<classifier>jbosstools-mirror</classifier>
+								</artifact>
 							</artifacts>
 						</configuration>
 					</execution>
