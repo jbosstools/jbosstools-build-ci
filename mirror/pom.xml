@@ -1,0 +1,65 @@
+<!--
+- Copyright (c) 2021 Red Hat Inc.
+- All rights reserved. This program and the accompanying materials
+- are made available under the terms of the Eclipse Public License v1.0
+- which accompanies this distribution, and is available at
+- http://www.eclipse.org/legal/epl-v10.html
+-
+- Contributors:
+- Stephane Bouchet (Red Hat) - Initial API and implementation
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.jboss.tools.tycho-plugins</groupId>
+	<artifactId>mirror-utils</artifactId>
+	<packaging>pom</packaging>
+	<name>jbosstools-tycho-mirror-utils</name>
+
+	<parent>
+		<groupId>org.jboss.tools</groupId>
+		<artifactId>tycho-plugins</artifactId>
+		<version>2.4.0</version>
+	</parent>
+
+	<properties>
+		<SRC_URL>http://download.eclipse.org/wildwebdeveloper/releases/0.12.0</SRC_URL>
+		<TARGET>wildwebdeveloper/0.12.0/</TARGET>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho.extras</groupId>
+				<artifactId>tycho-p2-extras-plugin</artifactId>
+				<version>${tychoVersion}</version>
+				<executions>
+					<execution>
+						<id>mirror</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>mirror</goal>
+						</goals>
+						<configuration>
+							<source>
+								<!-- source repositories to mirror from -->
+								<repository>
+									<url>${SRC_URL}</url>
+								</repository>
+							</source>
+							<!-- The destination directory to mirror to. -->
+							<destination>${project.build.directory}/mirrored/${TARGET}</destination>
+							<!-- whether to compress the content.xml/artifacts.xml -->
+							<compress>true</compress>
+							<!-- whether to mirror pack200 artifacts also. -->
+							<includePacked>true</includePacked>
+							<!-- Add XZ-compressed repository index files. XZ offers better compression 
+								ratios esp. for highly redundant file content. -->
+							<xzCompress>true</xzCompress>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
