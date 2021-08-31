@@ -23,8 +23,8 @@
 	</parent>
 
 	<properties>
-		<SRC_URL>http://download.eclipse.org/wildwebdeveloper/releases/0.12.0</SRC_URL>
-		<TARGET>wildwebdeveloper/0.12.0/</TARGET>
+		<SRC_URL></SRC_URL>
+		<TARGET></TARGET>
 	</properties>
 
 	<build>
