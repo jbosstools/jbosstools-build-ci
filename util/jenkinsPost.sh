@@ -47,18 +47,21 @@ fi
 
 if [[ ${userpass} = ":" ]] || [[ ! ${job} ]] || [[ ! ${task} ]]; then usage; fi
 
-if [[ ! ${crumb} ]]; then
-	# due to redirection, curl won't work -- wrong crumb returned
-	crumb=$(curl -k -s -S -L --location-trusted -s ${jenkinsURL//\/job/}/crumbIssuer/api/xml?xpath=//crumb | sed "s#<crumb>\([0-9a-f]\+\)</crumb>#\1#")
-	# so use wget
-	crumb=$(wget --no-check-certificate -q --auth-no-challenge --user ${jenkinsUser} --password "${jenkinsPass}" --output-document - "${jenkinsURL//\/job/}/crumbIssuer/api/xml?xpath=//crumb" \
-	  | sed "s#<crumb>\([0-9a-f]\+\)</crumb>#\1#")
+# testing if host reachable
+host=$(echo "${jenkinsURL}" | cut -d'/' -f 3)
+ping -c 1 ${host} &> /dev/null
+if [[ $? -ne 0 ]]; then
+    echo -e  "\033[1;91m[ERROR] host '${host}' not reachable.\033[0m"
+	exit 1
 fi
-if [[ $quiet == 0 ]]; then log "Crumb: ${crumb}"; fi
 
-logn "["
+if [[ ! ${crumb} ]]; then
+	crumb=$(wget --no-check-certificate -q --auth-no-challenge --user ${jenkinsUser} --password ${jenkinsPass} --output-document - "${jenkinsURL//\/job/}/crumbIssuer/api/xml?xpath=//crumb" | sed "s#<crumb>\([0-9a-f]\+\)</crumb>#\1#")
+fi
+if [[ $quiet == 0 ]] && [[ -n ${crumb} ]]; then log "Crumb: ${crumb}"; fi
+
 prevJob=$(curl -k -s -S -L --location-trusted -s ${jenkinsURL/https/http}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
-log "${prevJob}] POST: ${jenkinsURL}/${job}/${task} $data"
+logn "[${prevJob}] POST: ${jenkinsURL}/${job}/${task} $data\n"
 if [[ $quiet == 1 ]] && [[ $task != "build"* ]]; then echo ${prevJob}; fi
 
 curl -k -s -S -k -X POST -u ${userpass} -H "Jenkins-Crumb:${crumb}" ${data} ${jenkinsURL}/${job}/${task}
