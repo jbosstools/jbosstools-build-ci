@@ -48,7 +48,7 @@
 								</repository>
 							</source>
 							<!-- The destination directory to mirror to. -->
-							<destination>${project.build.directory}/mirrored/${TARGET}</destination>
+							<destination>${TARGET}</destination>
 							<!-- whether to compress the content.xml/artifacts.xml -->
 							<compress>true</compress>
 							<!-- whether to mirror pack200 artifacts also. -->

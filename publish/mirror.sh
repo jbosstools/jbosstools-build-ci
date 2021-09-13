@@ -9,7 +9,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
   # where to store downloaded Eclipse zips
   ECLIPSEDIR=/home/hudson/static_build_env/jbds/tools/sources
   # path to JDK
-  JDK_HOME=${NATIVE_TOOLS}${SEP}jdk11_last
+  JDK_HOME=${NATIVE_TOOLS}${SEP}${JAVA11}
   # shorthand for rsync
   RSYNC="rsync -arzq --protocol=28"
 
@@ -17,9 +17,6 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
 
   # get the build scripts
   ${RSYNC} --delete ${WORKSPACE}/sources/jbosstools/updates/requirements/* ${WORKSPACE}/updates/requirements/
-
-  # by default, don't ignore errors (unless Jenkins job explicitly asks for it)
-  ignoreErrors=false
 
   # if running on 32-bit slave
   if [[ ! `uname -a | grep 64` ]]; then ECLIPSE=${ECLIPSE/-x86_64/}; fi
@@ -51,10 +48,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
 
   # get the mirror
   if [[ ${SOURCE_URL} ]]; then SOURCE_URL_PARAM="-DURL=${SOURCE_URL}"; else SOURCE_URL_PARAM=""; fi
-  date; time ${JDK_HOME}/bin/java -cp ${WORKSPACE}/eclipse/plugins/org.eclipse.equinox.launcher_*.jar \
-      org.eclipse.equinox.launcher.Main -consoleLog -nosplash -data ${WORKSPACE}/tmp \
-      -application org.eclipse.ant.core.antRunner -f ${SCRIPTNAME} -Dversion=${VERSION} ${SOURCE_URL_PARAM} ${TASK} \
-      -DignoreErrors=${ignoreErrors} -vmargs -Declipse.p2.mirrors=false | tee ${logFile}
+  date; time $M2_HOME/bin/mvn -B -f ${WORKSPACE}/sources/mirror/pom.xml ${SOURCE_URL_PARAM} -DTARGET=${WORKDIR}/${VERSION} | tee ${logFile}
 
   if [[ -f ${logFile} ]]; then 
     echo "[INFO] Log file: ${logFile}"
