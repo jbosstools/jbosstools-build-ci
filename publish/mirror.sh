@@ -5,41 +5,12 @@
 # allow invoking this job to do nothing (if called from upstream job)
 if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then 
 
-  # Jenkins-specific variables
-  # where to store downloaded Eclipse zips
-  ECLIPSEDIR=/home/hudson/static_build_env/jbds/tools/sources
   # path to JDK
   JDK_HOME=${NATIVE_TOOLS}${SEP}${JAVA11}
   # shorthand for rsync
   RSYNC="rsync -arzq --protocol=28"
 
   WORKDIR=${WORKSPACE}/updates/requirements/${REQ_NAME}; mkdir -p ${WORKDIR}/; cd ${WORKDIR}
-
-  # get the build scripts
-  ${RSYNC} --delete ${WORKSPACE}/sources/jbosstools/updates/requirements/* ${WORKSPACE}/updates/requirements/
-
-  # if running on 32-bit slave
-  if [[ ! `uname -a | grep 64` ]]; then ECLIPSE=${ECLIPSE/-x86_64/}; fi
-
-  # get https://www.eclipse.org/downloads/download.php?r=1&file=/technology/epp/downloads/release/luna/SR1/eclipse-jee-luna-SR1-linux-gtk-x86_64.tar.gz
-  # if plugins folder doesn't exist, unpack Eclipse to ${WORKSPACE}/eclipse
-  if [[ ! -d ${WORKSPACE}/eclipse/plugins/ ]]; then
-    pushd ${WORKSPACE}
-      # if we don't have this Eclipse, get it
-      echo "wget ${ECLIPSE} ..."
-      if [[ ! -f ${ECLIPSEDIR}/${ECLIPSE##*/} ]]; then wget -nc ${ECLIPSE} -O ${ECLIPSEDIR}/${ECLIPSE##*/}; fi
-      # then unpack it
-      echo "Unpack ${ECLIPSEDIR}/${ECLIPSE##*/} ..."
-      tar xzf ${ECLIPSEDIR}/${ECLIPSE##*/}
-    popd
-  fi
-
-  # put a copy of ant-contrib.jar in ${WORKDIR}/..
-  if [[ $(grep ant-contrib ${SCRIPTNAME}) ]]; then
-    M2_HOME=/qa/tools/opt/apache-maven-3.2.5/
-    $M2_HOME/bin/mvn -B dependency:copy -DtrimVersion=true -Dmdep.stripClassifier=true -Dmdep.stripVersion=true \
-      -DoutputDirectory=${WORKSPACE}/updates/requirements/ -Dartifact=ant-contrib:ant-contrib:1.0b3:jar
-  fi
 
   mkdir -p ${WORKSPACE}/tmp
   logFile=${WORKSPACE}/tmp/mirror.log.txt
