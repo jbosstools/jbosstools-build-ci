@@ -19,7 +19,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
 
   # get the mirror
   if [[ ${SOURCE_URL} ]]; then SOURCE_URL_PARAM="-DURL=${SOURCE_URL}"; else SOURCE_URL_PARAM=""; fi
-  date; time $M2_HOME/bin/mvn -B -f ${WORKSPACE}/sources/mirror/pom.xml ${SOURCE_URL_PARAM} -DTARGET=${WORKDIR}/${VERSION} | tee ${logFile}
+  date; time $M2_HOME/bin/mvn clean package -B -f ${WORKSPACE}/sources/mirror/pom.xml ${SOURCE_URL_PARAM} -DTARGET=${WORKDIR}/${VERSION} | tee ${logFile}
 
   if [[ -f ${logFile} ]]; then 
     echo "[INFO] Log file: ${logFile}"
@@ -49,12 +49,6 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
   # publish to /builds/staging/${JOB_NAME}_${REQ_NAME}/${VERSION}
   DESTINATION="tools@filemgmt.jboss.org:/downloads_htdocs/tools"
   date
-
-  # deprecated: only for non-requirements releases 
-  # if [[ ${PUBLISH_PATH} != "requirements" ]]; then
-  #   ${RSYNC} --delete ${WORKDIR}/${VERSION} ${DESTINATION}/builds/staging/${JOB_NAME}_${REQ_NAME}/
-  #   ${RSYNC} ${WORKDIR}/${SCRIPTNAME} ${DESTINATION}/builds/staging/${JOB_NAME}_${REQ_NAME}/
-  # fi
 
   # optionally, publish to updates/requirements/${REQ_NAME}/ too
   if [[ ${VERSION} != "SNAPSHOT" ]]; then
