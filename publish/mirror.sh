@@ -70,7 +70,6 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
 
   date
   # cleanup
-  rm -fr ${WORKSPACE}/eclipse
   rm -fr ${WORKSPACE}/tmp
 
 fi
