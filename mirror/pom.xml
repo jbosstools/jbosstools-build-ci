@@ -15,16 +15,18 @@
 	<artifactId>mirror-utils</artifactId>
 	<packaging>pom</packaging>
 	<name>jbosstools-tycho-mirror-utils</name>
+	<version>2.2.0</version>
 
 	<parent>
 		<groupId>org.jboss.tools</groupId>
 		<artifactId>tycho-plugins</artifactId>
 		<version>2.2.0</version>
+		<relativePath></relativePath>
 	</parent>
 
 	<properties>
-		<SRC_URL>http://download.eclipse.org/wildwebdeveloper/releases/0.12.0</SRC_URL>
-		<TARGET>wildwebdeveloper/0.12.0/</TARGET>
+		<SRC_URL></SRC_URL>
+		<TARGET></TARGET>
 	</properties>
 
 	<build>
@@ -48,7 +50,7 @@
 								</repository>
 							</source>
 							<!-- The destination directory to mirror to. -->
-							<destination>${project.build.directory}/mirrored/${TARGET}</destination>
+							<destination>${TARGET}</destination>
 							<!-- whether to compress the content.xml/artifacts.xml -->
 							<compress>true</compress>
 							<!-- whether to mirror pack200 artifacts also. -->
