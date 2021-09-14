@@ -18,7 +18,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
   rm -f ${logFile} ${errFile}
 
   # get the mirror
-  if [[ ${SOURCE_URL} ]]; then SOURCE_URL_PARAM="-DURL=${SOURCE_URL}"; else SOURCE_URL_PARAM=""; fi
+  if [[ ${SOURCE_URL} ]]; then SOURCE_URL_PARAM="-DSRC_URL=${SOURCE_URL}"; else SOURCE_URL_PARAM=""; fi
   date; time $M2_HOME/bin/mvn clean package -B -f ${WORKSPACE}/sources/mirror/pom.xml ${SOURCE_URL_PARAM} -DTARGET=${WORKDIR}/${VERSION} | tee ${logFile}
 
   if [[ -f ${logFile} ]]; then 
