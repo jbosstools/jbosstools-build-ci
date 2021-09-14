@@ -21,6 +21,7 @@
 		<groupId>org.jboss.tools</groupId>
 		<artifactId>tycho-plugins</artifactId>
 		<version>2.2.0</version>
+		<relativePath></relativePath>
 	</parent>
 
 	<properties>
