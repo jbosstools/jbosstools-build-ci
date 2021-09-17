@@ -26,13 +26,19 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
 
     # check mirror log for failures
     errorMsgs="java.lang.reflect.InvocationTargetException"
-    errorMsgs="${errorMsgs}|Failed to transfer artifact canonical"
-    errorMsgs="${errorMsgs}|Validation found errors"
-    errorMsgs="${errorMsgs}|Cannot satisfy dependency|Could not resolve content"
-    errorMsgs="${errorMsgs}|Connection refused|Missing requirement"
-    errorMsgs="${errorMsgs}|No repository found|No such file or directory|Unable to read repository"
-    errorMsgs="${errorMsgs}|The following error occurred|BUILD FAIL"
-    sed -n "/${errorMsgs}/p" ${logFile} > ${errFile}
+    errorMsgs="${errorMsgs}/p;/Failed to transfer artifact canonical"
+    errorMsgs="${errorMsgs}/p;/Validation found errors"
+    errorMsgs="${errorMsgs}/p;/Cannot satisfy dependency"
+    errorMsgs="${errorMsgs}/p;/Could not resolve content"
+    errorMsgs="${errorMsgs}/p;/Connection refused"
+    errorMsgs="${errorMsgs}/p;/Missing requirement"
+    errorMsgs="${errorMsgs}/p;/No repository found"
+    errorMsgs="${errorMsgs}/p;/No such file or directory"
+    errorMsgs="${errorMsgs}/p;/Unable to read repository"
+    errorMsgs="${errorMsgs}/p;/The following error occurred"
+    errorMsgs="${errorMsgs}/p;/BUILD FAILURE"
+    
+    sed -n "{/${errorMsgs}/p}" ${logFile} > ${errFile}
 
     if [[ $(cat ${errFile}) ]]; then
       echo "[ERROR] The following errors have occurred while mirroring - must exit!"
