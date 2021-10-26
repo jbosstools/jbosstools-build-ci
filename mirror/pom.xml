@@ -20,7 +20,7 @@
 	<parent>
 		<groupId>org.jboss.tools</groupId>
 		<artifactId>tycho-plugins</artifactId>
-		<version>2.2.0</version>
+		<version>2.5.0</version>
 		<relativePath></relativePath>
 	</parent>
 
@@ -53,8 +53,6 @@
 							<destination>${TARGET}</destination>
 							<!-- whether to compress the content.xml/artifacts.xml -->
 							<compress>true</compress>
-							<!-- whether to mirror pack200 artifacts also. -->
-							<includePacked>true</includePacked>
 							<!-- Add XZ-compressed repository index files. XZ offers better compression 
 								ratios esp. for highly redundant file content. -->
 							<xzCompress>true</xzCompress>

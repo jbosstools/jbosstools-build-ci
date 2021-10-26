@@ -67,8 +67,6 @@ from https://wiki.eclipse.org/Tycho/Additional_Tools
                 <compress>true</compress>
                 <!-- whether to append to the target repository content -->
                 <append>true</append>
-                <!-- whether to mirror pack200 artifacts also. Available since tycho-extras 0.17.0 -->
-                <includePacked>true</includePacked>
             </configuration>
         </plugin>
     </plugins>
