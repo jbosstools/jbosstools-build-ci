@@ -57,7 +57,7 @@ if [[ ! $IUs ]]; then
   # https://repository.jboss.org/nexus/content/repositories/snapshots/org/jboss/tools/releng/jbosstools-releng-publish/
   # but just in case fall back to github
   if [[ ! -f ${WORKSPACE}/sources/util/installFromTarget.sh ]]; then
-		wget https://raw.github.com/jbosstools/jbosstools-build-ci/jbosstools-4.4.x/util/installFromTarget.sh -q --no-check-certificate -N
+		curl -s -S -k https://raw.github.com/jbosstools/jbosstools-build-ci/jbosstools-4.4.x/util/installFromTarget.sh > installFromTarget.sh
   else
     cp -f ${WORKSPACE}/sources/util/installFromTarget.sh ${WORKSPACE}/installFromTarget.sh
 	fi

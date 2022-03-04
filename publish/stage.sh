@@ -145,7 +145,6 @@ for site in ${sites}; do
   grepstring="${JOB_NAME}|${site}|${ID}|ERROR|${version}|${SRC_DIR}|${DESTDIR}|${SRC_TYPE}|${DESTTYPE}|exclude"
   DEST_URLs=""
 
-  RSYNC="rsync -aPrzv --rsh=ssh --protocol=28"
   EXCLUDESTRING="--exclude=\"repo\"" # exclude mirroring the update site repo/ folder for all builds
   if [[ "${site/discovery}" == "${site}" ]]; then # don't exclude the repo folder when publishing a discovery site build
     EXCLUDESTRING=""
@@ -159,8 +158,7 @@ for site in ${sites}; do
     else # copy from filemgmt to filemgmt via tmp folder intermediate
       # use ${HOME}/temp-stage/ instead of /tmp because insufficient space
       tmpdir=`mkdir -p ${HOME}/temp-stage/ && mktemp -d -t -p ${HOME}/temp-stage/ tmp.${site}.XXXXX` && mkdir -p $tmpdir && pushd $tmpdir >/dev/null
-      # echo "+ ${RSYNC} ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/" | egrep "${grepstring}"
-      ${RSYNC} ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
+      cp -R ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME}/${ID}/* ${tmpdir}/
     fi
       # copy build folder
       if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
@@ -173,16 +171,16 @@ for site in ${sites}; do
         echo "mkdir builds" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
         echo "mkdir ${PRODUCT}-${version}-build-${buildname}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/ &>${consoleDest}
       fi
-      log "[DEBUG] [$site] + ${RSYNC} ${EXCLUDESTRING} ${EXCLUDESTRING2} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/${ID}/" | egrep "${grepstring}"
+      log "[DEBUG] [$site] + sftp ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/${ID}/" | egrep "${grepstring}"
       y=${tmpdir}/all/repository.zip
       if [[ -f ${y} ]] && [[ ! -f ${y}.sha256 ]]; then
         echo "[WARN] [$site] Create ${y}.sha256"
         for s in $(sha256sum ${y}); do if [[ ${s} != ${y} ]]; then echo ${s} > ${y}.sha256; fi; done
       fi
-      ${RSYNC} -e 'ssh -p 2222' ${EXCLUDESTRING} ${EXCLUDESTRING2} ${tmpdir}/* tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/${ID}/ 
+      echo -e "put ${tmpdir}/*" | sftp -Cpr tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/${ID}/ 
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/"
       # symlink latest build
-      ln -s ${ID} latest; ${RSYNC} -e 'ssh -p 2222' ${tmpdir}/latest tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/ &>${consoleDest}
+      echo -e "ln -s ${ID} latest" | sftp -Cpr tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/ &>${consoleDest}
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/latest/"
       # copy update site zip
       suffix=-updatesite-${sitename}
@@ -201,13 +199,13 @@ for site in ${sites}; do
           echo "mkdir updates" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
           echo "mkdir ${sitename}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/ &>${consoleDest}
         fi
-        ${RSYNC} -e 'ssh -p 2222' ${y} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${version}${suffix}.zip &>${consoleDest}
+        echo -e "put ${y}" | sftp -Cpr tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${version}${suffix}.zip &>${consoleDest}
         # create sha256 sum if not exists
         if [[ ! -f ${y}.sha256 ]]; then
           echo "[WARN] [$site] Create updates/${sitename}/${ZIPPREFIX}${version}${suffix}.zip.sha256"
           for s in $(sha256sum ${y}); do if [[ ${s} != ${y} ]]; then echo ${s} > ${y}.sha256; fi; done          
         fi
-        ${RSYNC} -e 'ssh -p 2222' ${y}.sha256 tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${version}${suffix}.zip.sha256 &>${consoleDest}
+        echo -e "put ${y}.sha256" | sftp -Cpr tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${version}${suffix}.zip.sha256 &>${consoleDest}
       elif [[ ${requireUpdateZip} -gt 0 ]]; then
         echo "[ERROR] [$site] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
       elif [[ ${skipUpdateZip} -lt 1 ]]; then
@@ -230,8 +228,8 @@ for site in ${sites}; do
           echo "mkdir updates" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
           echo "mkdir ${sitename}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/ &>${consoleDest}
         fi
-        log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${version}/" | egrep "${grepstring}"
-        ${RSYNC} -e 'ssh -p 2222' ${tmpdir}/all/repo/* tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${version}/ &>${consoleDest}
+        log "[DEBUG] [$site] + sftp ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${version}/" | egrep "${grepstring}"
+        echo -e "put ${tmpdir}/all/repo/*" | sftp -Cpr tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${version}/ &>${consoleDest}
         DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${version}/"
       else
         # don't warn for discovery sites and browsersim standalone since they don't have update sites

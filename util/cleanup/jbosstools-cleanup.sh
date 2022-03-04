@@ -71,6 +71,24 @@ done
 DEST_SERV=${DESTINATION%%:*}; # tools@filemgmt.jboss.org
 DEST_PATH=${DESTINATION##*:}; # /downloads_htdocs/tools
 
+recursive_del ()
+{
+	local sd=$1
+	local dd=$2
+	local subdir=''
+	tmp=`mktemp`
+	echo -e "ls -1l $dd/" | sftp -q $DEST_SERV:$sd/ > $tmp
+ 	while IFS= read -r line; do
+    	if egrep -q '^d' <<< $line; then
+       		subdir=$(echo "$line" | awk '{ print $NF }')
+       		recursive_del $sd "$dd/$subdir"
+			echo -e "rm $dd/$subdir/*" | sftp -q $DEST_SERV:$sd/
+			echo -e "rmdir $dd/$subdir" | sftp -q $DEST_SERV:$sd/
+    	fi
+  	done < $tmp
+	rm -f $tmp
+}
+
 getSubDirs () 
 {
 	getSubDirsReturn=""
@@ -93,7 +111,7 @@ getSubDirs ()
 		fi
 		tmp=`mktemp`
 		echo "ls $dir" > $tmp
-		dirs=$(sftp -b $tmp tools@filemgmt.jboss.org 2>/dev/null)
+		dirs=$(sftp -b $tmp $DEST_SERV 2>/dev/null)
 		i=0
 		for c in $dirs; do #exclude *.*ml, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
 			# old way... if [[ $i -gt 2 ]] && [[ $c != "sftp>" ]] && [[ ${c##*.} != "" ]] && [[ ${c##*/*.*ml} != "" ]] && [[ ${c##*/*.properties} != "" ]] && [[ ${c##*/*.jar} != "" ]] && [[ ${c##*/*.zip} != "" ]] && [[ ${c##*/*.MD5} != "" ]] && [[ ${c##*/*.md5} != "" ]] && [[ ${c##*/web} != "" ]] && [[ ${c##*/plugins} != "" ]] && [[ ${c##*/features} != "" ]] && [[ ${c##*/binary} != "" ]] && [[ ${c##*/.blobstore} != "" ]]; then
@@ -175,14 +193,18 @@ clean ()
 					if [[ $keep -eq 0 ]]; then
 						echo -n "- $sd/$dd (${day}d)... " | tee -a $log
 						if [[ $delete -eq 1 ]]; then
-							if [[ $USER == "hudson" ]]; then
+							if [[ $USER == "sbouchet" ]]; then
 								# can't delete the dir, but can at least purge its contents
 								rm -fr ${tmpdir}/$dd; mkdir ${tmpdir}/$dd; pushd ${tmpdir}/$dd >/dev/null
-								rsync --rsh=ssh --protocol=28 -e 'ssh -p 2222' -r --delete . ${DEST_SERV}:$sd/$dd 2>&1 | tee -a $log
-								echo -e "rmdir $dd" | sftp tools@filemgmt.jboss.org:$sd/
+								# delete all inner direcories
+								echo "" | tee -a $log
+								recursive_del "$sd" "$dd"
+								echo -e "rm $dd/*" | sftp -q $DEST_SERV:$sd/ 
+								echo -e "rmdir $dd" | sftp -q $DEST_SERV:$sd/
 								popd >/dev/null; rm -fr ${tmpdir}/$dd
+							else
+								echo "" | tee -a $log
 							fi
-							echo "" | tee -a $log
 						else
 							echo " SKIPPED."
 						fi
@@ -200,15 +222,15 @@ clean ()
 				if [[ $(echo $ssd | sed "s#^$sd/[0-9]\+-B[0-9]\+##") == "" ]] || [[ ${ssd##$sd/20*} == "" ]] || [[ $checkTimeStamps -eq 0 ]]; then # a build dir
 					# make sure all dirs contain content; if not, remove them
 					thisDirsContents="something"
-					thisDirsContents=$(echo "ls" | sftp tools@filemgmt.jboss.org:$sd/${ssd} 2>&1 | egrep -v "sftp|Connected to|Changing to") # will be "" if nothing found
+					thisDirsContents=$(echo "ls" | sftp $DEST_SERV:$sd/${ssd} 2>&1 | egrep -v "sftp|Connected to|Changing to") # will be "" if nothing found
 					if [[ $thisDirsContents == "" ]]; then
 						echo -n "- $sd/$ssd (empty dir)... " | tee -a $log
 						# remove the empty dir from the list we'll composite together, delete it from the server, and don't count it in the subdirCount
 						rm -fr $tmp/$ssd
-						echo -e "rmdir $ssd" | sftp tools@filemgmt.jboss.org:$sd/
+						echo -e "rmdir $ssd" | sftp $DEST_SERV:$sd/
 					else
 						# check that $DEST_SERV:$sd/${ssd}/${childFolderSuffix} exists, or else 'File "..." not found'
-						thisDirsContents=$(echo "ls" | sftp tools@filemgmt.jboss.org:$sd/${ssd}/${childFolderSuffix} 2>&1 | egrep -v "sftp|Connected to|Changing to") # will be "" if nothing found
+						thisDirsContents=$(echo "ls" | sftp $DEST_SERV:$sd/${ssd}/${childFolderSuffix} 2>&1 | egrep -v "sftp|Connected to|Changing to") # will be "" if nothing found
 						if [[ ${thisDirsContents/File \"*\" not found./NO} == "NO" ]]; then 
 							echo $thisDirsContents
 							# remove the empty dir from the list we'll composite together, and don't count it in the subdirCount
@@ -239,16 +261,16 @@ regenProcess ()
 		if [[ $subdirCount -gt 0 ]]; then
 			siteName=${sd##*${DEST_PATH}/}
 			# JBIDE-25045 check if the destination folder is a symlink - we don't need (or want) to regen a symlink folder
-			# $➔ rsync --rsh=ssh --protocol=28 ${TOOLS}/neon/stable/updates/windup | egrep "^l"
+			# $➔ echo "ls -l" | sftp -q ${TOOLS}/neon/stable/updates/windup | egrep "^l"
 			#    lrwxrwxrwx    1 tools    tools           6 May 19 15:21 windup
 			# echo "> Check if $sd is symlink..."
-			isSymlink=$(rsync --rsh=ssh --protocol=28 -e 'ssh -p 2222' ${DEST_SERV}:$sd | egrep "^l")
+			isSymlink=$(echo "ls -l" | sftp -q ${DEST_SERV}:$sd | egrep "^l")
 			if [[ ! ${isSymlink} ]]; then
 				echo "+ Generate metadata for first ${numbuildstolink} of ${subdirCount} subdir(s) in $sd" | tee -a $log
 				mkdir -p ${tmpdir}/cleanup-fresh-metadata/
 				regenCompositeMetadata "$siteName" "$all" "$numbuildstolink" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "${tmpdir}/cleanup-fresh-metadata/compositeContent.xml"
 				regenCompositeMetadata "$siteName" "$all" "$numbuildstolink" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "${tmpdir}/cleanup-fresh-metadata/compositeArtifacts.xml"
-				rsync --rsh=ssh --protocol=28 -e 'ssh -p 2222' -q ${tmpdir}/cleanup-fresh-metadata/composite*.xml ${DEST_SERV}:$sd/
+				echo -e "put ${tmpdir}/cleanup-fresh-metadata/composite*.xml" | sftp -Cpq ${DEST_SERV}:$sd/
 				rm -fr ${tmpdir}/cleanup-fresh-metadata/
 			else
 				echo "- Skip symlinked folder $sd" | tee -a $log

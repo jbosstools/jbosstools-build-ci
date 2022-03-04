@@ -39,7 +39,7 @@ echo $latestStr
 sshmount() {
 mkdir -p ${WORKSPACE}/djo-ssh;
 if [[ $(file ${WORKSPACE}/djo-ssh 2>&1) == *"Transport endpoint is not connected"* ]]; then fusermount -uz ${WORKSPACE}/djo-ssh; fi
-if [[ ! -d ${WORKSPACE}/djo-ssh/images ]]; then  sshfs tools@10.5.105.197:/downloads_htdocs/tools ${WORKSPACE}/djo-ssh; fi
+if [[ ! -d ${WORKSPACE}/djo-ssh/images ]]; then  sshfs tools@filemgmt.jboss.org:/downloads_htdocs/tools ${WORKSPACE}/djo-ssh; fi
 }
 
 sshmount

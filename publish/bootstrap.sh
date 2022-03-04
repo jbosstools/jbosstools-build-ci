@@ -9,8 +9,8 @@ devstudioReleaseVersion_PREV=10.0
 eclipseReleaseName=oxygen
 devstudioReleaseVersion=11
 
-TOOLS=tools@10.5.105.197:/downloads_htdocs/tools
-JBDS=devstudio@10.5.105.197:/www_htdocs/devstudio
+TOOLS=tools@filemgmt.jboss.org:/downloads_htdocs/tools
+JBDS=devstudio@filemgmt.jboss.org:/www_htdocs/devstudio
 
 RSYNC="rsync -aPrz --rsh=ssh --protocol=28"
 

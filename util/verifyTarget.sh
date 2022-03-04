@@ -116,7 +116,7 @@ NOW=`date +%F_%H-%M`
 
 if [[ ! $targetplatformutilsversion ]]; then
   # eg., 0.22.1-SNAPSHOT
-  targetplatformutilsversion=`cat ${BASEDIR}/pom.xml | egrep "jbossTychoPluginsVersion|util" -B2 -A2 | egrep "version|jbossTychoPluginsVersion" | sed -e "s#.\+<version>\(.\+\)</version>.*#\1#" -e "s#.\+<jbossTychoPluginsVersion>\(.\+\)</jbossTychoPluginsVersion>.*#\1#" | head -1`
+  targetplatformutilsversion=`cat ${BASEDIR}/pom.xml | grep -E "jbossTychoPluginsVersion|util" -B2 -A2 | grep -E "version|jbossTychoPluginsVersion" | sed -e "s#.\+<version>\(.\+\)</version>.*#\1#" -e "s#.\+<jbossTychoPluginsVersion>\(.\+\)</jbossTychoPluginsVersion>.*#\1#" | head -1`
 fi
 
 for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
@@ -175,7 +175,7 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
           logfile=/tmp/fix-versions_${tf}_log_${PROJECT}_${NOW}.txt
           echo "${MVN} ${MRL} ${Dflags} -U org.jboss.tools.tycho-plugins:target-platform-utils:${targetplatformutilsversion}:fix-versions -DtargetFile=${tf}" | tee $logfile
           ${MVN} ${MRL} ${Dflags} -U -c org.jboss.tools.tycho-plugins:target-platform-utils:${targetplatformutilsversion}:fix-versions -DtargetFile=${tf} | tee -a $logfile
-          egrep -i -v "$LOG_GREP_EXCLUDES" $logfile | egrep -i -A2 "$LOG_GREP_INCLUDES"; if [[ "$?" == "0" ]]; then break 2; fi
+          grep -E -i -v "$LOG_GREP_EXCLUDES" $logfile | grep -E -i -A2 "$LOG_GREP_INCLUDES"; if [[ "$?" == "0" ]]; then break 2; fi
           if [[ -f ${tf}_fixedVersion.target ]]; then rm -f ${tf} *_update_hints.txt; mv -f ${tf}{_fixedVersion.target,}; fi
         fi
       done
@@ -197,7 +197,7 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
   logfile=/tmp/resolve_log_${PROJECT}_${NOW}.txt
   echo "${MVN} ${MRL} ${Dflags} -U install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources}" | tee $logfile
   ${MVN} ${MRL} ${Dflags} -U install -P${PROFILE} -DtargetRepositoryUrl=file://${WORKDIR}/target/${REPODIR}/ ${includeSources} | tee -a $logfile
-  egrep -i -v "$LOG_GREP_EXCLUDES" $logfile | egrep -i -A2 "$LOG_GREP_INCLUDES|$LOG_GREP_INCLUDES2"; if [[ "$?" == "0" ]]; then break 2; fi
+  grep -E -i -v "$LOG_GREP_EXCLUDES" $logfile | grep -E -i -A2 "$LOG_GREP_INCLUDES|$LOG_GREP_INCLUDES2"; if [[ "$?" == "0" ]]; then break 2; fi
 
   popd
 
@@ -267,7 +267,7 @@ for PROJECT in $PROJECTS; do echo "Process $PROJECT ..."
       echo ""
       echo "  Scan log ( ${INSTALLSCRIPT}_log_${PROJECT}_${NOW}.txt ) for errors ..."
       echo ""
-      egrep -i -v "$LOG_GREP_EXCLUDES" $logfile | egrep -i -A2 "$LOG_GREP_INCLUDES"; if [[ "$?" == "0" ]]; then break 2; fi
+      grep -E -i -v "$LOG_GREP_EXCLUDES" $logfile | grep -E -i -A2 "$LOG_GREP_INCLUDES"; if [[ "$?" == "0" ]]; then break 2; fi
     popd
   else
     echo ""
