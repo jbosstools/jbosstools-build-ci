@@ -43,7 +43,7 @@ for counter, row in enumerate(repos):
 	sha1 = row[1].strip()
 	tag = 'refs/tags/' + row[2].strip()
 	results = "Failure!"
-	print "Tagging " + reponame + " with " + sha1 +  " as "  + tag
+	print ("[" + str(counter) + "] Tagging " + reponame + " with " + sha1 +  " as "  + tag)
 	results = "Success!"
 	try:
 		repo = g.get_repo(reponame)
@@ -57,7 +57,7 @@ for counter, row in enumerate(repos):
 			raise
 
 		
-	print results
+	print (results)
 
 	
 
