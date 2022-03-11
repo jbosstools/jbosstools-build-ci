@@ -235,7 +235,7 @@ fi
 
 jobsToCheck=""
 checkProjects () {
-  jenkins_prefix="https://studio-jenkins-csb-codeready.apps.ocp4.prod.psi.redhat.com/job/Studio/job/Engineering/job/build_master/job/"
+  jenkins_prefix="https://studio-jenkins-csb-codeready.apps.ocp-c1.prod.psi.redhat.com/job/Studio/job/Engineering/job/build_master/job/"
   PROJECTS="$1" # ${JBTPROJECTS} or ${JBDSPROJECTS}
   g_project_prefix="$2" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
   staging_url="$3" # http://download.jboss.org/jbosstools/${jbtpath}/ or http://www.qa.jboss.com/binaries/RHDS/${jbdspath}/
