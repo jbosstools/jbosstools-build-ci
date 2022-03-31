@@ -21,7 +21,7 @@ fi
 jenkinsURL="https://studio-jenkins-csb-codeready.apps.ocp-c1.prod.psi.redhat.com/"
 JBTPROJECT=""
 jbtstream=master 
-jbtpath=photon/snapshots/builds
+jbtpath=photon/snapshots
 launchBrowser=0; # set to 1 to automatically launch a browser if any missing builds are found
 quiet="" # or "" or "-q"
 
@@ -80,8 +80,8 @@ declare -A projectMap=(
 
 jobsToCheck=""
 jenkins_prefix="${jenkinsURL}/job/Studio/job/Engineering/job/build_${jbtstream}/job/"
-composite_url="https://download.jboss.org/jbosstools/photon/snapshots/updates/core/${jbtstream}/buildinfo.json"
-staging_url="https://download.jboss.org/jbosstools/${jbtpath}/"
+composite_url="https://download.jboss.org/jbosstools/${jbtpath}/updates/core/${jbtstream}/buildinfo.json"
+staging_url="https://download.jboss.org/jbosstools/${jbtpath}/builds/"
 checkProjects () {
     
   for j in ${JBTPROJECTS}; do
@@ -130,17 +130,18 @@ checkProjects () {
 checkProjects
 
 if [[ ${jobsToCheck} ]]; then
+  composite_job="${jenkins_prefix}jbosstools-composite-install_master/"
   echo "Composite does not contains latest commited code from repo!"
-  echo "Run the following command locally to build incomplete jobs:"
+  echo "Run the following command locally to build incomplete jobs, if any."
   echo ""
   echo "google-chrome ${jobsToCheck}"
   echo ""
   echo "then run the aggregator to create a correct composite:"
   echo ""
-  echo "google-chrome ${composite_url}"
+  echo "google-chrome ${composite_job}"
   if [[ ${launchBrowser} == 1 ]]; then 
     google-chrome && google-chrome ${jobsToCheck}
-    google-chrome && google-chrome ${composite_url}
+    google-chrome && google-chrome ${composite_job}
   fi
   # if we had errors, make sure any jenkins wrappers fail too
   exit 1
