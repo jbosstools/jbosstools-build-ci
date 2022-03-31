@@ -30,6 +30,7 @@ if [[ $# -lt 1 ]]; then
 fi
 
 #defaults
+jenkinsURL="https://studio-jenkins-csb-codeready.apps.ocp-c1.prod.psi.redhat.com/"
 toggleJenkinsJobs=~/truu/jbdevstudio-ci/bin/toggleJenkinsJobs.py
 # JBIDE-24484 remove freemarker, portlet, playground
 # JBIDE-25736 remove arquillian
@@ -234,11 +235,11 @@ if [[ ${jbdsm} ]]; then
 fi
 
 jobsToCheck=""
+jenkins_prefix="${jenkinsURL}/job/Studio/job/Engineering/job/build_${branch}/job/"
 checkProjects () {
-  jenkins_prefix="https://studio-jenkins-csb-codeready.apps.ocp-c1.prod.psi.redhat.com/job/Studio/job/Engineering/job/build_master/job/"
   PROJECTS="$1" # ${JBTPROJECTS} or ${JBDSPROJECTS}
   g_project_prefix="$2" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
-  staging_url="$3" # http://download.jboss.org/jbosstools/${jbtpath}/ or http://www.qa.jboss.com/binaries/RHDS/${jbdspath}/
+  staging_url="$3" # https://download.jboss.org/jbosstools/${jbtpath}/ or http://www.qa.jboss.com/binaries/RHDS/${jbdspath}/
   jobname_prefix="$4" # jbosstools- or devstudio.
   stream="$5" # ${jbtstream} or ${jbdsstream}
 
@@ -338,7 +339,7 @@ checkProjects () {
   done
 }
 
-checkProjects "${JBTPROJECTS}"  jbosstools/jbosstools-   http://download.jboss.org/jbosstools/${jbtpath}/ jbosstools- "${jbtstream}"
+checkProjects "${JBTPROJECTS}"  jbosstools/jbosstools-   https://download.jboss.org/jbosstools/${jbtpath}/ jbosstools- "${jbtstream}"
 checkProjects "${JBDSPROJECTS}" jbdevstudio/jbdevstudio- http://www.qa.jboss.com/binaries/RHDS/${jbdspath}/ devstudio. "${jbdsstream}"
 
 if [[ ${jobsToCheck} ]]; then
