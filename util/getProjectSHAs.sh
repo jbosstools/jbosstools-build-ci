@@ -235,7 +235,7 @@ if [[ ${jbdsm} ]]; then
 fi
 
 jobsToCheck=""
-jenkins_prefix="${jenkinsURL}/job/Studio/job/Engineering/job/build_${branch}/job/"
+jenkins_prefix="${jenkinsURL}/job/Studio/job/Engineering/job/build_${jbtstream}/job/"
 checkProjects () {
   PROJECTS="$1" # ${JBTPROJECTS} or ${JBDSPROJECTS}
   g_project_prefix="$2" # jbosstools/jbosstools- or jbdevstudio/jbdevstudio-
