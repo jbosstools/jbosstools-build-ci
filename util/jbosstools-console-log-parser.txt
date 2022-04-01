@@ -92,6 +92,8 @@ error /Cannot satisfy dependency/
 error /conflicting dependency/
 error /Could not resolve content/
 error /Missing requirement/
+error /FAIL:/
+error /ERROR: could not retrieve GIT revision from:/
 
 error /The following error occurred/
 # match line starting with 'error ', case-insensitive

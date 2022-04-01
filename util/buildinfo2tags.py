@@ -26,17 +26,26 @@ if j:
 	# upstream/*/revision/knownReferences[0]/url = git repo from which build happened, eg., "git://github.com/jbosstools/jbosstools-base.git"
 	# upstream/*/revision/knownReferences[0]/ref = branch from which build happened, eg., "jbosstools-4.4.x" or "master"
 	for entry in j['upstream']:
-		if debug : print "[DEBUG] " + entry
+		if debug : print("[DEBUG] " + entry)
 		if type(j['upstream'][entry]) is dict :
-			if debug : print "[DEBUG] " + " >> " + j['upstream'][entry]["revision"]["HEAD"]
-			if debug : print "[DEBUG] " + " >> " + j['upstream'][entry]["revision"]["knownReferences"][0]["url"] # github project: "git://github.com/jbosstools/jbosstools-base.git"
-			if debug : print "[DEBUG] " + " >> " + j['upstream'][entry]["revision"]["knownReferences"][0]["ref"] # branch: "jbosstools-4.4.x" or "master"
-			m = re.search('.+/([^/]+)/([^/]+)\.git', j['upstream'][entry]["revision"]["knownReferences"][0]["url"]) 
+			if debug : print ("[DEBUG] " + " >> " + j['upstream'][entry]["revision"]["HEAD"])
+			if debug : print ("[DEBUG] " + " >> " + j['upstream'][entry]["revision"]["knownReferences"][0]["url"]) # github project
+			if debug : print ("[DEBUG] " + " >> " + j['upstream'][entry]["revision"]["knownReferences"][0]["ref"]) # branch
+			m = re.search('git@.+:([^.]+)/([^/]+)', j['upstream'][entry]["revision"]["knownReferences"][0]["url"]) # git@ pattern
 			if m:
 				org = m.group(1)
 				repo = m.group(2)
 				print(org + '/' + repo + ', ' + j['upstream'][entry]['revision']['HEAD'] + ', ' + options.name)
+			else :
+				m = re.search('.+/([^/]+)/([^/]+)\.git', j['upstream'][entry]["revision"]["knownReferences"][0]["url"]) # xyz.git pattern
+				if m:
+					org = m.group(1)
+					repo = m.group(2)
+					print(org + '/' + repo + ', ' + j['upstream'][entry]['revision']['HEAD'] + ', ' + options.name)
+				else :
+					print >> sys.stderr, "ERROR: Cannot find org/repo data for " + entry + ":" + j['upstream'][entry]["revision"]["knownReferences"][0]["url"]
 		else :
 			print >> sys.stderr, "ERROR: Missing data for " + entry + ":" + j['upstream'][entry]
 else:
-	print "[ERROR] Could not load json"
+	print ("[ERROR] Could not load json")
+
