@@ -23,7 +23,7 @@ fi
 COMP_PATH="builds/staging/_composite_/core/trunk/"
 SITES="http://download.jboss.org/jbosstools/updates/kepler/,http://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/"
 IUs=""
-DESTINATION="tools@filemgmt.jboss.org:/downloads_htdocs/tools"
+DESTINATION="tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools"
 DEST_URL="http://download.jboss.org/jbosstools"
 manifest="composite.site.IUs.txt"
 # comma-separated list of IUs to exclude from installation
@@ -85,7 +85,7 @@ find features/ plugins/ -maxdepth 1 | sort | tee ${WORKSPACE}/${manifest}
 popd >/dev/null
 
 # update cached copy of the manifest for subsequent checks
-rsync -arzq --protocol=28 ${WORKSPACE}/${manifest} ${DESTINATION}/${COMP_PATH}/
+rsync -arzq --protocol=28 --rsh=ssh -e 'ssh -p 2222' ${WORKSPACE}/${manifest} ${DESTINATION}/${COMP_PATH}/
 
 # echo a string to the Jenkins console log which we can then search for using Jenkins Text Finder to determine if the build should be blue (STABLE) or yellow (UNSTABLE)
 diff="`diff -U 0 ${WORKSPACE}/${manifest}_PREVIOUS ${WORKSPACE}/${manifest} 2>&1`"
