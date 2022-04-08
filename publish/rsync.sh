@@ -89,18 +89,18 @@ echo "[DEBUG] RSYNCFLAGS = $RSYNCFLAGS"
 
 # build the target_path with sftp to ensure intermediate folders exist
 if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
-	seg="."; for d in ${TARGET_PATH//\// }; do seg=$seg/$d; echo -e "mkdir ${seg:2}" | sftp $DESTINATION/; done; seg=""
+	seg="."; for d in ${TARGET_PATH//\// }; do seg=$seg/$d; echo -e "mkdir ${seg:2}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/; done; seg=""
 else
 	mkdir -p $DESTINATION/${TARGET_PATH}
 fi
 
 # copy the source into the target
 if [[ ${EXCLUDES} ]]; then
-	echo "[INFO] rsync -arzq --protocol=28 ${RSYNCFLAGS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
-		    rsync -arzq --protocol=28 ${RSYNCFLAGS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
+	echo "[INFO] rsync -arzv --protocol=28 --rsh=ssh -e 'ssh -p 2222' ${RSYNCFLAGS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
+		    rsync -arzv --protocol=28 --rsh=ssh -e 'ssh -p 2222' ${RSYNCFLAGS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
 else
-	echo "[INFO] rsync -arzq --protocol=28 ${RSYNCFLAGS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
-		    rsync -arzq --protocol=28 ${RSYNCFLAGS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
+	echo "[INFO] rsync -arzv --protocol=28 --rsh=ssh -e 'ssh -p 2222' ${RSYNCFLAGS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
+		    rsync -arzv --protocol=28 --rsh=ssh -e 'ssh -p 2222' ${RSYNCFLAGS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
 fi
 
 # given  TARGET_PATH=/downloads_htdocs/tools/neon/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master/2015-03-06_17-58-07-B13/all/repo/
@@ -120,13 +120,13 @@ if [[ ${BUILD_NUMBER} ]]; then
 	if [[ ${BUILD_TIMESTAMP} ]] && [[ ${TARGET_PATH/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
 		echo "[DEBUG] Symlink[BT] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_TIMESTAMP}-B${BUILD_NUMBER}"
 		mkdir -p $tmpdir
-		pushd $tmpdir >/dev/null; ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest; rsync --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
+		pushd $tmpdir >/dev/null; ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest; rsync -e 'ssh -p 2222' --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
 	else
 		BUILD_DIR=$(echo ${TARGET_PATH#${PARENT_PATH}/} | sed -e "s#/\?all/repo/\?##" -e "s#/\?all/\?##")
 		if [[ ${BUILD_DIR} ]] && [[ ${BUILD_DIR%B${BUILD_NUMBER}} != ${BUILD_DIR} ]] && [[ ${TARGET_PATH/${BUILD_DIR}} != ${TARGET_PATH} ]]; then
 			echo "[DEBUG] Symlink[BD] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_DIR}"
 			mkdir -p $tmpdir
-			pushd $tmpdir >/dev/null; ln -s ${BUILD_DIR} latest; rsync --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
+			pushd $tmpdir >/dev/null; ln -s ${BUILD_DIR} latest; rsync -e 'ssh -p 2222' --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
 		fi	
 	fi
 else
@@ -167,7 +167,7 @@ if [[ ${JOB_NAME} ]] && [[ ${JENKINS_URL} ]]; then
 	# JENKINS_URL=http://jenkins.hosts.mwqe.eng.bos.redhat.com/hudson/
 	bl=${tmpdir}/BUILDLOG.txt
 	getRemoteFile "${JENKINS_URL}job/${JOB_NAME}/${BUILD_NUMBER}/consoleText"; if [[ -w ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${bl}; fi
-	touch ${bl}; chmod 664 ${bl}; rsync -arzq --protocol=28 ${bl} $DESTINATION/${TARGET_PATH/\/all\/repo/}/logs/
+	touch ${bl}; chmod 664 ${bl}; rsync -e 'ssh -p 2222' -arzq --protocol=28 ${bl} $DESTINATION/${TARGET_PATH/\/all\/repo/}/logs/
 fi
 
 # purge temp folder
