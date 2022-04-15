@@ -93,7 +93,7 @@ getSubDirs ()
 		fi
 		tmp=`mktemp`
 		echo "ls $dir" > $tmp
-		dirs=$(sftp -b $tmp ${DEST_SERV} 2>/dev/null)
+		dirs=$(sftp -b $tmp tools@filemgmt.jboss.org 2>/dev/null)
 		i=0
 		for c in $dirs; do #exclude *.*ml, *.properties, *.jar, *.zip, *.MD5, *.md5, web/features/plugins/binary/.blobstore
 			# old way... if [[ $i -gt 2 ]] && [[ $c != "sftp>" ]] && [[ ${c##*.} != "" ]] && [[ ${c##*/*.*ml} != "" ]] && [[ ${c##*/*.properties} != "" ]] && [[ ${c##*/*.jar} != "" ]] && [[ ${c##*/*.zip} != "" ]] && [[ ${c##*/*.MD5} != "" ]] && [[ ${c##*/*.md5} != "" ]] && [[ ${c##*/web} != "" ]] && [[ ${c##*/plugins} != "" ]] && [[ ${c##*/features} != "" ]] && [[ ${c##*/binary} != "" ]] && [[ ${c##*/.blobstore} != "" ]]; then
@@ -179,7 +179,7 @@ clean ()
 								# can't delete the dir, but can at least purge its contents
 								rm -fr ${tmpdir}/$dd; mkdir ${tmpdir}/$dd; pushd ${tmpdir}/$dd >/dev/null
 								rsync --rsh=ssh --protocol=28 -r --delete . ${DEST_SERV}:$sd/$dd 2>&1 | tee -a $log
-								echo -e "rmdir $dd" | sftp ${DEST_SERV}:$sd/
+								echo -e "rmdir $dd" | sftp tools@filemgmt.jboss.org:$sd/
 								popd >/dev/null; rm -fr ${tmpdir}/$dd
 							fi
 							echo "" | tee -a $log
@@ -200,15 +200,15 @@ clean ()
 				if [[ $(echo $ssd | sed "s#^$sd/[0-9]\+-B[0-9]\+##") == "" ]] || [[ ${ssd##$sd/20*} == "" ]] || [[ $checkTimeStamps -eq 0 ]]; then # a build dir
 					# make sure all dirs contain content; if not, remove them
 					thisDirsContents="something"
-					thisDirsContents=$(echo "ls" | sftp $DEST_SERV:$sd/${ssd} 2>&1 | egrep -v "sftp|Connected to|Changing to") # will be "" if nothing found
+					thisDirsContents=$(echo "ls" | sftp tools@filemgmt.jboss.org:$sd/${ssd} 2>&1 | egrep -v "sftp|Connected to|Changing to") # will be "" if nothing found
 					if [[ $thisDirsContents == "" ]]; then
 						echo -n "- $sd/$ssd (empty dir)... " | tee -a $log
 						# remove the empty dir from the list we'll composite together, delete it from the server, and don't count it in the subdirCount
 						rm -fr $tmp/$ssd
-						echo -e "rmdir $ssd" | sftp $DEST_SERV:$sd/
+						echo -e "rmdir $ssd" | sftp tools@filemgmt.jboss.org:$sd/
 					else
 						# check that $DEST_SERV:$sd/${ssd}/${childFolderSuffix} exists, or else 'File "..." not found'
-						thisDirsContents=$(echo "ls" | sftp $DEST_SERV:$sd/${ssd}/${childFolderSuffix} 2>&1 | egrep -v "sftp|Connected to|Changing to") # will be "" if nothing found
+						thisDirsContents=$(echo "ls" | sftp tools@filemgmt.jboss.org:$sd/${ssd}/${childFolderSuffix} 2>&1 | egrep -v "sftp|Connected to|Changing to") # will be "" if nothing found
 						if [[ ${thisDirsContents/File \"*\" not found./NO} == "NO" ]]; then 
 							echo $thisDirsContents
 							# remove the empty dir from the list we'll composite together, and don't count it in the subdirCount
