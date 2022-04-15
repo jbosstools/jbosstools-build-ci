@@ -178,7 +178,7 @@ clean ()
 							if [[ $USER == "hudson" ]]; then
 								# can't delete the dir, but can at least purge its contents
 								rm -fr ${tmpdir}/$dd; mkdir ${tmpdir}/$dd; pushd ${tmpdir}/$dd >/dev/null
-								rsync --rsh=ssh --protocol=28 -r --delete . ${DEST_SERV}:$sd/$dd 2>&1 | tee -a $log
+								rsync --rsh=ssh --protocol=28 -e 'ssh -p 2222' -r --delete . ${DEST_SERV}:$sd/$dd 2>&1 | tee -a $log
 								echo -e "rmdir $dd" | sftp tools@filemgmt.jboss.org:$sd/
 								popd >/dev/null; rm -fr ${tmpdir}/$dd
 							fi
@@ -242,13 +242,13 @@ regenProcess ()
 			# $➔ rsync --rsh=ssh --protocol=28 ${TOOLS}/neon/stable/updates/windup | egrep "^l"
 			#    lrwxrwxrwx    1 tools    tools           6 May 19 15:21 windup
 			# echo "> Check if $sd is symlink..."
-			isSymlink=$(rsync --rsh=ssh --protocol=28 ${DEST_SERV}:$sd | egrep "^l")
+			isSymlink=$(rsync --rsh=ssh --protocol=28 -e 'ssh -p 2222' ${DEST_SERV}:$sd | egrep "^l")
 			if [[ ! ${isSymlink} ]]; then
 				echo "+ Generate metadata for first ${numbuildstolink} of ${subdirCount} subdir(s) in $sd" | tee -a $log
 				mkdir -p ${tmpdir}/cleanup-fresh-metadata/
 				regenCompositeMetadata "$siteName" "$all" "$numbuildstolink" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "${tmpdir}/cleanup-fresh-metadata/compositeContent.xml"
 				regenCompositeMetadata "$siteName" "$all" "$numbuildstolink" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "${tmpdir}/cleanup-fresh-metadata/compositeArtifacts.xml"
-				rsync --rsh=ssh --protocol=28 -q ${tmpdir}/cleanup-fresh-metadata/composite*.xml ${DEST_SERV}:$sd/
+				rsync --rsh=ssh --protocol=28 -e 'ssh -p 2222' -q ${tmpdir}/cleanup-fresh-metadata/composite*.xml ${DEST_SERV}:$sd/
 				rm -fr ${tmpdir}/cleanup-fresh-metadata/
 			else
 				echo "- Skip symlinked folder $sd" | tee -a $log
