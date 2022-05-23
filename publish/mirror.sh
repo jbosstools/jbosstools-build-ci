@@ -59,7 +59,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
   # optionally, publish to updates/requirements/${REQ_NAME}/ too
   if [[ ${VERSION} != "SNAPSHOT" ]]; then
     date
-    time ${RSYNC} --delete ${WORKDIR}/${VERSION} ${DESTINATION}/updates/requirements/${REQ_NAME}/
+    time ${RSYNC} --rsh=ssh -e 'ssh -p 2222'--delete ${WORKDIR}/${VERSION} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/updates/requirements/${REQ_NAME}/
   fi
 
   # optionally, publish to updates/${PUBLISH_PATH}/${REQ_NAME} too
@@ -67,7 +67,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
     date
     echo "mkdir ${PUBLISH_PATH}" | sftp ${DESTINATION}/updates
     echo "mkdir ${PUBLISH_PATH}/${REQ_NAME}" | sftp ${DESTINATION}/updates
-    time ${RSYNC} --delete ${WORKDIR}/${VERSION} ${DESTINATION}/updates/${PUBLISH_PATH}/${REQ_NAME}/
+    time ${RSYNC} --rsh=ssh -e 'ssh -p 2222' --delete ${WORKDIR}/${VERSION} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/updates/${PUBLISH_PATH}/${REQ_NAME}/
 
     # regen composite metadata 
     chmod +x ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh
