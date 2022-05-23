@@ -19,7 +19,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
 
   # get the mirror
   if [[ ${SOURCE_URL} ]]; then SOURCE_URL_PARAM="-DSRC_URL=${SOURCE_URL}"; else SOURCE_URL_PARAM=""; fi
-  date; time $M2_HOME/bin/mvn clean package -B -f ${WORKSPACE}/sources/mirror/pom.xml ${SOURCE_URL_PARAM} -DTARGET=${WORKDIR}/${VERSION} | tee ${logFile}
+  $M2_HOME/bin/mvn clean package -B -f ${WORKSPACE}/sources/mirror/pom.xml ${SOURCE_URL_PARAM} -DTARGET=${WORKDIR}/${VERSION} | tee ${logFile}
 
   if [[ -f ${logFile} ]]; then 
     echo "[INFO] Log file: ${logFile}"
@@ -54,27 +54,24 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
 
   # publish to /builds/staging/${JOB_NAME}_${REQ_NAME}/${VERSION}
   DESTINATION="tools@filemgmt.jboss.org:/downloads_htdocs/tools"
-  date
 
   # optionally, publish to updates/requirements/${REQ_NAME}/ too
   if [[ ${VERSION} != "SNAPSHOT" ]]; then
-    date
-    time ${RSYNC} --rsh=ssh -e 'ssh -p 2222'--delete ${WORKDIR}/${VERSION} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/updates/requirements/${REQ_NAME}/
+    echo "${RSYNC} --rsh=ssh -e 'ssh -p 2222'--delete ${WORKDIR}/${VERSION} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/updates/requirements/${REQ_NAME}/"
+    ${RSYNC} --rsh=ssh -e 'ssh -p 2222'--delete ${WORKDIR}/${VERSION} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/updates/requirements/${REQ_NAME}/
   fi
 
   # optionally, publish to updates/${PUBLISH_PATH}/${REQ_NAME} too
   if [[ ${PUBLISH_PATH} != "SNAPSHOT" ]]; then
-    date
     echo "mkdir ${PUBLISH_PATH}" | sftp ${DESTINATION}/updates
     echo "mkdir ${PUBLISH_PATH}/${REQ_NAME}" | sftp ${DESTINATION}/updates
-    time ${RSYNC} --rsh=ssh -e 'ssh -p 2222' --delete ${WORKDIR}/${VERSION} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/updates/${PUBLISH_PATH}/${REQ_NAME}/
+    ${RSYNC} --rsh=ssh -e 'ssh -p 2222' --delete ${WORKDIR}/${VERSION} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/updates/${PUBLISH_PATH}/${REQ_NAME}/
 
     # regen composite metadata 
     chmod +x ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh
-    ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh --dirs-to-scan "updates/${PUBLISH_PATH}/${REQ_NAME}" --regen-metadata-only --no-subdirs
+    ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh --dirs-to-scan "updates/${PUBLISH_PATH}/${REQ_NAME}" --regen-metadata-only --no-subdirs -DESTINATION tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools
   fi
 
-  date
   # cleanup
   rm -fr ${WORKSPACE}/tmp
 
