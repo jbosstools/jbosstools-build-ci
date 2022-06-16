@@ -47,7 +47,7 @@ doCreateBranch=0 # if the required branch doesn't exist, fetch from master inste
 doCreateTaskJIRAs=1 # create Task JIRAs for the changes to be done
 logfileprefix=${0##*/}; logfileprefix=${logfileprefix%.sh}
 version_jbt=4.4.4.Final
-version_ds=10.4.0.GA
+version_ds=
 version_parent=4.4.4.Final-SNAPSHOT # or 4.4.4.Final
 #TODO support branching from somewhere other than master
 github_branch=jbosstools-4.4.x # or master
@@ -84,6 +84,7 @@ while [[ "$#" -gt 0 ]]; do
     '-jirahost') JIRA_HOST="$2"; shift 1;;
     '-jirauser') JIRA_USER="$2"; shift 1;;
     '-jirapwd') JIRA_PWD="$2"; shift 1;;
+    '-jiratoken') JIRA_TOKEN="$2"; shift 1;;
     '-updateRootPom') doUpdateRootPom=1; shift 0;;
     '-createBranch') doCreateBranch=1; shift 0;;
     '-noCreateTaskJIRAs') doCreateTaskJIRAs=0; shift 0;;
@@ -106,6 +107,9 @@ fi
 if [[ ${JIRA_USER} ]] && [[ ${JIRA_PWD} ]]; then
   userandpass="-u ${JIRA_USER} -p ${JIRA_PWD}"
 fi
+if [[ ${JIRA_TOKEN} ]]; then
+  userandpass="-k ${JIRA_TOKEN}"
+fi
 
 # backups if not set above
 if [[ ! ${stream_jbt} ]] || [[ ! ${stream_ds} ]]; then
@@ -122,14 +126,14 @@ if [[ ! ${WORKSPACE2} ]]; then
 fi
 
 PYTHON_CMD=""
-if [[ -x /usr/bin/python ]]; then 
-  PYTHON_CMD="python";
+if [[ -x /usr/bin/python3 ]]; then 
+  PYTHON_CMD="python3";
   elif [[ -x /usr/bin/python2 ]]; then
     PYTHON_CMD="python2";
 fi
 
 if [[ ! ${PYTHON_CMD} ]]; then
-  echo "[ERROR] Could not find a python client. please install python/python2 on your system."
+  echo "[ERROR] Could not find a python client. please install python3/python2 on your system."
   exit 1
 fi
 
@@ -221,8 +225,8 @@ checkProjects () {
             if [[ ${isCorrectVersion} ]] && [[ ${doCreateTaskJIRAs} -gt 0 ]]; then
               # create new JIRA using createTaskJIRAs.py, then pass that into the commit comment below
               # if component does not exist, JIRA will be nullstring
-              if [[ ${doCreateBranch} -gt 0 ]]; then # update root poms then branch
-                JIRAcmd="${PYTHON_CMD} -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds} \\n \
+              if [[ ${doCreateBranch} -gt 0 ]] && [[ ${version_ds} -gt 0 ]]; then # update root poms then branch
+                JIRAcmd="${PYTHON_CMD} -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds}  \
 --task \"Prepare for ${version_jbt} / ${version_ds}\" --taskfull \"Please perform the following tasks: \\n \
  \\n \
 0. Make sure your component has no remaining unresolved JIRAs set for fixVersion = ${version_jbt} or ${version_ds} \\n \
@@ -283,8 +287,69 @@ ${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20i
 null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next. \\n \
 \" \
 -s ${JIRA_HOST} ${userandpass} -J ${componentFlag} ${k}"
+              elif [[ ${doCreateBranch} -gt 0 ]]; then # update root poms then branch only for JBIDE
+                JIRAcmd="${PYTHON_CMD} -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} \\n \
+--task \"Prepare for ${version_jbt}\" --taskfull \"Please perform the following tasks: \\n \
+ \\n \
+0. Make sure your component has no remaining unresolved JIRAs set for fixVersion = ${version_jbt}\\n \
+
+[Unresolved JIRAs with fixVersion = ${version_jbt}|https://issues.redhat.com/issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and\
+%20fixVersion%20in%20%28${version_jbt}%29%29%20and%20resolution%20%3D%20Unresolved] \\n \
+ \\n \
+1. Check out your existing *{color:orange}${github_branch_fallback}{color}* branch: \\n \
+ \\n \
+{code} \\n \
+git checkout ${github_branch_fallback} \\n \
+{code} \\n \
+ \\n \
+2. Update your *{color:orange}${github_branch_fallback} branch{color}* root pom to use the latest parent pom version, *{color:orange}${version_parent}{color}*: \\n \
+ \\n \
+{code} \\n \
+  <parent> \\n \
+    <groupId>org.jboss.tools</groupId> \\n \
+    <artifactId>parent</artifactId> \\n \
+    <version>${version_parent}</version> \\n \
+  </parent> \\n \
+{code} \\n \
+ \\n \
+Now, your root pom will use parent pom version: \\n \
+ \\n \
+* *{color:orange}${version_parent}{color}* in your *{color:orange}${github_branch_fallback}{color}* branch \\n \
+ \\n \
+3. Branch from your existing ${github_branch_fallback} branch into a new *{color:blue}${github_branch}{color}* branch: \\n \
+ \\n \
+{code} \\n \
+git checkout ${github_branch_fallback}; \\n \
+git pull origin ${github_branch_fallback}; \\n \
+git checkout -b ${github_branch}; \\n \
+git push origin ${github_branch} \\n \
+{code} \\n \
+ \\n \
+Now, your root pom will use parent pom version: \\n \
+ \\n \
+* *{color:blue}${version_parent}{color}* in your *{color:blue}${github_branch}{color}* branch, too. \\n \
+ \\n \
+4a. Ensure you've *built your code* using the latest *minimum* target platform version ${TARGET_PLATFORM_VERSION_MIN} \\n \
+ \\n \
+{code} \\n \
+mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MIN} \\n \
+{code} \\n \
+ \\n \
+4b. Ensure you've *run your tests* using the latest *maximum* target platform version ${TARGET_PLATFORM_VERSION_MAX} \\n \
+ \\n \
+{code} \\n \
+mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MAX} \\n \
+{code} \\n \
+ \\n \
+5. Close (do not resolve) this JIRA when done. \\n \
+ \\n \
+6. If you have any outstanding [New + Noteworthy JIRAs|https://issues.redhat.com/issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28\
+${version_jbt}%29%29%20AND%20resolution%20is%20\
+null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next. \\n \
+\" \
+-s ${JIRA_HOST} ${userandpass} -J ${componentFlag} ${k}"
                 # if [[ ${quiet} != "-q" ]]; then echo ${JIRAcmd}; fi
-              else # no branching - just update root poms
+              elif [[ ${version_ds} -gt 0 ]]; then # no branching - just update root poms
                 JIRAcmd="${PYTHON_CMD} -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} --jbds ${version_ds} \\n \
 --task \"Prepare for ${version_jbt} / ${version_ds}\" --taskfull \"Please perform the following tasks: \\n \
  \\n \
@@ -334,6 +399,57 @@ ${version_jbt}%29%29%20or%20%28project%20%3D%20%22JBDS%22%20and%20fixversion%20i
 null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next. \\n \
 \" \
 -s ${JIRA_HOST} ${userandpass} -J ${componentFlag} ${k}"
+              else # no branching - just update root poms  only for JBIDE
+                JIRAcmd="${PYTHON_CMD} -W ignore ${0/getProjectRootPomParents.sh/createTaskJIRAs.py} --jbide ${version_jbt} \\n \
+--task \"Prepare for ${version_jbt}\" --taskfull \"Please perform the following tasks: \\n \
+ \\n \
+1. Check out your existing *{color:orange}${github_branch}{color}* branch: \\n \
+ \\n \
+{code} \\n \
+git checkout ${github_branch} \\n \
+{code} \\n \
+ \\n \
+2. Update your *{color:orange}${github_branch} branch{color}* root pom to use the latest parent pom version, *{color:orange}${version_parent}{color}*: \\n \
+ \\n \
+{code} \\n \
+  <parent> \\n \
+    <groupId>org.jboss.tools</groupId> \\n \
+    <artifactId>parent</artifactId> \\n \
+    <version>${version_parent}</version> \\n \
+  </parent> \\n \
+{code} \\n \
+ \\n \
+Now, your root pom will use parent pom version: \\n \
+ \\n \
+* *{color:orange}${version_parent}{color}* in your *{color:orange}${github_branch}{color}* branch \\n \
+ \\n \
+3. Ensure that component features/plugins have been [properly upversioned|http://wiki.eclipse.org/Version_Numbering#Overall_example], eg., from 1.0.0 to 1.0.1.  \\n \
+ \\n \
+{code} \\n \
+mvn -Dtycho.mode=maven org.eclipse.tycho:tycho-versions-plugin:0.26.0:set-version -DnewVersion=1.0.1-SNAPSHOT \\n \
+{code} \\n \
+ \\n \
+ \\n \
+4a. Ensure you've *built your code* using the latest *minimum* target platform version ${TARGET_PLATFORM_VERSION_MIN} \\n \
+ \\n \
+{code} \\n \
+mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MIN} \\n \
+{code} \\n \
+ \\n \
+4b. Ensure you've *run your tests* using the latest *maximum* target platform version ${TARGET_PLATFORM_VERSION_MAX} \\n \
+ \\n \
+{code} \\n \
+mvn clean verify -Dtpc.version=${TARGET_PLATFORM_VERSION_MAX} \\n \
+{code} \\n \
+ \\n \
+5. Close (do not resolve) this JIRA when done. \\n \
+ \\n \
+6. If you have any outstanding [New + Noteworthy JIRAs|https://issues.redhat.com/issues/?jql=%28%28project%20%3D%20%22JBIDE%22%20and%20fixVersion%20in%20%28\
+${version_jbt}%29%29%20AND%20resolution%20is%20\
+null%20AND%20%28labels%20%3D%20new_and_noteworthy%20OR%20summary%20~%20%22New%20and%20Noteworthy%20for%20%22%29] to do, please complete them next. \\n \
+\" \
+-s ${JIRA_HOST} ${userandpass} -J ${componentFlag} ${k}"
+
                 # if [[ ${quiet} != "-q" ]]; then echo ${JIRAcmd}; fi
               fi
               echo "JIRA=\$(${JIRAcmd})" >> ${tskfile}

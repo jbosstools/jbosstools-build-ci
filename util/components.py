@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 debug = 'debug' in globals()
 
 # JBIDE-24484 remove freemarker, portlet, playground
@@ -101,7 +102,7 @@ def checkFixVersionsExist (jbide_fixversion, jbds_fixversion, jiraserver, jiraus
 
     # should never happen
     if jbide_fixversion is None:
-        print "\n[ERROR] JBIDE fixversion " + jbide_fixversion + " can not be None\n"
+        print ("\n[ERROR] JBIDE fixversion ") + jbide_fixversion + (" can not be None\n")
         return False
 
     # verify that fixversions are valid and exist on the target jira server
@@ -114,14 +115,14 @@ def checkFixVersionsExist (jbide_fixversion, jbds_fixversion, jiraserver, jiraus
     #   " * https://issues.stage.jboss.org/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?tempMax=1000&jqlQuery=" + \
     #   urllib.quote_plus(testFixVersionExistsSearchquery)
     q = requests.get(jiraserver + '/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?tempMax=1000&jqlQuery=' + \
-        urllib.quote_plus(testFixVersionsExistQuery), \
+        urllib.parse.quote_plus(testFixVersionsExistQuery), \
         auth=HTTPBasicAuth(jirauser, jirapwd), verify=False)
     # check for string: The value '4.4.7.foo' does not exist for the field 'fixVersion'
     if re.search("The value '" + jbide_fixversion + "' does not exist for the field 'fixVersion'", q.text):
-       print "\n[ERROR] JBIDE fixversion " + jbide_fixversion + " does not exist on " + jiraserver + "\n"
+       print ("\n[ERROR] JBIDE fixversion ") + jbide_fixversion + " does not exist on " + jiraserver + "\n"
        return False
     elif jbds_fixversion is not None and re.search("The value '" + jbds_fixversion + "' does not exist for the field 'fixVersion'", q.text):
-       print "\n[ERROR] JBDS fixversion " + jbds_fixversion + " does not exist on " + jiraserver + "\n"
+       print ("\n[ERROR] JBDS fixversion ") + jbds_fixversion + " does not exist on " + jiraserver + "\n"
        return False
     else:
         return True
@@ -156,7 +157,7 @@ def prettyXML(xml):
 def findChildNodeByNameCheckData(parent, name, dataMatch):
     for node in parent.childNodes:
         if node.nodeType == node.ELEMENT_NODE and node.localName == name:
-            if debug: print "[DEBUG] Check this Sprint node: " + node.toxml()
+            if debug: print ("[DEBUG] Check this Sprint node: ") + node.toxml()
             for n in node.childNodes:
                 if n.nodeType == n.TEXT_NODE:
                     if n.data == dataMatch:
@@ -185,9 +186,9 @@ def getSprintId(sprint, jiraserver, jirauser, jirapwd):
         for s in customfieldvalues :
             if getText(findChildNodeByName(s, 'customfieldname').childNodes) == "Sprint":
                 sprintNode = findChildNodeByNameCheckData(findChildNodeByName(s, 'customfieldvalues'), 'customfieldvalue',sprint)
-                if debug: print "[DEBUG] Found sprint node matching " + sprintNode.childNodes[0].data
+                if debug: print ("[DEBUG] Found sprint node matching ") + sprintNode.childNodes[0].data
                 sprintId = sprintNode.attributes["id"].value
-                if debug: print "[DEBUG] Found sprintId = " + sprintId + " in " + sprintNode.toxml()
+                if debug: print ("[DEBUG] Found sprintId = ") + sprintId + " in " + sprintNode.toxml()
                 return sprintId
     sys.exit("[ERROR] Sprint '" + sprint + "' does not yet exist. Go bug " + defaultAssignee() + " to get it created.")
     return None
@@ -204,9 +205,9 @@ def doQuery(query, field, jiraserver, jirauser, jirapwd, limit, failcheck = None
     payloadURL = jiraserver + '/sr/jira.issueviews:searchrequest-xml/temp/SearchRequest.xml?tempMax='+str(limit)+'&jqlQuery=' + \
         urllib.quote_plus(query)
     if debug:
-        print "[DEBUG] " + query
-        print "[DEBUG] " + queryURL
-        print "[DEBUG] " + payloadURL
+        print ("[DEBUG] ") + query
+        print ("[DEBUG] ") + queryURL
+        print ("[DEBUG] ") + payloadURL
     q = requests.get(payloadURL, auth=HTTPBasicAuth(jirauser, jirapwd), verify=False)
     # print q.text
     if failcheck != None:
@@ -216,5 +217,5 @@ def doQuery(query, field, jiraserver, jirauser, jirapwd, limit, failcheck = None
     issuelist = xml.getElementsByTagName(field)
     numExistingIssues = len(issuelist)
     if numExistingIssues > 0 : 
-        if debug: print "[DEBUG] Found " + str(numExistingIssues) + " nodes(s) to process"
+        if debug: print ("[DEBUG] Found ") + str(numExistingIssues) + " nodes(s) to process"
     return issuelist
