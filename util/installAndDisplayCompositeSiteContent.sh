@@ -9,9 +9,9 @@
 usage ()
 {
 	echo "Usage: $0 -COMP_PATH path/to/composite/ -SITES http://target-platform-site,http://composite-site/ -IUs a.feature.group,b.feature.group"
-	echo "Example: $0 -COMP_PATH builds/staging/_composite_/core/trunk/ -SITES http://download.jboss.org/jbosstools/updates/kepler/,http://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/ -IUs org.hibernate.eclipse.feature.feature.group,org.jboss.ide.eclipse.archives.feature.feature.group,..."
+	echo "Example: $0 -COMP_PATH builds/staging/_composite_/core/trunk/ -SITES https://download.jboss.org/jbosstools/updates/kepler/,https://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/ -IUs org.hibernate.eclipse.feature.feature.group,org.jboss.ide.eclipse.archives.feature.feature.group,..."
 	echo "Usage 2: $0 -COMP_PATH path/to/composite/ -SITES http://target-platform-site,http://composite-site/ # install everything"
-	echo "Example: $0 -COMP_PATH builds/staging/_composite_/core/trunk/ -SITES http://download.jboss.org/jbosstools/updates/kepler/,http://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/"
+	echo "Example: $0 -COMP_PATH builds/staging/_composite_/core/trunk/ -SITES https://download.jboss.org/jbosstools/updates/kepler/,https://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/"
 	exit 1;
 }
 
@@ -21,10 +21,10 @@ fi
 
 #defaults
 COMP_PATH="builds/staging/_composite_/core/trunk/"
-SITES="http://download.jboss.org/jbosstools/updates/kepler/,http://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/"
+SITES="https://download.jboss.org/jbosstools/updates/kepler/,https://download.jboss.org/jbosstools/builds/staging/_composite_/core/trunk/"
 IUs=""
 DESTINATION="tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools"
-DEST_URL="http://download.jboss.org/jbosstools"
+DEST_URL="https://download.jboss.org/jbosstools"
 manifest="composite.site.IUs.txt"
 # comma-separated list of IUs to exclude from installation
 EXCLUDES_CMD=""

@@ -4,7 +4,7 @@
 # defaults
 OPERATION=COPY # or MOVE
 DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or /home/windup/apache2/www/html/rhd/devstudio
-URL=http://download.jboss.org/jbosstools # or http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio or http://www.qa.jboss.com/binaries/devstudio
+URL=https://download.jboss.org/jbosstools # or http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio or http://www.qa.jboss.com/binaries/devstudio
 RELEASE_TYPE=updates # or discovery
 BUILD_TYPE=nightly
 TARGET_PLATFORM=
@@ -20,9 +20,9 @@ tmpdir=`mktemp -d`
 # TODO: update examples to include both the old style of publishing - {JOB_NAME}/all/repo - and the new style - {JOB_NAME}/{BUILD_TIMESTAMP}/all/repo
 if [[ $# -lt 1 ]]; then
   echo "Usage  : $0 [-DESTINATION destination] [-RELEASE_TYPE release_type] -BUILD_TYPE build_type -TARGET_PLATFORM target_platform -PROJECT_NAME project_name -TARGET_FOLDER target_folder -SOURCE_PATH source_path"
-  # push to http://download.jboss.org/jbosstools/updates/integration/kepler/core/base/4.1.0.Alpha1/
+  # push to https://download.jboss.org/jbosstools/updates/integration/kepler/core/base/4.1.0.Alpha1/
   echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM kepler -PARENT_FOLDER core -PROJECT_NAME base -TARGET_FOLDER 4.1.0.Alpha1 -SOURCE_PATH jbosstools-base_41/all/repo"
-  # push to http://download.jboss.org/jbosstools/updates/integration/kepler/core/server/4.1.0.Alpha1/
+  # push to https://download.jboss.org/jbosstools/updates/integration/kepler/core/server/4.1.0.Alpha1/
   echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM kepler -PARENT_FOLDER core -PROJECT_NAME server -TARGET_FOLDER 4.1.0.Alpha1 -SOURCE_PATH jbosstools-server_41/all/repo"
   echo ""
 
@@ -30,21 +30,21 @@ if [[ $# -lt 1 ]]; then
   echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM NONE -PARENT_FOLDER locus -PROJECT_NAME locus -TARGET_FOLDER 1.0.0.CR2 -SOURCE_PATH \${JOB_NAME}/all/repo"
   echo ""
 
-  # push to http://download.jboss.org/jbosstools/updates/development/juno/soa-tooling/modeshape/3.0.0.CR1/
+  # push to https://download.jboss.org/jbosstools/updates/development/juno/soa-tooling/modeshape/3.0.0.CR1/
   echo "Example: $0 -BUILD_TYPE development -TARGET_PLATFORM juno -PARENT_FOLDER integration-stack -PROJECT_NAME modeshape -TARGET_FOLDER 3.3.0.CR1 -SOURCE_PATH modeshape-tools-continuous/all/repo"
-  # push to http://download.jboss.org/jbosstools/updates/stable/indigo/soa-tooling/switchyard/0.6.0.Final/
+  # push to https://download.jboss.org/jbosstools/updates/stable/indigo/soa-tooling/switchyard/0.6.0.Final/
   echo "Example: $0 -BUILD_TYPE stable -TARGET_PLATFORM indigo -PARENT_FOLDER soa-tooling -PROJECT_NAME switchyard -TARGET_FOLDER 0.6.0.Final -SOURCE_PATH SwitchYard-Tools/eclipse"
   echo ""
 
-  # push from http://download.jboss.org/drools/release/5.3.0.Final/droolsjbpm-tools-distribution-5.3.0.Final.zip
-  #        to http://download.jboss.org/jbosstools/updates/stable/indigo/soa-tooling/droolsjbpm/5.3.0.Final/
-  echo "Example: $0 -BUILD_TYPE stable -TARGET_PLATFORM indigo -PARENT_FOLDER soa-tooling -PROJECT_NAME droolsjbpm -TARGET_FOLDER 5.3.0.Final -SOURCE_ZIP http://download.jboss.org/drools/release/5.3.0.Final/droolsjbpm-tools-distribution-5.3.0.Final.zip"
-  # push from http://download.jboss.org/drools/release/5.5.0.Final/droolsjbpm-tools-distribution-5.5.0.Final.zip
-  #        to http://download.jboss.org/jbosstools/updates/integration/juno/integration-stack/droolsjbpm/5.5.0.Final/
-  echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM juno -PARENT_FOLDER integration-stack -PROJECT_NAME droolsjbpm -TARGET_FOLDER 5.5.0.Final -SOURCE_ZIP http://download.jboss.org/drools/release/5.5.0.Final/droolsjbpm-tools-distribution-5.5.0.Final.zip"
+  # push from https://download.jboss.org/drools/release/5.3.0.Final/droolsjbpm-tools-distribution-5.3.0.Final.zip
+  #        to https://download.jboss.org/jbosstools/updates/stable/indigo/soa-tooling/droolsjbpm/5.3.0.Final/
+  echo "Example: $0 -BUILD_TYPE stable -TARGET_PLATFORM indigo -PARENT_FOLDER soa-tooling -PROJECT_NAME droolsjbpm -TARGET_FOLDER 5.3.0.Final -SOURCE_ZIP https://download.jboss.org/drools/release/5.3.0.Final/droolsjbpm-tools-distribution-5.3.0.Final.zip"
+  # push from https://download.jboss.org/drools/release/5.5.0.Final/droolsjbpm-tools-distribution-5.5.0.Final.zip
+  #        to https://download.jboss.org/jbosstools/updates/integration/juno/integration-stack/droolsjbpm/5.5.0.Final/
+  echo "Example: $0 -BUILD_TYPE integration -TARGET_PLATFORM juno -PARENT_FOLDER integration-stack -PROJECT_NAME droolsjbpm -TARGET_FOLDER 5.5.0.Final -SOURCE_ZIP https://download.jboss.org/drools/release/5.5.0.Final/droolsjbpm-tools-distribution-5.5.0.Final.zip"
   echo ""
 
-  # push to http://download.jboss.org/jbosstools/discovery/nightly/core/trunk/jbosstools-directory.xml
+  # push to https://download.jboss.org/jbosstools/discovery/nightly/core/trunk/jbosstools-directory.xml
   echo "Example: $0 -RELEASE_TYPE discovery -PARENT_FOLDER core -TARGET_FOLDER trunk -SOURCE_PATH ${WORKSPACE}/sources/discovery/core/org.jboss.tools.central.discovery/target/discovery-site/"
   # push to http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/discovery/nightly/core/4.1.kepler/devstudio-directory.xml
   echo "Example: $0 -DESTINATION /home/windup/apache2/www/html/rhd/devstudio -URL http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio -RELEASE_TYPE discovery -PARENT_FOLDER core -TARGET_FOLDER 4.1.kepler -SOURCE_PATH ${WORKSPACE}/sources/discovery/core/com.jboss.jbds.central.discovery/target/discovery-site/"
@@ -63,7 +63,7 @@ while [[ "$#" -gt 0 ]]; do
     '-PROJECT_NAME') PROJECT_NAME="$2"; shift 1;; # switchyard, modeshape, droolsjbpm, ...
     '-TARGET_FOLDER') TARGET_FOLDER="$2"; shift 1;; # 0.5.0.Beta3, 0.6.0.Final, ...
     '-SOURCE_PATH') SOURCE_PATH="$2"; shift 1;; # jbosstools-4.0_stable_branch.component--as/all/repo, modeshape-tools-continuous/all/repo, SwitchYard-Tools/eclipse
-    '-SOURCE_ZIP') SOURCE_ZIP="$2"; shift 1;; # http://download.jboss.org/drools/release/5.3.0.Final/droolsjbpm-tools-distribution-5.3.0.Final.zip
+    '-SOURCE_ZIP') SOURCE_ZIP="$2"; shift 1;; # https://download.jboss.org/drools/release/5.3.0.Final/droolsjbpm-tools-distribution-5.3.0.Final.zip
   esac
   shift 1
 done

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# this script is used in jbosstoolstargetplatformrequirements-mirror-matrix and jbosstools-requirements to create a mirror in http://download.jboss.org/jbosstools/updates/requirements/REQ_NAME/VERSION
+# this script is used in jbosstoolstargetplatformrequirements-mirror-matrix and jbosstools-requirements to create a mirror in https://download.jboss.org/jbosstools/updates/requirements/REQ_NAME/VERSION
 
 # allow invoking this job to do nothing (if called from upstream job)
 if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then 
@@ -77,4 +77,4 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
 
 fi
 
-echo "New requirement site: http://download.jboss.org/jbosstools/updates/${PUBLISH_PATH}/${REQ_NAME}/${VERSION}/#new"
+echo "New requirement site: https://download.jboss.org/jbosstools/updates/${PUBLISH_PATH}/${REQ_NAME}/${VERSION}/#new"

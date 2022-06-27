@@ -103,8 +103,8 @@ for qual in $quals; do
 
     # discovery sites
     if [[ ${skipdiscovery} -lt 1 ]] || [[ ${onlydiscovery} -gt 0 ]]; then 
-      for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds \
-               http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
+      for u in https://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds \
+               https://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
         for f in discovery.central discovery.earlyaccess; do
           for ff in compositeContent.xml compositeArtifacts.xml jbosstools-earlyaccess.properties jbosstools-directory.xml plugins/; do
             if [[ ${f} == "discovery.central" ]] && [[ ${ff/earlyaccess.properties/} != ${ff} ]]; then continue; fi # skip check for central + earlyaccess.properties
@@ -155,7 +155,7 @@ for qual in $quals; do
 
     if [[ ${onlydiscovery} -lt 1 ]]; then 
       # build folders
-      for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
+      for u in https://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
         for f in coretests central integration-tests core; do
           for ff in repo/artifacts.xml.xz repo/content.xml.xz repo/category.xml repo/buildinfo.json repository.zip repository.zip.sha256; do
             a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
@@ -165,7 +165,7 @@ for qual in $quals; do
           log ""
         done
       done
-      for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
+      for u in https://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds; do
         for f in fuse-extras; do
           for ff in repo/artifacts.xml.xz repo/content.xml.xz repo/category.xml repo/buildinfo.json; do # no repo zip to check here
             a=${u}/jbosstools-${versionWithRespin_jbt}-build-${f}/latest/all/${ff}
@@ -177,7 +177,7 @@ for qual in $quals; do
       done
 
       # update sites
-      for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
+      for u in https://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
         for f in fuse-extras coretests central integration-tests core; do
           for ff in artifacts.xml.xz content.xml.xz category.xml buildinfo.json; do
             a=${u}/${f}/${versionWithRespin_jbt}/${ff}
@@ -190,7 +190,7 @@ for qual in $quals; do
 
       # released artifacts linked from tools.jboss.org
       if [[ $qual != "staging" ]]; then 
-        for u in http://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates/core; do
+        for u in https://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates/core; do
           for f in src updatesite-core; do
             for ff in jbosstools-${version_jbt}-${f}.zip jbosstools-${version_jbt}-${f}.zip.sha256; do
               a=${u}/${ff}

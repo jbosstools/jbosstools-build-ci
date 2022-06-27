@@ -11,7 +11,7 @@
 #  - see end of https://github.com/jbdevstudio/jbdevstudio-devdoc/blob/master/release_guide/9.x/JBDS_Staging_for_QE.adoc#push-installers-update-site-and-discovery-site
 
 DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /home/windup/apache2/www/html/rhd/devstudio
-DEST_URL="http://download.jboss.org/jbosstools"
+DEST_URL="https://download.jboss.org/jbosstools"
 whichID=latest
 PRODUCT="jbosstools"
 ZIPPREFIX="jbosstools-"

@@ -5,16 +5,16 @@ usage ()
 {
 	echo "Usage	: $0 url_to_check1 url_to_check2"
 	echo "Example (good URLs): $0 \\"
-	echo "  http://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/master \\"
- 	echo "  http://download.jboss.org/jbosstools/oxygen/snapshots/updates/discovery.earlyaccess/master \\"
+	echo "  https://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/master \\"
+ 	echo "  https://download.jboss.org/jbosstools/oxygen/snapshots/updates/discovery.earlyaccess/master \\"
  	echo "  \\"
 
- 	echo "  http://download.jboss.org/jbosstools/oxygen/development/updates/ \\"
- 	echo "  http://download.jboss.org/jbosstools/oxygen/development/updates/discovery.earlyaccess \\"
+ 	echo "  https://download.jboss.org/jbosstools/oxygen/development/updates/ \\"
+ 	echo "  https://download.jboss.org/jbosstools/oxygen/development/updates/discovery.earlyaccess \\"
  	echo "  \\"
 
-	echo "  http://download.jboss.org/jbosstools/oxygen/stable/updates/ \\"
- 	echo "  http://download.jboss.org/jbosstools/oxygen/stable/updates/discovery.earlyaccess"
+	echo "  https://download.jboss.org/jbosstools/oxygen/stable/updates/ \\"
+ 	echo "  https://download.jboss.org/jbosstools/oxygen/stable/updates/discovery.earlyaccess"
  	echo ""
 
 	echo "Example (good URLs): $0 \\"
@@ -23,9 +23,9 @@ usage ()
 	echo ""
 
 	echo "Example (bad/obsolete URLs): $0 \\"
-	echo "  http://download.jboss.org/jbosstools/builds/staging/_composite_/core/master \\"
-	echo "  http://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/4.5.oxygen \\"
-	echo "  http://download.jboss.org/jbosstools/oxygen/development/updates/integration-stack/discovery/earlyaccess/"
+	echo "  https://download.jboss.org/jbosstools/builds/staging/_composite_/core/master \\"
+	echo "  https://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/4.5.oxygen \\"
+	echo "  https://download.jboss.org/jbosstools/oxygen/development/updates/integration-stack/discovery/earlyaccess/"
 	exit 1
 
 }

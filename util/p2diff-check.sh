@@ -3,7 +3,7 @@
 tmpdir=/tmp/p2diff-check; mkdir -p $tmpdir
 # first, create a p2diff report, eg.,
 # ./p2diff \
-# http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.51.0.Final/REPO/ \
+# https://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.51.0.Final/REPO/ \
 # file:/home/mistria/git/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/ \
 # > $tmpdir/p2diff.txt
 inputfile=$tmpdir/p2diff.txt
@@ -13,7 +13,7 @@ if [[ ! -f $inputfile ]]; then
 	echo "No such file $inputfile. Please create a p2diff report file, eg., "
 	echo ""
 	echo "/path/to/p2diff \\
-  http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.51.0.Final/REPO/ \\
+  https://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.51.0.Final/REPO/ \\
   file://${HOME}/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/ \\
   > $tmpdir/p2diff.txt"
 	exit 1
@@ -26,7 +26,7 @@ fi
 # > org.eclipse.sapphire.platform.feature.group [9.0.0.201506110922] 
 # > org.eclipse.wst.common_ui.feature.feature.jar [3.7.0.v201505132009] 
 # === Summary ===
-# http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.51.0.Final/REPO/ contains 342 unique IUs
+# https://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.51.0.Final/REPO/ contains 342 unique IUs
 # file:/home/mistria/git/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/ contains 349 unique IUs
 
 # filter out anything but the diff lines (no need for summary)
