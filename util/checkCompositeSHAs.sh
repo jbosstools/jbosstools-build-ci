@@ -90,19 +90,21 @@ checkProjects () {
     if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [1] ${staging_url}jbosstools-${j}_${jbtstream}/latest/all/repo/buildinfo.json"; fi
     jenkinshash=`wget -q --no-check-certificate ${staging_url}jbosstools-${j}_${jbtstream}/latest/all/repo/buildinfo.json -O - | \
       grep HEAD | grep -v currentBranch | head -1 | sed -e "s/.\+\"HEAD\" : \"\(.\+\)\",/\1/"`
+    if [[ ${quiet} != "-q" ]]; then echo "[HASH] [1] ${jenkinshash}"; fi
     if [[ ! ${jenkinshash} ]]; then # try Jenkins XML API instead
       jenkinshash=`wget -q --no-check-certificate --user=${j_user} --password="${j_password}" ${jenkins_prefix}jbosstools-${j}_${jbtstream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1 -O - | \
         sed "s#<SHA1>\(.\+\)</SHA1>#\1#"`
+      if [[ ${quiet} != "-q" ]]; then echo "[HASH] [1] ${jenkinshash}"; fi
       if [[ ${jenkinshash} ]]; then
         echo "backup: $jenkinshash from ${jenkins_prefix}jbosstools-${j}_${jbtstream}/lastBuild/git/api/xml?xpath=//lastBuiltRevision/SHA1"
       fi
     fi
 
     # get corresponding hash from aggregate
-    if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [1] ${composite_url}"; fi
+    if [[ ${quiet} != "-q" ]]; then echo "[DEBUG] [2] ${composite_url}"; fi
     compositehash=`wget -q --no-check-certificate ${composite_url} -O - | \
-      grep -A 3 "${staging_url}jbosstools-${j}_${jbtstream}/latest/all/repo" | grep HEAD | sed -e "s/.\+\"HEAD\" : \"\(.\+\)\",/\1/"`
-
+      grep -A 3 "${staging_url}jbosstools-${j}_${jbtstream}/" | grep HEAD | sed -e "s/.\+\"HEAD\" : \"\(.\+\)\",/\1/"`
+    if [[ ${quiet} != "-q" ]]; then echo "[HASH] [2] ${compositehash}"; fi
     if [[ ! ${compositehash} ]] || [[ ! ${jenkinshash} ]]; then 
       if [[ ! ${compositehash} ]]; then
         echo "ERROR: cannot get hash from aggregate" | egrep ERROR

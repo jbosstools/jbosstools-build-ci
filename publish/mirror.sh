@@ -57,7 +57,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
 
   # optionally, publish to updates/requirements/${REQ_NAME}/ too
   if [[ ${VERSION} != "SNAPSHOT" ]]; then
-    echo "${RSYNC} --rsh=ssh -e 'ssh -p 2222'--delete ${WORKDIR}/${VERSION} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/updates/requirements/${REQ_NAME}/"
+    echo "${RSYNC} --rsh=ssh -e 'ssh -p 2222' --delete ${WORKDIR}/${VERSION} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/updates/requirements/${REQ_NAME}/"
     ${RSYNC} --rsh=ssh -e 'ssh -p 2222' --delete ${WORKDIR}/${VERSION} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/updates/requirements/${REQ_NAME}/
   fi
 
