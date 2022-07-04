@@ -18,7 +18,7 @@
 
 # OPTIONAL if you're testing a TP that's downstream from the jbosstoolstarget, eg., Central, Early Access, or Integration Stack
 # set URL(s) for JBT / JBT Target so that all Central deps can be resolved; for more than one, separate w/ commas
-# -u file://$HOME/tru/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,http://download.jboss.org/jbosstools/updates/nightly/core/master/
+# -u file://$HOME/tru/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,https://download.jboss.org/jbosstools/updates/nightly/core/master/
 # for JBDS Central tests, use:
 # -u file://$HOME/tru/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/
 
@@ -38,7 +38,7 @@ usage ()
   echo "  -b /path/to/jbosstools-discovery -p jbtcentral -x \\"
   echo "  -DTARGET_PLATFORM_VERSION_MAX=4.72.0.Final \\"
   echo "  -z /path/to/eclipse-jee-neon-R-linux-gtk-x86_64.tar.gz  -d /path/to/executable/p2diff \\"
-  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.72.0.Final/"
+  echo "  -u https://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.72.0.Final/"
   echo "          or, use locally built sites"
   echo "  -u file:///path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/"
   echo ""
@@ -46,8 +46,8 @@ usage ()
   echo "  -b /path/to/jbosstools-discovery -p jbtearlyaccess -x \\"
   echo "  -DTARGET_PLATFORM_VERSION_MAX=4.72.0.Final \\"
   echo "  -z /path/to/eclipse-jee-neon-R-linux-gtk-x86_64.tar.gz -d /path/to/executable/p2diff \\"
-  echo "  -u http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.72.0.Final/,\\
-http://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.72.0.Final-SNAPSHOT/" # always a -SNAPSHOT version
+  echo "  -u https://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/4.72.0.Final/,\\
+https://download.jboss.org/jbosstools/targetplatforms/jbtcentraltarget/4.72.0.Final-SNAPSHOT/" # always a -SNAPSHOT version
   echo "          or, use locally built sites"
   echo "  -u file:///path/to/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,\\
 file:///path/to/jbosstools-discovery/jbtcentraltarget/multiple/target/jbtcentral-multiple.target.repo/"
@@ -74,7 +74,7 @@ LOG_GREP_INCLUDES2="TargetDefinitionResolutionException|Could not find"
 LOG_GREP_EXCLUDES="Could not find metadata|Failed to execute goal org.jboss.tools.tycho-plugins:target-platform-utils|Checksum validation failed, no checksums available from the repository"
 #BASEDIR=`pwd`
 #ECLIPSEZIP=${HOME}/tmp/Eclipse_Bundles/eclipse-jee-neon-R-linux-gtk-x86_64.tar.gz
-#UPSTREAM_SITES=file://$HOME/tru/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,http://download.jboss.org/jbosstools/updates/nightly/core/master/
+#UPSTREAM_SITES=file://$HOME/tru/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,https://download.jboss.org/jbosstools/updates/nightly/core/master/
 # for JBDS tests, use UPSTREAM_SITES=file://$HOME/tru/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/,http://www.qa.jboss.com/binaries/RHDS/builds/staging/devstudio.product_master/all/repo/
 #P2DIFF=${HOME}/tmp/p2diff/p2diff
 

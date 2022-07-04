@@ -30,9 +30,9 @@ PUBLISHPATHSUFFIX=""; if [[ $1 ]]; then PUBLISHPATHSUFFIX="$1"; fi
 JOBNAMEREDUX=${JOB_NAME/.aggregate}; JOBNAMEREDUX=${JOBNAMEREDUX/jbosstools-}
 
 if [[ ${PUBLISHPATHSUFFIX} ]]; then 
-  PUBLISHEDSITE="http://download.jboss.org/jbosstools/updates/nightly/${PUBLISHPATHSUFFIX}"
+  PUBLISHEDSITE="https://download.jboss.org/jbosstools/updates/nightly/${PUBLISHPATHSUFFIX}"
 else
-  PUBLISHEDSITE="http://download.jboss.org/jbosstools/updates/nightly/${JOBNAMEREDUX}"
+  PUBLISHEDSITE="https://download.jboss.org/jbosstools/updates/nightly/${JOBNAMEREDUX}"
 fi
 
 wgetParams="--timeout=900 --wait=10 --random-wait --tries=10 --retry-connrefused --no-check-certificate -q"
@@ -132,12 +132,12 @@ if [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then
   getRemoteFile "http://jenkins.hosts.mwqe.eng.bos.redhat.com/hudson/job/${JOB_NAME}/${BUILD_NUMBER}/api/xml?xpath=%28//lastBuiltRevision%29[1]"; if [[ -w ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${rl}.xml; fi
 
   sed -e "s#<lastBuiltRevision><SHA1>\([a-f0-9]\+\)</SHA1><branch><SHA1>\([a-f0-9]\+\)</SHA1><name>\([^<>]\+\)</name></branch></lastBuiltRevision>#\3\@\1#g" ${rl}.xml | sed -e "s#<[^<>]\+>##g" > ${rl}.txt
-  REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
+  REV_LOG_URL="https://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
   REV_LOG_DETAIL="`cat ${rl}.txt`"
 else
   # no git... unsupported
   echo "UNKNOWN REVISION(S)" > ${rl}.txt
-  REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/"
+  REV_LOG_URL="https://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/"
   REV_LOG_DETAIL="Details"
 fi
 
@@ -145,7 +145,7 @@ fi
 mkdir -p ${STAGINGDIR}/logs
 ALLREVS=${STAGINGDIR}/logs/ALL_REVISIONS.txt
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then
-  GITREV_SOURCE="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}"
+  GITREV_SOURCE="https://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}"
   echo "  >>> ${GITREV_SOURCE}/components <<<  " > $ALLREVS
 
   if [[ -f ${WORKSPACE}/sources/aggregate/site/zips/ALL_REVISIONS.txt ]]; then
@@ -159,7 +159,7 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
     for f in `cd ${STAGINGDIR}/components; find . -maxdepth 1 -type f -name "*.zip" | sort`; do
       REV=
       g=`echo $f | sed 's#\.\/\([^<>]\+\)(-Update|-updatesite).\+.zip#\1#g'`
-      if [[ ! `wget ${wgetParams} http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -O $tmpdir/${g}_GIT_REVISION.txt 2>&1 | egrep "ERROR 404"` ]]; then
+      if [[ ! `wget ${wgetParams} https://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -O $tmpdir/${g}_GIT_REVISION.txt 2>&1 | egrep "ERROR 404"` ]]; then
         REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
       else
         REV="?"
@@ -178,7 +178,7 @@ if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/agg
       elif [[ ${f/zip/} != ${f} ]]; then
         REV=
         g=`echo $f | sed 's#href=".\+zip">\([^<>]\+\)(-Update|-updatesite).\+.zip</a>.\+#\1#g'`
-        if [[ ! `wget ${wgetParams} http://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -O $tmpdir/${g}_GIT_REVISION.txt 2>&1 | egrep "ERROR 404"` ]]; then
+        if [[ ! `wget ${wgetParams} https://download.jboss.org/jbosstools/builds/staging/${g}/logs/GIT_REVISION.txt -O $tmpdir/${g}_GIT_REVISION.txt 2>&1 | egrep "ERROR 404"` ]]; then
           REV=`cat $tmpdir/${g}_GIT_REVISION.txt`
         else
           REV="?"
@@ -217,11 +217,11 @@ if [[ ${JOB_NAME/devstudio} != ${JOB_NAME} ]]; then # devstudio build
   echo "  >>> ${UPSTREAM_JOB_NAME} <<<" >> $ALLREVS
   echo "" >> $ALLREVS
   echo "See also upstream JBoss Tools aggregate job for complete list of git revisions."  >> $ALLREVS
-  echo " * http://download.jboss.org/jbosstools/builds/staging/${UPSTREAM_JOB_NAME}/logs/ALL_REVISIONS.txt *" >> $ALLREVS
+  echo " * https://download.jboss.org/jbosstools/builds/staging/${UPSTREAM_JOB_NAME}/logs/ALL_REVISIONS.txt *" >> $ALLREVS
   echo "" >> $ALLREVS
 
   # ensure upstream logs/ALL_REVISIONS.txt file actually exists
-  if [[ ! `wget ${wgetParams} -O - http://download.jboss.org/jbosstools/builds/staging/${UPSTREAM_JOB_NAME}/logs/ALL_REVISIONS.txt -O $tmpdir/upstream_ALL_REVISIONS.txt 2>&1 | egrep "ERROR 404"` ]]; then
+  if [[ ! `wget ${wgetParams} -O - https://download.jboss.org/jbosstools/builds/staging/${UPSTREAM_JOB_NAME}/logs/ALL_REVISIONS.txt -O $tmpdir/upstream_ALL_REVISIONS.txt 2>&1 | egrep "ERROR 404"` ]]; then
     cat $tmpdir/upstream_ALL_REVISIONS.txt >> $ALLREVS
     echo "" >> $ALLREVS
   fi
@@ -243,21 +243,21 @@ showUnchangedMessage ()
 if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
   PREV_REV_FILE=$tmpdir/PREV_REV.txt
   if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]] && [[ -d ${WORKSPACE}/sources/aggregate/site/zips ]]; then # check previous build's ALL_REVISIONS log
-    rm -f ${PREV_REV_FILE}; PREV_REV_CHECK=`wget ${wgetParams} -O ${PREV_REV_FILE} http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt 2>/dev/null && echo "found" || echo "not found"`
+    rm -f ${PREV_REV_FILE}; PREV_REV_CHECK=`wget ${wgetParams} -O ${PREV_REV_FILE} https://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt 2>/dev/null && echo "found" || echo "not found"`
       REV_LOG_DETAIL="Details"
-      REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
+      REV_LOG_URL="https://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
     if [[ ! ${PREV_REV_CHECK%%*not found*} ]]; then 
-      echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
+      echo "No previous log in https://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/ALL_REVISIONS.txt"
     elif [[ `cat ${ALLREVS}` == `cat ${PREV_REV_FILE}` ]]; then 
       showUnchangedMessage GIT
     fi
   elif [[ $(find ${WORKSPACE} -mindepth 2 -maxdepth 3 -name ".git") ]]; then # check previous build's GIT_REVISION log
     REV_LOG_DETAIL="`cat ${rl}.txt`"
     if [[ ${REV_LOG_DETAIL} ]]; then # file has contents
-      REV_LOG_URL="http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
-      rm -f ${PREV_REV_FILE}; PREV_REV_CHECK=`wget ${wgetParams} -O ${PREV_REV_FILE} http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt 2>/dev/null && echo "found" || echo "not found"`
+      REV_LOG_URL="https://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
+      rm -f ${PREV_REV_FILE}; PREV_REV_CHECK=`wget ${wgetParams} -O ${PREV_REV_FILE} https://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt 2>/dev/null && echo "found" || echo "not found"`
       if [[ ! ${PREV_REV_CHECK%%*not found*} ]]; then 
-        echo "No previous log in http://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
+        echo "No previous log in https://download.jboss.org/jbosstools/builds/staging/${JOB_NAME}/logs/GIT_REVISION.txt"
       elif [[ `cat ${rl}.txt` == `cat ${PREV_REV_FILE}` ]]; then 
         showUnchangedMessage GIT 
       fi
@@ -272,11 +272,11 @@ if [[ ${skipRevisionCheckWhenPublishing} != "true" ]]; then
   if [[ ${PUBLISH_STATUS} ]]; then 
     if [[ ${JOB_NAME/.product} == ${JOB_NAME} ]]; then
       # set a BUILD_DESCRIPTION we can later parse from Jenkins
-      BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_DETAIL}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://download.jboss.org/jbosstools/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/target/coverage-report/html/JBoss_Tools_chunk/index.html">Coverage report</a> &amp; <a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/*/target/jacoco.exec" style="color: purple; font-weight:bold">jacoco.exec</a> (EclEmma)</li>'
+      BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_DETAIL}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="https://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="https://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="https://download.jboss.org/jbosstools/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/target/coverage-report/html/JBoss_Tools_chunk/index.html">Coverage report</a> &amp; <a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/*/target/jacoco.exec" style="color: purple; font-weight:bold">jacoco.exec</a> (EclEmma)</li>'
     else
       # set a build description for JBDS product builds
       REV_LOG_SHORT=`echo $REV_LOG_DETAIL | sed "s#.*repos/devstudio/##g" | sed "s/[\n\r\ \t]\+//g"`
-      BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_SHORT}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/builds/staging/'${JOB_NAME}'/installer/">Installers & Zips</a></li> <li>Upstream: <a href="http://download.jboss.org/jbosstools/builds/staging/'${UPSTREAM_JOB_NAME}'/all/repo/">Update Site</a>'
+      BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_SHORT}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/builds/staging/'${JOB_NAME}'/installer/">Installers & Zips</a></li> <li>Upstream: <a href="https://download.jboss.org/jbosstools/builds/staging/'${UPSTREAM_JOB_NAME}'/all/repo/">Update Site</a>'
     fi
     if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then echo ">> ${PUBLISHEDSITE} <<"; fi
     exit 0
@@ -291,11 +291,11 @@ fi
 
 if [[ ${JOB_NAME/.product} == ${JOB_NAME} ]]; then
   # set a BUILD_DESCRIPTION we can later parse from Jenkins
-  BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_DETAIL}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://download.jboss.org/jbosstools/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/target/coverage-report/html/JBoss_Tools_chunk/index.html">Coverage report</a> &amp; <a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/*/target/jacoco.exec" style="color: purple; font-weight:bold">jacoco.exec</a> (EclEmma)</li>'
+  BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_DETAIL}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="https://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="https://download.jboss.org/jbosstools/targetplatforms/jbosstoolstarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="https://download.jboss.org/jbosstools/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/target/coverage-report/html/JBoss_Tools_chunk/index.html">Coverage report</a> &amp; <a href="/hudson/job/'${JOB_NAME}'/'${BUILD_NUMBER}'/artifact/sources/*/target/jacoco.exec" style="color: purple; font-weight:bold">jacoco.exec</a> (EclEmma)</li>'
 else
   # set a build description for JBDS product builds
   REV_LOG_SHORT=`echo $REV_LOG_DETAIL | sed "s#.*repos/devstudio/##g" | sed "s/[\n\r\ \t]\+//g"`
-  BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_SHORT}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/builds/staging/'${JOB_NAME}'/installer/">Installers & Zips</a></li> <li>Upstream: <a href="http://download.jboss.org/jbosstools/builds/staging/'${UPSTREAM_JOB_NAME}'/all/repo/">Update Site</a>'
+  BUILD_DESCRIPTION='<li>Rev: <a href="'${REV_LOG_URL}'">'${REV_LOG_SHORT}'</a>'${PUBLISH_STATUS}'</li> <li>Target: <a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION}'">'${TARGET_PLATFORM_VERSION}'</a> / <a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/targetplatforms/jbdevstudiotarget/'${TARGET_PLATFORM_VERSION_MAXIMUM}'">'${TARGET_PLATFORM_VERSION_MAXIMUM}'</a></li> <li><a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/builds/staging/'${JOB_NAME}'/all/repo/">Update Site</a></li> <li><a href="http://wonka.mw.lab.eng.bos.redhat.com/rhd/devstudio/builds/staging/'${JOB_NAME}'/installer/">Installers & Zips</a></li> <li>Upstream: <a href="https://download.jboss.org/jbosstools/builds/staging/'${UPSTREAM_JOB_NAME}'/all/repo/">Update Site</a>'
 fi
 
 METAFILE="${BUILD_TIMESTAMP}-B${BUILD_NUMBER}.txt"
@@ -703,7 +703,7 @@ rm -fr $tmpdir
 find ${WORKSPACE} -maxdepth 2 -name "getRemoteFile*" -type f -exec rm -f {} \;
 
 if [[ ${JOB_NAME/.aggregate} != ${JOB_NAME} ]]; then
-  # regenerate http://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
+  # regenerate https://download.jboss.org/jbosstools/builds/nightly/*/*/composite*.xml files for up to 5 builds, cleaning anything older than 5 days old
   # new approach using publish script from Nexus via jbosstools-build-ci-scripts_4.3.x
   if [[ -f ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh ]]; then
     cd ${WORKSPACE}/sources/util/cleanup

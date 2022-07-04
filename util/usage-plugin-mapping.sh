@@ -15,7 +15,7 @@ getMaps () {
 	echo ""; 
 	#echo $theArray
 	for version in $theArray; do
-		wget -q http://download.jboss.org/jbosstools/static/${eclipseName}/stable/updates/core/${version}/plugins/ -O - | \
+		wget -q https://download.jboss.org/jbosstools/static/${eclipseName}/stable/updates/core/${version}/plugins/ -O - | \
 		grep href | grep -v pack.gz | egrep "org.jboss.tools.usage_.*jar" | sed -e "s#.\+<a href=\"\([^\"]\+\)\".\+#${version} :: \1#"
 	done
 

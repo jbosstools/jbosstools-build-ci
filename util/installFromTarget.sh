@@ -25,7 +25,7 @@ if [[ $# -lt 1 ]]; then
 fi
 
 #director.xml script is used with Eclipse's AntRunner to launch p2.director
-DIRECTORXML="http://download.jboss.org/jbosstools/updates/scripted-install/director.xml"
+DIRECTORXML="https://download.jboss.org/jbosstools/updates/scripted-install/director.xml"
 # comma-separated list of IUs to exclude from installation
 EXCLUDES=""
 

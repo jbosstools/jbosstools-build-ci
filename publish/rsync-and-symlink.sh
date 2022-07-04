@@ -3,9 +3,9 @@
 # util script to publish something like yaml-language-server-*.tar.gz bits from staging -> stable and generate a latest symlink
 # must define DESTINATION="user@SERVER_IP:/sftp/path" to define destination (on download.jboss.org server or elsewhere)
 # 
-# assumes you have content in http://download.jboss.org/jbosstools/oxygen/staging/builds/${filePrefix}/
-# and want to copy it over to http://download.jboss.org/jbosstools/static/oxygen/stable/builds/${filePrefix}/
-# then create a symlink from  http://download.jboss.org/jbosstools/oxygen/stable/builds/${filePrefix}/ to the /static/ path
+# assumes you have content in https://download.jboss.org/jbosstools/oxygen/staging/builds/${filePrefix}/
+# and want to copy it over to https://download.jboss.org/jbosstools/static/oxygen/stable/builds/${filePrefix}/
+# then create a symlink from  https://download.jboss.org/jbosstools/oxygen/stable/builds/${filePrefix}/ to the /static/ path
 
 eclipseReleaseName=oxygen
 filePrefix=yaml-language-server

@@ -16,10 +16,10 @@ usage ()
   echo ""
 
   echo "To compare the generated json file to its published snapshot location:"
-  echo "Usage 1: $0 -s \${WORKSPACE}/sources/site/target/repository -t http://download.jboss.org/jbosstools/neon/snapshots/builds/\${JOB_NAME}/latest/all/repo"
+  echo "Usage 1: $0 -s \${WORKSPACE}/sources/site/target/repository -t https://download.jboss.org/jbosstools/neon/snapshots/builds/\${JOB_NAME}/latest/all/repo"
 
   echo "To compare the workspace's .git/HEAD against published snapshot location:"
-  echo "Usage 2: $0 -s \${WORKSPACE}/sources -t http://download.jboss.org/jbosstools/neon/snapshots/builds/\${JOB_NAME}/latest/all/repo"
+  echo "Usage 2: $0 -s \${WORKSPACE}/sources -t https://download.jboss.org/jbosstools/neon/snapshots/builds/\${JOB_NAME}/latest/all/repo"
 
   echo ""
   echo "If SHAs match, return FALSE."

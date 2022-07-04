@@ -12,8 +12,8 @@
 usage ()
 {
 	echo "Usage	: $0 url_to_check [-fn (fail never - report ALL 404s instead of stopping after first)]"
-	echo "Example	: $0 http://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/master/"
-	echo "Example 2 : $0 http://download.jboss.org/jbosstools/builds/staging/_composite_/core/master/compositeContent.xml -fn"
+	echo "Example	: $0 https://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/master/"
+	echo "Example 2 : $0 https://download.jboss.org/jbosstools/builds/staging/_composite_/core/master/compositeContent.xml -fn"
 	exit 1
 
 }
@@ -41,8 +41,8 @@ while [[ "$#" -gt 0 ]]; do
 		'-fn') failnever=1; shift 0;; # if 1 (true), process all 404s, rather than stopping on the first one
 		'-sleep') sleep="$2"; shift 1;; # duration of each sleep. see `man sleep` for syntax, eg., 5m = 5 minutes
 		'-maxsleeps') maxsleeps="$2"; shift 1;; # number of sleeps before giving up, eg., 6 = 30 mins (if sleep = 5m)
-		'-url') checkurls="$2"; shift 1;; # URL to read, eg., http://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/master/
-		*) checkurls="${checkurls} $1"; shift 0;; # URL to read, eg., http://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/master/
+		'-url') checkurls="$2"; shift 1;; # URL to read, eg., https://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/master/
+		*) checkurls="${checkurls} $1"; shift 0;; # URL to read, eg., https://download.jboss.org/jbosstools/oxygen/snapshots/builds/_composite_/core/master/
 	esac
 	shift 1
 done

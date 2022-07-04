@@ -23,7 +23,7 @@ cloneSite () {
         DESTINATION=${JBDS}
         SOURCE_PATH=${devstudioReleaseVersion_PREV}/${qual}/updates/${site}/${stream_jbt}
         TARGET_PATH=${devstudioReleaseVersion}/${qual}/updates/${site}/${stream_jbt}
-      elif [[ ${url_prefix} == "http://download.jboss.org/jbosstools/"* ]]; then
+      elif [[ ${url_prefix} == "https://download.jboss.org/jbosstools/"* ]]; then
         DESTINATION=${TOOLS}
         SOURCE_PATH=${eclipseReleaseName_PREV}/${qual}/updates/${site}/${stream_jbt}
         TARGET_PATH=${eclipseReleaseName}/${qual}/updates/${site}/${stream_jbt}
@@ -54,7 +54,7 @@ for url_prefix in https://devstudio.redhat.com/${devstudioReleaseVersion}; do
   done
 done
 
-for url_prefix in http://download.jboss.org/jbosstools/${eclipseReleaseName}; do
+for url_prefix in https://download.jboss.org/jbosstools/${eclipseReleaseName}; do
   for qual in snapshots; do
     for site in core central earlyaccess coretests integration-tests; do
       for stream_jbt in master; do
