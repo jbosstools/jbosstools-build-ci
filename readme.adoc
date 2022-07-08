@@ -87,19 +87,19 @@ toc::[]
 
 |link:util/installAndDisplayCompositeSiteContent.sh[installAndDisplay CompositeSiteContent.sh]
 |Install and display list of what was installed from a composite site. Requires link:util/installFromTarget.sh[installFromTarget.sh]
-|Used in https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-composite-install_master/[composite-install]
+|Used in https://studio-jenkins-csb-codeready.apps.ocp-c1.prod.psi.redhat.com/job/Studio/job/Engineering/job/build_master/job/jbosstools-composite-install_master/[composite-install]
 
 |link:util/installFromCentral.sh[installFromCentral.sh]
 |Install from JBoss Central
-|Used in https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-install-p2director.install-tests.matrix_master/[p2director install-tests.matrix]
+|Used in https://studio-jenkins-csb-codeready.apps.ocp-c1.prod.psi.redhat.com/job/Studio/job/Engineering/job/build_master/job/jbosstools-install-p2director.install-tests.matrix_master/[p2director install-tests.matrix]
 
 |link:util/installFromTarget.sh[installFromTarget.sh]
 |Install from a target platform or other update site(s)
-|Used in https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-composite-install_master/[composite-install]
+|Used in https://studio-jenkins-csb-codeready.apps.ocp-c1.prod.psi.redhat.com/job/Studio/job/Engineering/job/build_master/job/jbosstools-composite-install_master/[composite-install]
 
 |link:util/validateCompositeSiteChildrenExist.sh[validateComposite SiteChildrenExist.sh]
 |Validates that the child links within a composite site exist as real sites, or return 404 so as to prevent install grinder tests from failing
-|Used in https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-install-grinder.install-tests.matrix_master/[install-grinder install-tests.matrix]
+|_Deprecated_
 
 |===
 
@@ -111,11 +111,11 @@ toc::[]
 
 |link:util/cleanup/jbosstools-cleanup.sh[jbosstools cleanup.sh]
 |Cleanup script for JBoss Tools builds; also regenerates composite*.xml files after purging old builds
-|Used in https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/jbosstools-cleanup/[jbosstools cleanup], link:publish/rsync.sh[rsync.sh], link:publish/promote.sh[promote.sh], link:publish/publish.sh[publish.sh]
+|Used in https://studio-jenkins-csb-codeready.apps.ocp-c1.prod.psi.redhat.com/job/Studio/job/Engineering/job/releng/job/jbosstools-cleanup/[jbosstools cleanup], link:publish/rsync.sh[rsync.sh], link:publish/promote.sh[promote.sh], link:publish/publish.sh[publish.sh]
 
 |link:util/cleanup/devstudio-product-cleanup.sh[devstudio-product cleanup.sh]
 |Cleanup script for JBDS builds
-|Used in https://jenkins.mw.lab.eng.bos.redhat.com/hudson/job/devstudio-cleanup/[devstudio cleanup]
+|_Deprecated_
 
 |_link:util/purgeRemoteFiles.sh[purgeRemoteFiles.sh]_
 |_For a list of files, wipe them from the server. Used to remove things like .svn and .gitignore from download.jboss.org if accidentally rsynch'd to the server_
@@ -176,11 +176,11 @@ toc::[]
 
 |_link:util/getArch.sh[getArch.sh]_
 |_Gets the architecture for the current platform by calling `uname -a` and mapping that to values that Eclipse expects_
-|_Deprecated?_
+|_Deprecated_
 
 |_link:util/getLatestArtifactFromNexus.sh[getLatestArtifact FromNexus.sh]_
 |_For a given generic Nexus URL (eg., using SNAPSHOT), determine the ACTUAL filename in Nexus so it can be fetch by another script_
-|_Deprecated?_
+|_Deprecated_
 
 |link:util/runstack.sh[runstack.sh]
 |Wrapper script to build a series of jbosstools-* projects in sequence, including tests, in a separare UI thread. Requires link:util/runtests.sh[runtests.sh]

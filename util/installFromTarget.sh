@@ -10,7 +10,7 @@
 # -INSTALL_PLAN file://${HOME}/eclipse/workspace-jboss/jbosstools-github-master/jbosstools-target-platforms/jbosstools/multiple/target/jbosstools-multiple.target.repo/ \
 # | tee /tmp/log.txt; cat /tmp/log.txt | egrep -i -A2 "could not be found|FAILED|Missing|Only one of the following|being installed|Cannot satisfy dependency|cannot be installed"
 #
-# See also https://jenkins.hosts.mwqe.eng.bos.redhat.com/hudson/view/DevStudio/view/Target-Platforms/job/jbosstoolstargetplatforms-matrix/
+# See also https://studio-jenkins-csb-codeready.apps.ocp-c1.prod.psi.redhat.com/job/Studio/job/Engineering/job/target_platforms/job/jbosstoolstargetplatform_master/
 
 usage ()
 {
