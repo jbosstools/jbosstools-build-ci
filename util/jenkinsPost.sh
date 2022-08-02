@@ -7,7 +7,7 @@ usage ()
 	echo "Usage: $0 -j JOBNAME -t TaskOrActionToPerform {-u jenkinsUser} {-p jenkinsPass} {-s jenkinsURL} {-d querystring data foo=bar&baz=foo&...}"
 	echo ""
 	echo "Example:    export userpass=\"KERBUSER:KERBPWD\" && $0 -j jbosstools-base_master -t buildWithParameters"
-	echo "Example:    $0 -j jbosstools-build.parent_master -t build -u KERBUSER -p KERBPWD -s https://jenkins.hosts.mwqe.eng.bos.redhat.com/hudson/job"
+	echo "Example:    $0 -j jbosstools-build.parent_master -t build -u KERBUSER -p KERBPWD -s https://studio-jenkins-csb-codeready.apps.ocp-c1.prod.psi.redhat.com/job/"
 	echo ""
 	exit 1
 }
@@ -24,7 +24,7 @@ log ()
 
 if [[ $# -lt 2 ]]; then usage; fi
 
-jenkinsURL="https://jenkins.hosts.mwqe.eng.bos.redhat.com/hudson/job"
+jenkinsURL="https://studio-jenkins-csb-codeready.apps.ocp-c1.prod.psi.redhat.com/job/"
 quiet=0
 
 while [[ "$#" -gt 0 ]]; do
