@@ -93,10 +93,10 @@ rm -fr ${WORKSPACE}/data; mkdir -p ${WORKSPACE}/data
 
 # collect feature.groups to install
 ${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
-list.feature.groups -Doutput=${WORKSPACE}/feature.group.list.properties -DsourceSites=${INSTALL_PLAN} -Dexec=${ECLIPSEEXEC}
+list.feature.groups -Doutput=${WORKSPACE}/feature.group.list.properties -DsourceSites=${INSTALL_PLAN} -Dexec=${ECLIPSEEXEC} -Djava.security.manager=allow
 # collect plugins to install (in case we have orphan plugins not inside feature.groups)
 ${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
-list.plugins -Doutput=${WORKSPACE}/plugin.list.properties -DsourceSites=${INSTALL_PLAN} -Dexec=${ECLIPSEEXEC}
+list.plugins -Doutput=${WORKSPACE}/plugin.list.properties -DsourceSites=${INSTALL_PLAN} -Dexec=${ECLIPSEEXEC} -Djava.security.manager=allow
 BASE_IUs=""
 for f in feature.group.list.properties plugin.list.properties; do
   if [[ -f ${WORKSPACE}/${f} ]]; then 

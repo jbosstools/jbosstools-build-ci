@@ -219,7 +219,7 @@ EOXSLT
   # for each Central Discover plugin
   for PLUGINJAR in $PLUGINJARS; do 
     curl -s -k ${CENTRAL_URL}/${PLUGINJAR} > ${WORKSPACE}/plugin.jar
-    unzip -oq -d ${WORKSPACE} ${WORKSPACE}/plugin.jar plugin.xml
+    pushd ${WORKSPACE}; jar xf ${WORKSPACE}/plugin.jar plugin.xml; popd
 
     ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} \
     transform -Dxslt=${WORKSPACE}/get-ius-and-siteUrls.xsl -Dinput=${WORKSPACE}/plugin.xml -Doutput=${WORKSPACE}/plugin.transformed.xml -q | tee ${WORKSPACE}/installFromCentral_log.3__${PLUGINJAR/\//_}.txt
