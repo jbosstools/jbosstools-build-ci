@@ -22,7 +22,7 @@ ok /Couldn't create directory: Failure/
 ok /Checksum validation failed, no checksums available from .*repository/
 ok /Warning: Nashorn engine is planned to be removed from a future JDK release/
 ok /\[WARNING\] The artifact xml-apis:xml-apis:jar:2.0.2 has been relocated to xml-apis:xml-apis:jar:1.0.b2/
-ok /WARNING: Using incubator modules: jdk.incubator.foreign, jdk.incubator.vector
+ok /WARNING: Using incubator modules: jdk.incubator.foreign, jdk.incubator.vector/
 
 # avoid false positive of UI Bot Test logs
 ok /TRACE \[main\]\[WorkbenchPartLookup\]/

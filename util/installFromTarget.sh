@@ -91,6 +91,9 @@ fi
 # wipe existing Eclipse workspace
 rm -fr ${WORKSPACE}/data; mkdir -p ${WORKSPACE}/data
 
+echo "test"
+java -version
+
 # collect feature.groups to install
 ${ECLIPSEEXEC} -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} -DtargetDir=${ECLIPSE} \
 list.feature.groups -Doutput=${WORKSPACE}/feature.group.list.properties -DsourceSites=${INSTALL_PLAN} -Dexec=${ECLIPSEEXEC} -Djava.security.manager=allow
