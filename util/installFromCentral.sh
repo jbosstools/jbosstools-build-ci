@@ -218,7 +218,7 @@ EOXSLT
 
   # for each Central Discover plugin
   for p in ${!PLUGINJARS[@]}; do 
-    PLUGINJAR = ${PLUGINJARS[$p]}
+    PLUGINJAR=${PLUGINJARS[$p]}
     curl -s -k ${PLUGINJAR} > ${WORKSPACE}/plugin.jar
     jar xf ${WORKSPACE}/plugin.jar ${WORKSPACE}/plugin.xml
 
