@@ -218,7 +218,7 @@ EOXSLT
 
   # for each Central Discover plugin
   for PLUGINJAR in $PLUGINJARS; do 
-    curl -s -k ${CENTRAL_URL}/${PLUGINJAR} > ${WORKSPACE}/plugin.jar
+    curl -s -k ${PLUGINJAR} > ${WORKSPACE}/plugin.jar
     pushd ${WORKSPACE}; jar xf ${WORKSPACE}/plugin.jar plugin.xml; popd
 
     ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} \
