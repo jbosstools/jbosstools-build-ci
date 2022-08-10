@@ -217,13 +217,14 @@ if [[ $CENTRAL_URL != $INSTALL_PLAN ]]; then
 EOXSLT
 
   # for each Central Discover plugin
-  for PLUGINJAR in $PLUGINJARS; do 
+  for p in ${!PLUGINJARS[@]}; do 
+    PLUGINJAR = ${PLUGINJARS[$p]}
     curl -s -k ${PLUGINJAR} > ${WORKSPACE}/plugin.jar
-    pushd ${WORKSPACE}; jar xf ${WORKSPACE}/plugin.jar plugin.xml; popd
+    jar xf ${WORKSPACE}/plugin.jar ${WORKSPACE}/plugin.xml
 
     ${ECLIPSE}/eclipse -consolelog -nosplash -data ${WORKSPACE}/data -application org.eclipse.ant.core.antRunner -f ${WORKSPACE}/director.xml ${VM} \
-    transform -Dxslt=${WORKSPACE}/get-ius-and-siteUrls.xsl -Dinput=${WORKSPACE}/plugin.xml -Doutput=${WORKSPACE}/plugin.transformed.xml -q | tee ${WORKSPACE}/installFromCentral_log.3__${PLUGINJAR/\//_}.txt
-    checkLogForErrors ${WORKSPACE}/installFromCentral_log.3__${PLUGINJAR/\//_}.txt
+    transform -Dxslt=${WORKSPACE}/get-ius-and-siteUrls.xsl -Dinput=${WORKSPACE}/plugin.xml -Doutput=${WORKSPACE}/plugin.transformed.xml -q | tee ${WORKSPACE}/installFromCentral_log.3__$p.txt
+    checkLogForErrors ${WORKSPACE}/installFromCentral_log.3__$p.txt
 
     # parse the list of features from plugin.transformed.xml
     FEATURES=`cat ${WORKSPACE}/plugin.transformed.xml | grep "iu id" | sed "s#.\+id=\"\(.\+\)\"\ */>#\1#" | sort | uniq`
