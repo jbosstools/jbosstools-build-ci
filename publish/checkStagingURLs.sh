@@ -141,7 +141,7 @@ for qual in $quals; do
                   jars=$(curl -s ${a} | grep "url" | sed -e "s#.\+url=\"\([^\"]\+\)\".\+#\1#")
                   # check jar 404s
                   for j in ${jars}; do
-                    logn " + ${j} : "; stat=$(curl -I -s ${a/${ff}/${j}} | egrep "404 Not Found")
+                    logn " + ${j} : "; stat=$(curl -I -s ${j}} | egrep "404 Not Found")
                     if [[ ! $stat ]]; then log "${green}OK${norm}"; let OK+=1; else logerr " + ${j} : " "${red}NO${norm} \n$(curl -I -s ${a})"; let notOK+=1; fi
                   done
                 fi
