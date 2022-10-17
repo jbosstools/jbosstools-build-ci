@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import re
+
 debug = 'debug' in globals()
 
 # JBIDE-24484 remove freemarker, portlet, playground
@@ -34,7 +36,8 @@ JIRA_components = {
     # "Usage Analytics " : { "usage"},
     "versionwatch      ": { "versionwatch" },
     "VPE               ": { "visual-page-editor-core", "visual-page-editor-templates"},
-    "Webservices       ": { "webservices"}
+    "Webservices       ": { "webservices"},
+    "Quarkus           ": { "quarkus"}
     }
 
 # there are more N&N pages than there are JIRA components (eg., jbosstools-central includes Central, Maven and Project Examples) so this list is a bit different from teh above one

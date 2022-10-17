@@ -208,7 +208,7 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
 			print(name +  ": " + jiraserver + '/browse/' + singleJIRA.key + " => " + componentLead)
 
 	if (not options.autoaccept and not options.jiraonly):
-		accept = raw_input("Accept created JIRAs? [Y/n] ")
+		accept = input("Accept created JIRAs? [Y/n] ")
 		if accept.capitalize() in ["N"]:
 			try:
 				rootJBIDE
