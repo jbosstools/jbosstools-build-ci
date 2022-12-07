@@ -1,5 +1,5 @@
 # Requires: 
-# sudo pip install pygithub
+# pip3 install pygithub
 # 
 from github import Github, GithubException
 from optparse import OptionParser
