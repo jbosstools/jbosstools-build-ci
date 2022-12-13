@@ -105,7 +105,7 @@ for qual in $quals; do
     if [[ ${skipdiscovery} -lt 1 ]] || [[ ${onlydiscovery} -gt 0 ]]; then 
       for u in https://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/builds \
                https://download.jboss.org/jbosstools/${static}${eclipseReleaseName}/${qual}/updates; do
-        for f in discovery.central discovery.earlyaccess; do
+        for f in discovery.central ; do
           for ff in compositeContent.xml compositeArtifacts.xml jbosstools-earlyaccess.properties jbosstools-directory.xml plugins/; do
             if [[ ${f} == "discovery.central" ]] && [[ ${ff/earlyaccess.properties/} != ${ff} ]]; then continue; fi # skip check for central + earlyaccess.properties
             if [[ ${u/builds/} != ${u} ]]; then
@@ -220,7 +220,7 @@ for qual in $quals; do
     if [[ ${skipdiscovery} -lt 1 ]] || [[ ${onlydiscovery} -gt 0 ]]; then 
       for u in https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/builds \
                https://devstudio.redhat.com/${static}${devstudioReleaseVersion}/${qual}/updates; do
-        for f in discovery.central discovery.earlyaccess; do
+        for f in discovery.central ; do
           for ff in compositeContent.xml compositeArtifacts.xml devstudio-earlyaccess.properties devstudio-directory.xml plugins/; do
             if [[ ${f} == "discovery.central" ]] && [[ ${ff/earlyaccess.properties/} != ${ff} ]]; then continue; fi # skip check for central + earlyaccess.properties
             if [[ ${u/builds/} != ${u} ]]; then
