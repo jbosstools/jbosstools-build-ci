@@ -68,11 +68,15 @@ curl -k -s -S -k -X POST -u ${userpass} -H "Jenkins-Crumb:${crumb}" ${data} ${je
 
 if [[ $task == "build"* ]]; then # build or buildWithParameters
 	sleep 10s
-	browser=/usr/bin/google-chrome; if [[ ! -x ${browser} ]]; then browser=/usr/bin/firefox; fi
 	nextJob=$(curl -k -s -S -L --location-trusted -s ${jenkinsURL/https/http}/${job}/api/xml?xpath=//lastBuild/number | sed "s#<number>\([0-9]\+\)</number>#\1#")
-	if [[ $quiet == 1 ]]; then echo ${nextJob}; fi
+	if [[ $quiet == 1 ]]; then 
+		echo ${nextJob}
+	else
+		echo ${nextJob}
+		browser=/usr/bin/google-chrome; if [[ ! -x ${browser} ]]; then browser=/usr/bin/firefox; fi
+		${browser} ${jenkinsURL/https/http}/${job}/lastBuild/parameters ${jenkinsURL/https/http}/${job}/lastBuild/console >/dev/null 2>/dev/null
+	fi
 	if [[ "${prevJob}" != "${nextJob}" ]]; then
 		log "[${nextJob}]  GET:  ${jenkinsURL/https/http}/${job}/lastBuild/"
-		${browser} ${jenkinsURL/https/http}/${job}/lastBuild/parameters ${jenkinsURL/https/http}/${job}/lastBuild/console >/dev/null 2>/dev/null
 	fi
 fi
