@@ -1,9 +1,9 @@
+#!/usr/bin/env python3
 from jira import JIRA
-import magic
 import urllib, sys, os
 from optparse import OptionParser
 
-# Requires jira (`pip install jira python-magic`), not jira-python - https://stackoverflow.com/questions/30915236/jira-python-package-in-pip-has-gone
+# Requires jira (`pip3 install jira python-magic`), not jira-python - https://stackoverflow.com/questions/30915236/jira-python-package-in-pip-has-gone
 # If connection to JIRA server fails with error: "The error message is __init__() got an unexpected keyword argument 'mime'"
 # Then go edit /usr/lib/python2.7/site-packages/jira/client.py 
 # replace 
@@ -48,6 +48,7 @@ parser.add_option("-J", "--jiraonly", dest="jiraonly", action="store_true", help
 parser.add_option("-s", "--server", dest="jiraserver", help="JIRA server, eg., https://issues.stage.redhat.com or https://issues.redhat.com")
 parser.add_option("-u", "--user", dest="jirauser", help="JIRA Username")
 parser.add_option("-p", "--pwd", dest="jirapwd", help="JIRA Password")
+parser.add_option("-k", "--jiratoken", dest="jiratoken", help="JIRA Token")
 # NOTE: rather than passing in two flags here, you can `export userpass=jirauser:jirapwd`, 
 # and this script will read those values from the shell
 
@@ -60,12 +61,15 @@ if (not options.jirauser or not options.jirapwd) and "userpass" in os.environ:
 	options.jirauser = userpass_bits[0]
 	options.jirapwd = userpass_bits[1]
 
-if not options.jirauser or not options.jirapwd or not options.jiraserver or not options.jbidefixversion or not options.jbdsfixversion or not options.taskdescription:
+if ((not options.jirauser or not options.jirapwd) and not options.jiratoken) or not options.jiraserver or not options.jbidefixversion or not options.taskdescription:
 	parser.error("Must to specify ALL commandline flags")
 
 jiraserver = options.jiraserver
 try:
-	jira = JIRA(options={'server':jiraserver}, basic_auth=(options.jirauser, options.jirapwd))
+	if (options.jiratoken):
+		jira = JIRA(server=jiraserver, token_auth=options.jiratoken)
+	else:
+		jira = JIRA(options={'server':jiraserver}, basic_auth=(options.jirauser, options.jirapwd))
 except AttributeError as e:
 	sys.exit("[ERROR] Could not connect to {0} as {1} with jirapwd {2}".format(jiraserver, options.jirauser, options.jirapwd))
 except:
@@ -108,9 +112,9 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
 			componentList = { options.componentjbide: {options.componentjbide} }
 
 	## The jql query across for all task issues
-	tasksearchquery = '((project in (JBDS) and fixVersion = "' + jbds_fixversion + '") or (project in (JBIDE) and fixVersion = "' + jbide_fixversion + '")) AND labels = task'
+	tasksearchquery = '(project in (JBIDE) and fixVersion = "' + jbide_fixversion + '") AND labels = task'
 
-	tasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery)
+	tasksearch = jiraserver + '/issues/?jql=' + urllib.parse.quote_plus(tasksearchquery)
 
 	def nametuple(x):
 		return { "name" : x }
@@ -135,7 +139,7 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
 			jira.assign_issue(rootJBDS, installerLead)
 		except:
 			if (not options.jiraonly):
-				print "[WARNING] Unexpected error! User {0} tried to assign {1} to {2}: {3}".format(options.jirauser, rootJBDS, installerLead, sys.exc_info()[0])
+				print ("[WARNING] Unexpected error! User {0} tried to assign {1} to {2}: {3}").format(options.jirauser, rootJBDS, installerLead, sys.exc_info()[0])
 		if (options.jiraonly):
 			print(rootJBDS.key)
 		else:
@@ -160,20 +164,20 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
 			jira.assign_issue(rootJBIDE, componentLead)
 		except:
 			if (not options.jiraonly):
-				print "[WARNING] Unexpected error! User {0} tried to assign {1} to {2}: {3}".format(options.jirauser, rootJBIDE, componentLead, sys.exc_info()[0])
+				print ("[WARNING] Unexpected error! User {0} tried to assign {1} to {2}: {3}").format(options.jirauser, rootJBIDE, componentLead, sys.exc_info()[0])
 		if (options.jiraonly):
 			print(rootJBIDE.key)
 		else:
 			print("JBoss Tools       : " + jiraserver + '/browse/' + rootJBIDE.key + " => " + componentLead + "")
 
-	for name, comps in componentList.iteritems():
+	for name, comps in componentList.items():
 		for firstcomponent in comps:
 			break
 		cms = map(nametuple, comps)
 		componentLead = queryComponentLead(CLJBIDE, firstcomponent, 0)
 		#print(name + "->" + str(cms) + " => " + componentLead)
 
-		comptasksearch = jiraserver + '/issues/?jql=' + urllib.quote_plus(tasksearchquery + " and component in (" + ",".join(map(quote,comps)) + ")")
+		comptasksearch = jiraserver + '/issues/?jql=' + urllib.parse.quote_plus(tasksearchquery + " and component in (" + ",".join(map(quote,comps)) + ")")
 		
 		singleJIRA_dict = {
 			'project' : { 'key': projectname },
@@ -182,7 +186,7 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
 				'\n\n[Search for all task JIRA|' + tasksearch + '], or [Search for ' + name.strip() + ' task JIRA|' + comptasksearch + ']',
 			'issuetype' : { 'name' : issuetype },
 			'priority' : { 'name': 'Blocker'},
-			'components' : cms,
+			'components' : list(cms),
 			'labels' : [ "task" ]
 		}
 		# if subtask, set parent
@@ -197,14 +201,14 @@ if checkFixVersionsExist(jbide_fixversion, jbds_fixversion, jiraserver, options.
 			jira.assign_issue(singleJIRA, componentLead)
 		except:
 			if (not options.jiraonly):
-				print "[WARNING] Unexpected error! User {0} tried to assign {1} to {2}: {3}".format(options.jirauser, singleJIRA, componentLead, sys.exc_info()[0])
+				print ("[WARNING] Unexpected error! User {0} tried to assign {1} to {2}: {3}").format(options.jirauser, singleJIRA, componentLead, sys.exc_info()[0])
 		if (options.jiraonly):
 			print(singleJIRA.key)
 		else:
 			print(name +  ": " + jiraserver + '/browse/' + singleJIRA.key + " => " + componentLead)
 
 	if (not options.autoaccept and not options.jiraonly):
-		accept = raw_input("Accept created JIRAs? [Y/n] ")
+		accept = input("Accept created JIRAs? [Y/n] ")
 		if accept.capitalize() in ["N"]:
 			try:
 				rootJBIDE

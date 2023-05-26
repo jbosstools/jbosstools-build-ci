@@ -42,7 +42,7 @@ log ()
 # can be used to publish a build (including installers, site zips, MD5s, build log) or just an update site folder
 usage ()
 {
-  echo "Usage  : $0 -sites \"site1 site2 ...\" -stream STREAM -vr versionWithRespin -sd SRC_DIR [-dd DESTDIR] [-st SRC_TYPE] [-dt DESTTYPE] \\"
+  echo "Usage  : $0 -sites \"site1 site2 ...\" -stream STREAM -vr version -sd SRC_DIR [-dd DESTDIR] [-st SRC_TYPE] [-dt DESTTYPE] \\"
   echo "            [-JOB_NAME JOB_NAME] [-DESTINATION user@server:/path] [-DEST_URL http://server.url] [-ID ID] [-q]"
   echo ""
 
@@ -75,8 +75,8 @@ while [[ "$#" -gt 0 ]]; do
   case $1 in
     '-sites') sites="${sites} $2"; shift 1;; # site coretests-site central-site earlyaccess-site discovery.central discovery.earlyaccess
   
-    '-stream') stream="$2"; shift 1;; # for staging, use 4.3.mars or 9.0.mars; for release, use the versionWithRespin value, eg., 4.3.1.CR1c or 9.1.0.CR1c
-    '-versionWithRespin'|'-vr') versionWithRespin="$2"; shift 1;; # for staging, use 4.3.1.CR1c, 9.1.0.CR1c; for release, use 4.3.1.Final or 9.1.0.GA
+    '-stream') stream="$2"; shift 1;; # for staging, use 4.3.mars or 9.0.mars; for release, use the version value, eg., 4.3.1.CR1c or 9.1.0.CR1c
+    '-version'|'-vr') version="$2"; shift 1;; # for staging, use 4.3.1.CR1c, 9.1.0.CR1c; for release, use 4.3.1.Final or 9.1.0.GA
 
     '-SRC_DIR'|'-sd') SRC_DIR="$2"; shift 1;; # mars or 9.0 or neon or 10.0 (if not set, default to same value as DESTDIR)
     '-DESTDIR'|'-dd') DESTDIR="$2"; shift 1;; # mars or 9.0 or neon or 10.0, or could be static/mars, static/9.0, etc.
@@ -142,7 +142,7 @@ for site in ${sites}; do
       log "[DEBUG] $(echo "ls 20*" | sftp ${SOURCE}/${SRC_DIR}/${SRC_TYPE}/builds/${JOB_NAME} 2>&1)"
     fi
   fi
-  grepstring="${JOB_NAME}|${site}|${ID}|ERROR|${versionWithRespin}|${SRC_DIR}|${DESTDIR}|${SRC_TYPE}|${DESTTYPE}|exclude"
+  grepstring="${JOB_NAME}|${site}|${ID}|ERROR|${version}|${SRC_DIR}|${DESTDIR}|${SRC_TYPE}|${DESTTYPE}|exclude"
   DEST_URLs=""
 
   RSYNC="rsync -aPrzv --rsh=ssh --protocol=28"
@@ -164,26 +164,26 @@ for site in ${sites}; do
     fi
       # copy build folder
       if [[ ${DESTINATION/@/} == ${DESTINATION} ]]; then # local 
-        log "[DEBUG] [$site] + mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}" | egrep "${grepstring}"
-        mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname} &>${consoleDest}
+        log "[DEBUG] [$site] + mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}" | egrep "${grepstring}"
+        mkdir -p ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname} &>${consoleDest}
       else # remote
-        log "[DEBUG] [$site] + mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname} | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/" | egrep "${grepstring}"
+        log "[DEBUG] [$site] + mkdir ${PRODUCT}-${version}-build-${buildname} | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/" | egrep "${grepstring}"
         echo "mkdir ${DESTDIR}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/ &>${consoleDest}
         echo "mkdir ${DESTTYPE}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/ &>${consoleDest}
         echo "mkdir builds" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
-        echo "mkdir ${PRODUCT}-${versionWithRespin}-build-${buildname}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/ &>${consoleDest}
+        echo "mkdir ${PRODUCT}-${version}-build-${buildname}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/ &>${consoleDest}
       fi
-      log "[DEBUG] [$site] + ${RSYNC} ${EXCLUDESTRING} ${EXCLUDESTRING2} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/" | egrep "${grepstring}"
+      log "[DEBUG] [$site] + ${RSYNC} ${EXCLUDESTRING} ${EXCLUDESTRING2} ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/${ID}/" | egrep "${grepstring}"
       y=${tmpdir}/all/repository.zip
       if [[ -f ${y} ]] && [[ ! -f ${y}.sha256 ]]; then
         echo "[WARN] [$site] Create ${y}.sha256"
         for s in $(sha256sum ${y}); do if [[ ${s} != ${y} ]]; then echo ${s} > ${y}.sha256; fi; done
       fi
-      ${RSYNC} -e 'ssh -p 2222' ${EXCLUDESTRING} ${EXCLUDESTRING2} ${tmpdir}/* tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/${ID}/ 
-      DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/"
+      ${RSYNC} -e 'ssh -p 2222' ${EXCLUDESTRING} ${EXCLUDESTRING2} ${tmpdir}/* tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/${ID}/ 
+      DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/"
       # symlink latest build
-      ln -s ${ID} latest; ${RSYNC} -e 'ssh -p 2222' ${tmpdir}/latest tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/ &>${consoleDest}
-      DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${versionWithRespin}-build-${buildname}/latest/"
+      ln -s ${ID} latest; ${RSYNC} -e 'ssh -p 2222' ${tmpdir}/latest tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/ &>${consoleDest}
+      DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/latest/"
       # copy update site zip
       suffix=-updatesite-${sitename}
       y=${tmpdir}/all/repository.zip
@@ -201,13 +201,13 @@ for site in ${sites}; do
           echo "mkdir updates" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
           echo "mkdir ${sitename}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/ &>${consoleDest}
         fi
-        ${RSYNC} -e 'ssh -p 2222' ${y} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip &>${consoleDest}
+        ${RSYNC} -e 'ssh -p 2222' ${y} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${version}${suffix}.zip &>${consoleDest}
         # create sha256 sum if not exists
         if [[ ! -f ${y}.sha256 ]]; then
-          echo "[WARN] [$site] Create updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256"
+          echo "[WARN] [$site] Create updates/${sitename}/${ZIPPREFIX}${version}${suffix}.zip.sha256"
           for s in $(sha256sum ${y}); do if [[ ${s} != ${y} ]]; then echo ${s} > ${y}.sha256; fi; done          
         fi
-        ${RSYNC} -e 'ssh -p 2222' ${y}.sha256 tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256 &>${consoleDest}
+        ${RSYNC} -e 'ssh -p 2222' ${y}.sha256 tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${ZIPPREFIX}${version}${suffix}.zip.sha256 &>${consoleDest}
       elif [[ ${requireUpdateZip} -gt 0 ]]; then
         echo "[ERROR] [$site] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
       elif [[ ${skipUpdateZip} -lt 1 ]]; then
@@ -230,9 +230,9 @@ for site in ${sites}; do
           echo "mkdir updates" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
           echo "mkdir ${sitename}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/ &>${consoleDest}
         fi
-        log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/" | egrep "${grepstring}"
-        ${RSYNC} -e 'ssh -p 2222' ${tmpdir}/all/repo/* tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/ &>${consoleDest}
-        DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${versionWithRespin}/"
+        log "[DEBUG] [$site] + ${RSYNC} ${tmpdir}/all/repo/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${version}/" | egrep "${grepstring}"
+        ${RSYNC} -e 'ssh -p 2222' ${tmpdir}/all/repo/* tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${version}/ &>${consoleDest}
+        DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/updates/${sitename}/${version}/"
       else
         # don't warn for discovery sites and browsersim standalone since they don't have update sites
         if [[ ${requireUpdateSite} -gt 0 ]]; then

@@ -123,7 +123,7 @@ if not options.skipVersionValidation:
 def updateIssues(issuelist, NEXTorDOTX, description):
 	numExistingIssues = len(issuelist) if not issuelist == None else 0
 	if numExistingIssues > 0 : 
-		if debug: print "[DEBUG] Move " + str(numExistingIssues) + " " + description
+		if debug: print("[DEBUG] Move " + str(numExistingIssues) + " " + description)
 		jira = JIRA(options={'server':jiraserver}, basic_auth=(jirauser, jirapwd))
 
 		cnt = 0
@@ -146,13 +146,13 @@ def updateIssues(issuelist, NEXTorDOTX, description):
 
 			if doThisJIRA == False:
 				operation = " - [" + str(cnt) + "/" + str(len(issuelist)) + "] -Skip- " + linkURL + " (" + whichLabelSkipped + ") : " + summary
-				print operation
+				print(operation)
 			else:
 				if options.autoApplyChanges or options.dryrun: 
-					print operation
+					print(operation)
 					yesno = ""
 				else:
-					yesno = raw_input(operation + " ? [y/N] ")
+					yesno = input(operation + " ? [y/N] ")
 				if options.autoApplyChanges or yesno.capitalize() in ["Y"]:
 					# move issue to next fixversion
 					if components.findChildNodeByName(s, 'project').attributes["key"].value == "JBIDE": # JBIDE or JBDS
@@ -178,9 +178,9 @@ def updateIssues(issuelist, NEXTorDOTX, description):
 					else:
 						jira.add_comment(key, "[checkUnresolvedIssues.py] Slip to fixversion = *" + fixversion_NEXT + "*")
 
-print "\n[INFO] [1] Check " + sprint + " + " + sprint_NEXT + ", JBIDE " + version_jbt + " + JBDS " + version_ds + \
+print("\n[INFO] [1] Check " + sprint + " + " + sprint_NEXT + ", JBIDE " + version_jbt + " + JBDS " + version_ds + \
 	", for unresolved blockers/criticals + issues in NEXT sprint: " + \
-	"move to NEXT sprint/milestone\n"
+	"move to NEXT sprint/milestone\n")
 query = 'resolution = null AND ( \
 	( \
 	( (project = JBIDE AND fixVersion = "' + version_jbt + '") OR (project = JBDS AND fixVersion = "' + version_ds + '") ) \
@@ -192,9 +192,9 @@ updateIssues(components.getIssuesFromQuery(query, jiraserver, jirauser, jirapwd)
 	"issues to fixversion = " + version_jbt_NEXT + "/" + version_ds_NEXT + " and sprint = " + sprint_NEXT + " (" + sprintId_NEXT + ")")
 
 # TODO should these be removed from the current sprint?
-print "\n[INFO] [2] Check JBIDE " + version_jbt + " + JBDS " + version_ds + \
+print("\n[INFO] [2] Check JBIDE " + version_jbt + " + JBDS " + version_ds + \
 	", for unresolved issues NOT in the next sprint: " + \
-	"move to .x\n"
+	"move to .x\n")
 query = 'resolution = null AND \
 	((project = JBIDE AND fixVersion = "' + version_jbt + '") OR (project = JBDS AND fixVersion = "' + version_ds + '")) AND \
 	(sprint is null OR sprint != "' + sprint_NEXT + '")'
