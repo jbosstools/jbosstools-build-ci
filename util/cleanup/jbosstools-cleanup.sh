@@ -78,14 +78,14 @@ recursive_del ()
 	local subdir=''
 	tmp=`mktemp`
 	echo -e "ls -1l $dd/" | sftp -q $DEST_SERV:$sd/ > $tmp
- 	while IFS= read -r line; do
-    	if egrep -q '^d' <<< $line; then
-       		subdir=$(echo "$line" | awk '{ print $NF }')
-       		recursive_del $sd "$dd/$subdir"
-			echo -e "rm $dd/$subdir/*" | sftp -q $DEST_SERV:$sd/
-			echo -e "rmdir $dd/$subdir" | sftp -q $DEST_SERV:$sd/
-    	fi
-  	done < $tmp
+	while IFS= read -r line; do
+		if egrep -q '^d' <<< $line; then
+		subdir=$(echo "$line" | awk '{ print $NF }')
+		recursive_del $sd "$dd/$subdir"
+		echo -e "rm $dd/$subdir/*" | sftp -q $DEST_SERV:$sd/
+		echo -e "rmdir $dd/$subdir" | sftp -q $DEST_SERV:$sd/
+		fi
+	done < $tmp
 	rm -f $tmp
 }
 
@@ -193,7 +193,7 @@ clean ()
 					if [[ $keep -eq 0 ]]; then
 						echo -n "- $sd/$dd (${day}d)... " | tee -a $log
 						if [[ $delete -eq 1 ]]; then
-							if [[ $USER == "sbouchet" ]]; then
+							if [[ $USER == "hudson" ]]; then
 								# can't delete the dir, but can at least purge its contents
 								rm -fr ${tmpdir}/$dd; mkdir ${tmpdir}/$dd; pushd ${tmpdir}/$dd >/dev/null
 								# delete all inner direcories
