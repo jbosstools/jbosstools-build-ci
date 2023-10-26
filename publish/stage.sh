@@ -178,7 +178,9 @@ for site in ${sites}; do
         echo "[WARN] [$site] Create ${y}.sha256"
         for s in $(sha256sum ${y}); do if [[ ${s} != ${y} ]]; then echo ${s} > ${y}.sha256; fi; done
       fi
-      echo -e "put ${tmpdir}/" | sftp -Cpr tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/${ID}/ 
+      pushd ${tmpdir}/
+      echo -e "put ." | sftp -Cqpr tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/ 
+      popd
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/"
       # symlink latest build
       echo -e "ln -s ${ID} latest" | sftp -Cpr tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/ &>${consoleDest}
