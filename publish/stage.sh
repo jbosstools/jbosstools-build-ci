@@ -170,6 +170,7 @@ for site in ${sites}; do
         echo "mkdir ${DESTTYPE}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/ &>${consoleDest}
         echo "mkdir builds" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
         echo "mkdir ${PRODUCT}-${version}-build-${buildname}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/ &>${consoleDest}
+        echo "mkdir ${ID}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname} &>${consoleDest}
       fi
       log "[DEBUG] [$site] + sftp ${tmpdir}/* ${DESTINATION}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/${ID}/" | egrep "${grepstring}"
       y=${tmpdir}/all/repository.zip
