@@ -7,9 +7,7 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
 
   # path to JDK
   JDK_HOME=${NATIVE_TOOLS}${SEP}${JAVA11}
-  # shorthand for rsync
-  RSYNC="rsync -arzq --protocol=28"
-
+  
   WORKDIR=${WORKSPACE}/updates/requirements/${REQ_NAME}; mkdir -p ${WORKDIR}/; cd ${WORKDIR}
 
   mkdir -p ${WORKSPACE}/tmp
@@ -52,24 +50,40 @@ if [[ ${PUBLISH_PATH} != "DO_NOTHING" ]]; then
     fi
   fi
 
-  # publish to /builds/staging/${JOB_NAME}_${REQ_NAME}/${VERSION}
+  # publish step
   DESTINATION="tools@filemgmt.jboss.org:/downloads_htdocs/tools"
 
   # optionally, publish to updates/requirements/${REQ_NAME}/ too
   if [[ ${VERSION} != "SNAPSHOT" ]]; then
-    echo "${RSYNC} --rsh=ssh -e 'ssh -p 2222' --delete ${WORKDIR}/${VERSION} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/updates/requirements/${REQ_NAME}/"
-    ${RSYNC} --rsh=ssh -e 'ssh -p 2222' --delete ${WORKDIR}/${VERSION} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/updates/requirements/${REQ_NAME}/
+    #delete before pushing
+    echo "delete ${WORKDIR}/${VERSION} on tools@jboss.org:/downloads_htdocs/tools/updates/requirements/${REQ_NAME}/"
+    echo "chdir ${VERSION}/binary" | sftp ${DESTINATION}/updates/requirements/${REQ_NAME}/ 2>&1 | tee ${logFile}
+  	if ! grep -q "No such file or directory" ${logfile}; then
+  		echo -e "rm *" | sftp -Cqpr ${DESTINATION}/updates/requirements/${REQ_NAME}/${VERSION}/binary/
+  	fi
+    echo "chdir ${VERSION}/features" | sftp ${DESTINATION}/updates/requirements/${REQ_NAME}/ 2>&1 | tee ${logFile}
+  	if ! grep -q "No such file or directory" ${logfile}; then
+  		echo -e "rm *" | sftp -Cqpr ${DESTINATION}/updates/requirements/${REQ_NAME}/${VERSION}/features/
+  	fi
+    echo "chdir ${VERSION}/plugins" | sftp ${DESTINATION}/updates/requirements/${REQ_NAME}/ 2>&1 | tee ${logFile}
+  	if ! grep -q "No such file or directory" ${logfile}; then
+  		echo -e "rm *" | sftp -Cqpr ${DESTINATION}/updates/requirements/${REQ_NAME}/${VERSION}/plugins/
+  	fi
+    echo -e "rm *" | sftp -Cqpr ${DESTINATION}/updates/requirements/${REQ_NAME}/${VERSION}/
+  fi
+    echo "sftp -Cpr ${DESTINATION}/updates/requirements/${REQ_NAME}/"
+    echo -e "put *" | sftp -Cpr ${DESTINATION}/updates/requirements/${REQ_NAME}/
   fi
 
   # optionally, publish to updates/${PUBLISH_PATH}/${REQ_NAME} too
   if [[ ${PUBLISH_PATH} != "SNAPSHOT" ]]; then
     echo "mkdir ${PUBLISH_PATH}" | sftp ${DESTINATION}/updates
     echo "mkdir ${PUBLISH_PATH}/${REQ_NAME}" | sftp ${DESTINATION}/updates
-    ${RSYNC} --rsh=ssh -e 'ssh -p 2222' --delete ${WORKDIR}/${VERSION} tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools/updates/${PUBLISH_PATH}/${REQ_NAME}/
+    echo -e "put *" | sftp -Cpr ${DESTINATION}/updates/${PUBLISH_PATH}/${REQ_NAME}/
 
     # regen composite metadata 
     chmod +x ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh
-    ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh --dirs-to-scan "updates/${PUBLISH_PATH}/${REQ_NAME}" --regen-metadata-only --no-subdirs -DESTINATION tools@filemgmt-prod-sync.jboss.org:/downloads_htdocs/tools
+    ${WORKSPACE}/sources/util/cleanup/jbosstools-cleanup.sh --dirs-to-scan "updates/${PUBLISH_PATH}/${REQ_NAME}" --regen-metadata-only --no-subdirs 
   fi
 
   # cleanup

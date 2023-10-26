@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # This utility script will help you determine if all your projects have correctly updated their root poms to use the 
-# latest parent pom version. It will first pull down the latest sources from origin/master, then parse the root pom and
+# latest parent pom version. It will first pull down the latest sources from origin/main, then parse the root pom and
 # compare that to the requested parent pom version. Should any mismatches be found, the offending lines are shown and 
 # links to github (to review latest commits) and Jenkins (to run any missing builds) are provided.
 
@@ -18,7 +18,7 @@ usage ()
     echo ""
     echo "Example 2: $0 -pv 4.4.2.Final-SNAPSHOT -skipupdate -w1 /home/nboldt/tru -w2 /home/nboldt/truu -p2 build-sites -p3 product -noCreateTaskJIRAs"
     echo ""
-    echo "Example 3: $0 -b master -pv 4.4.2.Final-SNAPSHOT -w1 \${WORKSPACE}/jbosstools.github -w2 \${WORKSPACE}/jbdevstudio.github \\"
+    echo "Example 3: $0 -b main -pv 4.4.2.Final-SNAPSHOT -w1 \${WORKSPACE}/jbosstools.github -w2 \${WORKSPACE}/jbdevstudio.github \\"
     echo "               -p1 openshift -p2 build-sites -p3 product"
     echo ""
     echo "Example 4: $0 -updateRootPom -createBranch -b jbosstools-4.4.4.x -b2 jbosstools-4.4.x -pv 4.4.4.Final-SNAPSHOT \\"

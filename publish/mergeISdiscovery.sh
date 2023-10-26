@@ -5,7 +5,6 @@
 tmpdir=`mktemp -d`
 mkdir -p $tmpdir
 
-# may want to use IP as it's faster than the domain name - 10.5.105.197
 TOOLS=tools@filemgmt.jboss.org:/downloads_htdocs/tools
 JBDS=devstudio@filemgmt.jboss.org:/www_htdocs/devstudio
 

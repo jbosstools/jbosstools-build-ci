@@ -1,15 +1,12 @@
 #!/bin/bash
-# Script to rsync build artifacts from Jenkins to filemgmt or www.qa
+# Script to sync build artifacts from Jenkins to filemgmt using sftp
 # NOTE: sources should be checked out into ${WORKSPACE}/sources 
 
 #set up tmpdir
 tmpdir=`mktemp -d`
 mkdir -p $tmpdir
 
-DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools # or devstudio@filemgmt.jboss.org:/www_htdocs/devstudio or /home/windup/apache2/www/html/rhd/devstudio
-
-INCLUDES="*"
-EXCLUDES=""
+DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools
 
 # defaults
 numbuildstokeep=2
@@ -17,11 +14,6 @@ numbuildstolink=2
 threshholdwhendelete=2 # in days
 regenMetadataFlag=""; # set to ' -R' to suppress regenerating metadata entirely (no composite site will be produced)
 regenMetadataForce=0
-
-# use this to pass in rsync flags
-# eg., use --del -n to PREVIEW what obsolete files might be deleted from target folder while pushing new ones
-# eg., use --del to delete from target folder while pushing new ones: USE WITH CAUTION!
-RSYNCFLAGS="" 
 
 # can be used to publish a build (including installers, site zips, MD5s, build log) or just an update site folder
 usage ()
@@ -35,14 +27,9 @@ usage ()
 
 	echo "To push JBT build + update site folders:"
 	echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite          -t neon/snapshots/builds/\${JOB_NAME}/\${BUILD_TIMESTAMP}-B\${BUILD_NUMBER}"
-	echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite/all/repo -t neon/snapshots/updates/core/\${stream} --del"
+	echo "   $0 -s \${WORKSPACE}/sources/aggregate/site/target/fullSite/all/repo -t neon/snapshots/updates/core/\${stream}"
 	echo ""
 
-	echo "To push JBDS build + update site folders:"
-	echo "   $0 -DESTINATION devstudio@10.16.89.81:/home/windup/apache2/www/html/rhd/devstudio  -s \${WORKSPACE}/sources/results/target      -t 10.0/snapshots/builds/\${JOB_NAME}/all"
-	echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio -e \*eap.jar         -s \${WORKSPACE}/sources/results/target      -t 10.0/snapshots/builds/\${JOB_NAME}/all"
-	echo "   $0 -DESTINATION devstudio@filemgmt.jboss.org:/www_htdocs/devstudio                      -s \${WORKSPACE}/sources/results/target/repo -t 10.0/snapshots/updates/core/\${stream} --del"
-	echo ""
 	exit 1
 }
 
@@ -54,19 +41,15 @@ while [[ "$#" -gt 0 ]]; do
 		'-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., /home/windup/apache2/www/html/rhd/devstudio
 		'-s') SOURCE_PATH="$2"; shift 1;; # ${WORKSPACE}/sources/site/target/repository/
 		'-t') TARGET_PATH="$2"; shift 1;; # neon/snapshots/builds/<job-name>/<build-number>/, neon/snapshots/updates/core/{4.4.0.Final, master}/
-		'-i') INCLUDES="$2"; shift 1;;
-		'-e') EXCLUDES="$2"; shift 1;;
 		'-DBUILD_TIMESTAMP'|'-BUILD_TIMESTAMP') BUILD_TIMESTAMP="$2"; shift 1;; # does this work?
 		'-DBUILD_NUMBER'|'-BUILD_NUMBER') BUILD_NUMBER="$2"; shift 1;;
 		'-DJOB_NAME'|'-JOB_NAME')         JOB_NAME="$2"; shift 1;;
 		'-DWORKSPACE'|'-WORKSPACE')       WORKSPACE="$2"; shift 1;;
-		'-d'|'--del') RSYNCFLAGS="${RSYNCFLAGS} --del"; shift 0;;
 		'-k'|'--keep') numbuildstokeep="$2"; shift 1;;
 		'-l'|'--link') numbuildstolink="$2"; shift 1;;
 		'-a'|'--age-to-delete') threshholdwhendelete="$2"; shift 1;;
 		'-R'|'--no-regen-metadata') regenMetadataForce=0;  regenMetadataFlag=" -R"; shift 0;;
 		'-FR'|'--force-regen-metadata') regenMetadataForce=1; regenMetadataFlag=""; shift 0;;
-		*) RSYNCFLAGS="${RSYNCFLAGS} $1"; shift 0;;
 	esac
 	shift 1
 done
@@ -85,23 +68,18 @@ if [[ ${TARGET_PATH} ]]; then
 fi
 
 echo "[DEBUG] BUILD_TIMESTAMP = $BUILD_TIMESTAMP"
-echo "[DEBUG] RSYNCFLAGS = $RSYNCFLAGS"
 
 # build the target_path with sftp to ensure intermediate folders exist
 if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
-	seg="."; for d in ${TARGET_PATH//\// }; do seg=$seg/$d; echo -e "mkdir ${seg:2}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/; done; seg=""
+	seg="."; for d in ${TARGET_PATH//\// }; do seg=$seg/$d; echo -e "mkdir ${seg:2}" | sftp $DESTINATION/; done; seg=""
 else
 	mkdir -p $DESTINATION/${TARGET_PATH}
 fi
 
 # copy the source into the target
-if [[ ${EXCLUDES} ]]; then
-	echo "[INFO] rsync -arzv --protocol=28 --rsh=ssh -e 'ssh -p 2222' ${RSYNCFLAGS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
-		    rsync -arzv --protocol=28 --rsh=ssh -e 'ssh -p 2222' ${RSYNCFLAGS} --exclude=${EXCLUDES} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
-else
-	echo "[INFO] rsync -arzv --protocol=28 --rsh=ssh -e 'ssh -p 2222' ${RSYNCFLAGS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/"
-		    rsync -arzv --protocol=28 --rsh=ssh -e 'ssh -p 2222' ${RSYNCFLAGS} ${SOURCE_PATH}/${INCLUDES} $DESTINATION/${TARGET_PATH}/
-fi
+echo "[INFO] sftp ${SOURCE_PATH} into $DESTINATION/${TARGET_PATH}..."
+mkdir -p ${tmpdir}/${BUILD_TIMESTAMP}/${TARGET_PATH}
+pushd $tmpdir >/dev/null; cd ${SOURCE_PATH}; cp -r ./ ${tmpdir}/${BUILD_TIMESTAMP}/${TARGET_PATH}; cd ${tmpdir}/${BUILD_TIMESTAMP}/${TARGET_PATH}; (echo "put -rp ./"; echo quit)|sftp -Cq $DESTINATION/${TARGET_PATH}; popd >/dev/null
 
 # given  TARGET_PATH=/downloads_htdocs/tools/neon/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master/2015-03-06_17-58-07-B13/all/repo/
 # return PARENT_PATH=neon/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master
@@ -120,13 +98,13 @@ if [[ ${BUILD_NUMBER} ]]; then
 	if [[ ${BUILD_TIMESTAMP} ]] && [[ ${TARGET_PATH/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
 		echo "[DEBUG] Symlink[BT] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_TIMESTAMP}-B${BUILD_NUMBER}"
 		mkdir -p $tmpdir
-		pushd $tmpdir >/dev/null; ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest; rsync -e 'ssh -p 2222' --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
+		pushd $tmpdir >/dev/null; echo -e "ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest" | sftp -Cpq $DESTINATION/${TARGET_PATH}/; popd >/dev/null
 	else
 		BUILD_DIR=$(echo ${TARGET_PATH#${PARENT_PATH}/} | sed -e "s#/\?all/repo/\?##" -e "s#/\?all/\?##")
 		if [[ ${BUILD_DIR} ]] && [[ ${BUILD_DIR%B${BUILD_NUMBER}} != ${BUILD_DIR} ]] && [[ ${TARGET_PATH/${BUILD_DIR}} != ${TARGET_PATH} ]]; then
 			echo "[DEBUG] Symlink[BD] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_DIR}"
 			mkdir -p $tmpdir
-			pushd $tmpdir >/dev/null; ln -s ${BUILD_DIR} latest; rsync -e 'ssh -p 2222' --protocol=28 -l latest ${DESTINATION}/${PARENT_PATH}/; rm -f latest; popd >/dev/null
+			pushd $tmpdir >/dev/null; echo -e "ln -s ${BUILD_DIR} latest" | sftp -Cpq $DESTINATION/${TARGET_PATH}/ ; popd >/dev/null
 		fi	
 	fi
 else
@@ -162,11 +140,11 @@ getRemoteFile ()
 }
 
 # store a copy of this build's log in the target folder (if JOB_NAME is defined)
-if [[ ${JOB_NAME} ]] && [[ ${JENKINS_URL} ]]; then
-	# JENKINS_URL=https://studio-jenkins-csb-codeready.apps.ocp-c1.prod.psi.redhat.com/ 
+if [[ ${JOB_NAME} ]] && [[ ${JOB_URL} ]]; then
 	bl=${tmpdir}/BUILDLOG.txt
-	getRemoteFile "${JENKINS_URL}job/${JOB_NAME}/${BUILD_NUMBER}/consoleText"; if [[ -w ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${bl}; fi
-	touch ${bl}; chmod 664 ${bl}; rsync -e 'ssh -p 2222' -arzq --protocol=28 ${bl} $DESTINATION/${TARGET_PATH/\/all\/repo/}/logs/
+	getRemoteFile "${JOB_URL}/${BUILD_NUMBER}/consoleText"; if [[ -w ${getRemoteFileReturn} ]]; then mv ${getRemoteFileReturn} ${bl}; fi
+	pushd $tmpdir >/dev/null; echo -e "mkdir logs" | sftp -Cpq $DESTINATION/${TARGET_PATH}; popd >/dev/null
+	pushd $tmpdir >/dev/null; touch ${bl}; chmod 664 ${bl}; (echo "put ${bl}"; echo quit)|sftp -Cpq $DESTINATION/${TARGET_PATH}/logs/; popd >/dev/null
 fi
 
 # purge temp folder
