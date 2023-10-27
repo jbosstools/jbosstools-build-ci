@@ -202,13 +202,13 @@ for site in ${sites}; do
           echo "mkdir updates" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/ &>${consoleDest}
           echo "mkdir ${sitename}" | sftp tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/ &>${consoleDest}
         fi
-        echo -e "put ${y} ${ZIPPREFIX}${versionWithRespin}${suffix}.zip" | sftp -Cpr tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/ &>${consoleDest}
+        echo -e "put ${y} ${ZIPPREFIX}${version}${suffix}.zip" | sftp -Cpr tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/ &>${consoleDest}
         # create sha256 sum if not exists
         if [[ ! -f ${y}.sha256 ]]; then
           echo "[WARN] [$site] Create updates/${sitename}/${ZIPPREFIX}${version}${suffix}.zip.sha256"
           for s in $(sha256sum ${y}); do if [[ ${s} != ${y} ]]; then echo ${s} > ${y}.sha256; fi; done          
         fi
-        echo -e "put ${y}.sha256 ${ZIPPREFIX}${versionWithRespin}${suffix}.zip.sha256" | sftp -Cpr tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/ &>${consoleDest}
+        echo -e "put ${y}.sha256 ${ZIPPREFIX}${version}${suffix}.zip.sha256" | sftp -Cpr tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/updates/${sitename}/ &>${consoleDest}
       elif [[ ${requireUpdateZip} -gt 0 ]]; then
         echo "[ERROR] [$site] No update site zip (repository.zip or ${ZIPPREFIX}*${suffix}.zip) found to publish in ${tmpdir}/all/ to ${DESTINATION}/${DESTDIR}/${DESTTYPE}/updates/${sitename}" | egrep "${grepstring}"
       elif [[ ${skipUpdateZip} -lt 1 ]]; then
