@@ -8,6 +8,8 @@ mkdir -p $tmpdir
 
 DESTINATION=tools@filemgmt.jboss.org:/downloads_htdocs/tools
 
+INCLUDES="*"
+
 # defaults
 numbuildstokeep=2
 numbuildstolink=2
@@ -41,6 +43,7 @@ while [[ "$#" -gt 0 ]]; do
 		'-DESTINATION') DESTINATION="$2"; shift 1;; # override for JBDS publishing, eg., /home/windup/apache2/www/html/rhd/devstudio
 		'-s') SOURCE_PATH="$2"; shift 1;; # ${WORKSPACE}/sources/site/target/repository/
 		'-t') TARGET_PATH="$2"; shift 1;; # neon/snapshots/builds/<job-name>/<build-number>/, neon/snapshots/updates/core/{4.4.0.Final, master}/
+		'-i') INCLUDES="$2"; shift 1;;
 		'-DBUILD_TIMESTAMP'|'-BUILD_TIMESTAMP') BUILD_TIMESTAMP="$2"; shift 1;; # does this work?
 		'-DBUILD_NUMBER'|'-BUILD_NUMBER') BUILD_NUMBER="$2"; shift 1;;
 		'-DJOB_NAME'|'-JOB_NAME')         JOB_NAME="$2"; shift 1;;
@@ -71,15 +74,15 @@ echo "[DEBUG] BUILD_TIMESTAMP = $BUILD_TIMESTAMP"
 
 # build the target_path with sftp to ensure intermediate folders exist
 if [[ ${DESTINATION##*@*:*} == "" ]]; then # user@server, do remote op
-	seg="."; for d in ${TARGET_PATH//\// }; do seg=$seg/$d; echo -e "mkdir ${seg:2}" | sftp $DESTINATION/; done; seg=""
+	seg="."; for d in ${TARGET_PATH//\// }; do seg=$seg/$d; echo -e "mkdir ${seg:2}" | sftp -q $DESTINATION/; done; seg=""
 else
 	mkdir -p $DESTINATION/${TARGET_PATH}
 fi
 
 # copy the source into the target
-echo "[INFO] sftp ${SOURCE_PATH} into $DESTINATION/${TARGET_PATH}..."
+echo "[INFO] sftp ${SOURCE_PATH}/${INCLUDES} into $DESTINATION/${TARGET_PATH}..."
 mkdir -p ${tmpdir}/${BUILD_TIMESTAMP}/${TARGET_PATH}
-pushd $tmpdir >/dev/null; cd ${SOURCE_PATH}; cp -r ./ ${tmpdir}/${BUILD_TIMESTAMP}/${TARGET_PATH}; cd ${tmpdir}/${BUILD_TIMESTAMP}/${TARGET_PATH}; (echo "put -rp ./"; echo quit)|sftp -Cq $DESTINATION/${TARGET_PATH}; popd >/dev/null
+pushd $tmpdir >/dev/null; cd ${SOURCE_PATH}; cp -r ./ ${tmpdir}/${BUILD_TIMESTAMP}/${TARGET_PATH}; cd ${tmpdir}/${BUILD_TIMESTAMP}/${TARGET_PATH}; (echo "put -rp ./${INCLUDES}"; echo quit)|sftp -Cqp $DESTINATION/${TARGET_PATH}; popd >/dev/null
 
 # given  TARGET_PATH=/downloads_htdocs/tools/neon/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master/2015-03-06_17-58-07-B13/all/repo/
 # return PARENT_PATH=neon/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master
@@ -98,13 +101,13 @@ if [[ ${BUILD_NUMBER} ]]; then
 	if [[ ${BUILD_TIMESTAMP} ]] && [[ ${TARGET_PATH/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
 		echo "[DEBUG] Symlink[BT] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_TIMESTAMP}-B${BUILD_NUMBER}"
 		mkdir -p $tmpdir
-		pushd $tmpdir >/dev/null; echo -e "ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest" | sftp -Cpq $DESTINATION/${TARGET_PATH}/; popd >/dev/null
+		pushd $tmpdir >/dev/null; echo -e "rm -f latest;ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest" | sftp -Cpq $DESTINATION/${TARGET_PATH}/; popd >/dev/null
 	else
 		BUILD_DIR=$(echo ${TARGET_PATH#${PARENT_PATH}/} | sed -e "s#/\?all/repo/\?##" -e "s#/\?all/\?##")
 		if [[ ${BUILD_DIR} ]] && [[ ${BUILD_DIR%B${BUILD_NUMBER}} != ${BUILD_DIR} ]] && [[ ${TARGET_PATH/${BUILD_DIR}} != ${TARGET_PATH} ]]; then
 			echo "[DEBUG] Symlink[BD] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_DIR}"
 			mkdir -p $tmpdir
-			pushd $tmpdir >/dev/null; echo -e "ln -s ${BUILD_DIR} latest" | sftp -Cpq $DESTINATION/${TARGET_PATH}/ ; popd >/dev/null
+			pushd $tmpdir >/dev/null; echo -e "rm -f latest;ln -s ${BUILD_DIR} latest" | sftp -Cpq $DESTINATION/${TARGET_PATH}/ ; popd >/dev/null
 		fi	
 	fi
 else
