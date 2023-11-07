@@ -179,7 +179,7 @@ checkProjects () {
       k=${j} # jira component
     fi
     if [[ ${quiet} != "-q" ]]; then echo "[INFO] == ${g_project_prefix}${j} (${k}) =="; fi
-    branchDoesNotExist="$(curl -s -I https://github.com/${g_project_prefix}${j}/tree/${github_branch} | egrep "404 Not Found")"
+    branchDoesNotExist="$(curl -s -I https://github.com/${g_project_prefix}${j}/tree/${github_branch} | grep -E "404 Not Found")"
     if [[ ! -d ${workspace}/${prefix}${j} ]]; then
       # fetch the project to the workspace as it's not already here!
       pushd ${workspace} >/dev/null
@@ -212,7 +212,7 @@ checkProjects () {
       if [[ -f ${pomfile} ]]; then # echo "$j $pomfile..."
 
         thisparent=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<"` # contains actual version
-        wasCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | egrep ">${version_parent}<"` # empty string if wrong version
+        wasCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep -E ">${version_parent}<"` # empty string if wrong version
         # echo "thisparent = [$thisparent]"
         if [[ ${thisparent} ]]; then
           if [[ ! $wasCorrectVersion ]]; then
@@ -220,7 +220,7 @@ checkProjects () {
               perl -0777 -i.orig -pe \
               's#(<artifactId>parent</artifactId>)[\r\n\ \t]+(<version>)([\d.]+[^<>]+)(</version>)#\1\n\t\t<version>'${version_parent}'\4#igs' \
               ${pomfile}
-              isCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | egrep ">${version_parent}<"` # empty string if wrong version
+              isCorrectVersion=`cat ${pomfile} | sed "s/[\r\n\$\^\t\ ]\+//g" | grep -A2 -B2 ">parent<" | grep -E ">${version_parent}<"` # empty string if wrong version
             fi
             if [[ ${isCorrectVersion} ]] && [[ ${doCreateTaskJIRAs} -gt 0 ]]; then
               # create new JIRA using createTaskJIRAs.py, then pass that into the commit comment below
