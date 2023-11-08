@@ -82,7 +82,7 @@ fi
 # copy the source into the target
 echo "[INFO] sftp ${SOURCE_PATH}/${INCLUDES} into $DESTINATION/${TARGET_PATH}..."
 mkdir -p ${tmpdir}/${BUILD_TIMESTAMP}/${TARGET_PATH}
-pushd $tmpdir >/dev/null; cd ${SOURCE_PATH}; cp -r ./ ${tmpdir}/${BUILD_TIMESTAMP}/${TARGET_PATH}; cd ${tmpdir}/${BUILD_TIMESTAMP}/${TARGET_PATH}; (echo "put -rp ./${INCLUDES}"; echo quit)|sftp -Cqp $DESTINATION/${TARGET_PATH}; popd >/dev/null
+pushd $tmpdir >/dev/null; cd ${SOURCE_PATH}; cp -r ./ ${tmpdir}/${BUILD_TIMESTAMP}/${TARGET_PATH}; cd ${tmpdir}/${BUILD_TIMESTAMP}/${TARGET_PATH}; (echo "put -rp ./${INCLUDES}"; echo quit)|sftp -Cqrp $DESTINATION/${TARGET_PATH}; popd >/dev/null
 
 # given  TARGET_PATH=/downloads_htdocs/tools/neon/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master/2015-03-06_17-58-07-B13/all/repo/
 # return PARENT_PATH=neon/snapshots/builds/jbosstools-build-sites.aggregate.earlyaccess-site_master
