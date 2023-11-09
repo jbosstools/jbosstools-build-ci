@@ -103,11 +103,11 @@ if [[ ${BUILD_NUMBER} ]]; then
 		echo "[DEBUG] Symlink[BT] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_TIMESTAMP}-B${BUILD_NUMBER}"
 		mkdir -p $tmpdir
 		pushd $tmpdir >/dev/null
-		echo "chdir latest" | sftp -q $DESTINATION/${PARENT_PATH}/latest 2>&1 | tee ${logfile} 
+		echo "chdir latest" | sftp -q $DESTINATION/${PARENT_PATH}/ 2>&1 | tee ${logfile} 
   		if ! grep -q "No such file or directory" ${logfile}; then
   			echo -e "rm latest" | sftp -Cpq $DESTINATION/${PARENT_PATH}/
   		fi
-		echo -e "ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest" | sftp -Cpq $DESTINATION/${TARGET_PATH}/
+		echo -e "ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest" | sftp -Cpq $DESTINATION/${PARENT_PATH}/
 		popd >/dev/null
 	else
 		BUILD_DIR=$(echo ${TARGET_PATH#${PARENT_PATH}/} | sed -e "s#/\?all/repo/\?##" -e "s#/\?all/\?##")
@@ -115,11 +115,11 @@ if [[ ${BUILD_NUMBER} ]]; then
 			echo "[DEBUG] Symlink[BD] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_DIR}"
 			mkdir -p $tmpdir
 			pushd $tmpdir >/dev/null
-			echo "chdir latest" | sftp -q $DESTINATION/${PARENT_PATH}/latest 2>&1 | tee ${logfile} 
+			echo "chdir latest" | sftp -q $DESTINATION/${PARENT_PATH}/ 2>&1 | tee ${logfile} 
   			if ! grep -q "No such file or directory" ${logfile}; then
   				echo -e "rm latest" | sftp -Cpq $DESTINATION/${PARENT_PATH}/
   			fi
-			echo -e "ln -s ${BUILD_DIR} latest" | sftp -Cpq $DESTINATION/${TARGET_PATH}/
+			echo -e "ln -s ${BUILD_DIR} latest" | sftp -Cpq $DESTINATION/${PARENT_PATH}/
 			popd >/dev/null
 		fi	
 	fi
