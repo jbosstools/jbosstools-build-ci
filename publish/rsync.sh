@@ -107,7 +107,7 @@ if [[ ${BUILD_NUMBER} ]]; then
   		if ! grep -q "No such file or directory" ${logfile}; then
   			echo -e "rm latest" | sftp -Cpq $DESTINATION/${PARENT_PATH}/
   		fi
-		echo -e "cd ${PARENT_PATH}/; ls *; help; ln -s latest/ ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} " | sftp $DESTINATION/
+		(echo "cd ${PARENT_PATH}/"; echo "ls *"; echo help ; echo ln -s latest/ ${BUILD_TIMESTAMP}-B${BUILD_NUMBER})|sftp -Cp $DESTINATION
 		rm ${logfile}
 		popd >/dev/null
 	else
