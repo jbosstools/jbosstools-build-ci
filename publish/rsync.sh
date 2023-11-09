@@ -101,13 +101,25 @@ if [[ ${BUILD_NUMBER} ]]; then
 	if [[ ${BUILD_TIMESTAMP} ]] && [[ ${TARGET_PATH/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
 		echo "[DEBUG] Symlink[BT] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_TIMESTAMP}-B${BUILD_NUMBER}"
 		mkdir -p $tmpdir
-		pushd $tmpdir >/dev/null; echo -e "rm latest;ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest" | sftp -Cpq $DESTINATION/${TARGET_PATH}/; popd >/dev/null
+		pushd $tmpdir >/dev/null
+		isSymlink=$(echo "ls -l" | sftp -q $DESTINATION/${TARGET_PATH}/latest | egrep "^l")
+		if [[ ${isSymlink} ]]; then
+			echo -e "rm latest" | sftp -Cpq $DESTINATION/${TARGET_PATH}/
+		fi
+		echo -e "ln -s ${BUILD_TIMESTAMP}-B${BUILD_NUMBER} latest" | sftp -Cpq $DESTINATION/${TARGET_PATH}/
+		popd >/dev/null
 	else
 		BUILD_DIR=$(echo ${TARGET_PATH#${PARENT_PATH}/} | sed -e "s#/\?all/repo/\?##" -e "s#/\?all/\?##")
 		if [[ ${BUILD_DIR} ]] && [[ ${BUILD_DIR%B${BUILD_NUMBER}} != ${BUILD_DIR} ]] && [[ ${TARGET_PATH/${BUILD_DIR}} != ${TARGET_PATH} ]]; then
 			echo "[DEBUG] Symlink[BD] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_DIR}"
 			mkdir -p $tmpdir
-			pushd $tmpdir >/dev/null; echo -e "rm latest;ln -s ${BUILD_DIR} latest" | sftp -Cpq $DESTINATION/${TARGET_PATH}/ ; popd >/dev/null
+			pushd $tmpdir >/dev/null
+			isSymlink=$(echo "ls -l" | sftp -q $DESTINATION/${TARGET_PATH}/latest | egrep "^l")
+			if [[ ${isSymlink} ]]; then
+				echo -e "rm latest" | sftp -Cpq $DESTINATION/${TARGET_PATH}/
+			fi
+			echo -e "ln -s ${BUILD_DIR} latest" | sftp -Cpq $DESTINATION/${TARGET_PATH}/
+			popd >/dev/null
 		fi	
 	fi
 else
