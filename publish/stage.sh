@@ -183,7 +183,7 @@ for site in ${sites}; do
       popd
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/"
       # symlink latest build
-      echo -e "ln -s ${ID} latest" | sftp -Cpr tools@filemgmt.jboss.org:/downloads_htdocs/tools/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/ &>${consoleDest}
+		  (echo "cd ${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/"; echo ln -s ${ID}/ latest)|sftp -Cp tools@filemgmt.jboss.org:/downloads_htdocs/tools &>${consoleDest}
       DEST_URLs="${DEST_URLs} ${DEST_URL}/${DESTDIR}/${DESTTYPE}/builds/${PRODUCT}-${version}-build-${buildname}/latest/"
       # copy update site zip
       suffix=-updatesite-${sitename}
