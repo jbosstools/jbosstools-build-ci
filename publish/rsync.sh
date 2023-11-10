@@ -101,7 +101,6 @@ PARENT_PATH=$(echo $TARGET_PATH | sed -e "s#/\?downloads_htdocs/tools/##" -e "s#
 if [[ ${BUILD_NUMBER} ]]; then
 	if [[ ${BUILD_TIMESTAMP} ]] && [[ ${TARGET_PATH/${BUILD_TIMESTAMP}-B${BUILD_NUMBER}} != ${TARGET_PATH} ]]; then
 		echo "[DEBUG] Symlink[BT] ${DESTINATION}/${PARENT_PATH}/latest -> ${BUILD_TIMESTAMP}-B${BUILD_NUMBER}"
-		mkdir -p $tmpdir
 		pushd $tmpdir >/dev/null
 		echo "chdir latest" | sftp -q $DESTINATION/${PARENT_PATH}/ &>${logfile} | tee ${logfile} 
   		if ! grep -q "No such file or directory" ${logfile}; then
