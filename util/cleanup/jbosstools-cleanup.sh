@@ -256,6 +256,10 @@ regenProcess ()
 		subdirCount=$1
 		sd=$2
 		numbuildstolink=$3
+		if [[ $debug -gt 0 ]]; then
+			cat $tmp | sort -Vr | head -n $numbuildstolink | tee -a $log
+			cat $tmp | sort -Vr | head -n "$($numbuildstolink+1)" | tail -n +$numbuildstolink | tee -a $log
+		fi
 		all=$(cat $tmp | sort -Vr | head -$numbuildstolink) # link only the latest $numbuildstolink builds using natural sort of (version) numbers within text 
 		rm -f $tmp
 		if [[ $subdirCount -gt 0 ]]; then
