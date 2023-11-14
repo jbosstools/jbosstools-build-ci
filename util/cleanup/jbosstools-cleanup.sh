@@ -256,10 +256,6 @@ regenProcess ()
 		subdirCount=$1
 		sd=$2
 		numbuildstolink=$3
-		if [[ $debug -gt 0 ]]; then
-			cat $tmp | sort -Vr | head -n $numbuildstolink | tee -a $log
-			cat $tmp | sort -Vr | head -n "$(($numbuildstolink+1))" | tail -n +$numbuildstolink | tee -a $log
-		fi
 		all=$(cat $tmp | sort -Vr | head -$numbuildstolink) # link only the latest $numbuildstolink builds using natural sort of (version) numbers within text 
 		rm -f $tmp
 		if [[ $subdirCount -gt 0 ]]; then
@@ -267,7 +263,7 @@ regenProcess ()
 			# JBIDE-25045 check if the destination folder is a symlink - we don't need (or want) to regen a symlink folder
 			# $➔ echo "ls -l" | sftp -q ${TOOLS}/neon/stable/updates/windup | egrep "^l"
 			#    lrwxrwxrwx    1 tools    tools           6 May 19 15:21 windup
-			# echo "> Check if $sd is symlink..."
+			echo "> Check if $sd is symlink..." | tee -a $log
 			isSymlink=$(echo "ls -l" | sftp -q ${DEST_SERV}:$sd | egrep "^l")
 			if [[ ! ${isSymlink} ]]; then
 				echo "+ Generate metadata for first ${numbuildstolink} of ${subdirCount} subdir(s) in $sd" | tee -a $log
