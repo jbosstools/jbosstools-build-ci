@@ -268,7 +268,7 @@ regenProcess ()
 				rsync --protocol=28 --rsh=ssh -e 'ssh -p 2222' tools@filemgmt-prod-sync.jboss.org:/$sd  | tee -a $log
 				echo "ls -al $sd" | sftp -q ${DEST_SERV} | head -1 | tee -a $log
 			fi
-			isSymlink=$(echo "ls -l" | sftp -q ${DEST_SERV}:$sd/ | egrep "^l")
+			isSymlink=$(echo "ls -al $sd" | sftp -q ${DEST_SERV} | head -1 | egrep "^l")
 			if [[ ! ${isSymlink} ]]; then
 				echo "+ Generate metadata for first ${numbuildstolink} of ${subdirCount} subdir(s) in $sd" | tee -a $log
 				mkdir -p ${tmpdir}/cleanup-fresh-metadata/
