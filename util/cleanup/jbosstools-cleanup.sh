@@ -231,19 +231,14 @@ clean ()
 					else
 						# check that $DEST_SERV:$sd/${ssd}/${childFolderSuffix} exists, or else 'File "..." not found'
 						thisDirsContents=$(echo "ls" | sftp $DEST_SERV:$sd/${ssd}/${childFolderSuffix} 2>&1 | egrep -v "sftp|Connected to|Changing to") # will be "" if nothing found
-						isSymlink=$(echo "ls -l" | sftp -q $DEST_SERV:$sd/${ssd} | egrep "^l")
 						if [[ ${thisDirsContents/File \"*\" not found./NO} == "NO" ]]; then 
 							echo $thisDirsContents
 							# remove the empty dir from the list we'll composite together, and don't count it in the subdirCount
 							rm -fr $tmp/$ssd
-						elif [[ ! ${isSymlink} ]]; then
-							# remove the symlink dir from the list we'll composite together, and don't count it in the subdirCount
-							echo "- Skip symlinked folder $sd/${ssd}" | tee -a $log
-							rm -fr $tmp/$ssd
 						else
 							buildid=${ssd##*/};
 							let subdirCount=subdirCount+1;
-							echo "[${subdirCount}] Found $buildid" | tee -a $log
+							# echo "[${subdirCount}] Found $buildid"
 							echo $buildid >> $tmp
 						fi
 					fi
@@ -261,16 +256,28 @@ regenProcess ()
 		subdirCount=$1
 		sd=$2
 		numbuildstolink=$3
-		all=$(cat $tmp | sort -Vr | head -n "$(($numbuildstolink+1))" | tail -n +$numbuildstolink) # link only the latest $numbuildstolink builds using natural sort of (version) numbers within text , skipping the first line as it appears to be the "latest" symlink
+		if [[ $debug -gt 0 ]]; then
+			cat $tmp | sort -Vr | head -n "$($numbuildstolink+1)" | tail -n +$numbuildstolink | tee -a $log
+		fi
+		all=$(cat $tmp | sort -Vr | head -n "$($numbuildstolink+1)" | tail -n +$numbuildstolink) # link only the latest $numbuildstolink builds using natural sort of (version) numbers within text 
 		rm -f $tmp
 		if [[ $subdirCount -gt 0 ]]; then
 			siteName=${sd##*${DEST_PATH}/}
-			echo "+ Generate metadata for first ${numbuildstolink} of ${subdirCount} subdir(s) in $sd" | tee -a $log
-			mkdir -p ${tmpdir}/cleanup-fresh-metadata/
-			regenCompositeMetadata "$siteName" "$all" "$numbuildstolink" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "${tmpdir}/cleanup-fresh-metadata/compositeContent.xml"
-			regenCompositeMetadata "$siteName" "$all" "$numbuildstolink" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "${tmpdir}/cleanup-fresh-metadata/compositeArtifacts.xml"
-			echo -e "put ${tmpdir}/cleanup-fresh-metadata/composite*.xml" | sftp -Cpq ${DEST_SERV}:$sd/
-			rm -fr ${tmpdir}/cleanup-fresh-metadata/
+			# JBIDE-25045 check if the destination folder is a symlink - we don't need (or want) to regen a symlink folder
+			# $➔ echo "ls -l" | sftp -q ${TOOLS}/neon/stable/updates/windup | egrep "^l"
+			#    lrwxrwxrwx    1 tools    tools           6 May 19 15:21 windup
+			# echo "> Check if $sd is symlink..."
+			isSymlink=$(echo "ls -l" | sftp -q ${DEST_SERV}:$sd | egrep "^l")
+			if [[ ! ${isSymlink} ]]; then
+				echo "+ Generate metadata for first ${numbuildstolink} of ${subdirCount} subdir(s) in $sd" | tee -a $log
+				mkdir -p ${tmpdir}/cleanup-fresh-metadata/
+				regenCompositeMetadata "$siteName" "$all" "$numbuildstolink" "org.eclipse.equinox.internal.p2.metadata.repository.CompositeMetadataRepository" "${tmpdir}/cleanup-fresh-metadata/compositeContent.xml"
+				regenCompositeMetadata "$siteName" "$all" "$numbuildstolink" "org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository" "${tmpdir}/cleanup-fresh-metadata/compositeArtifacts.xml"
+				echo -e "put ${tmpdir}/cleanup-fresh-metadata/composite*.xml" | sftp -Cpq ${DEST_SERV}:$sd/
+				rm -fr ${tmpdir}/cleanup-fresh-metadata/
+			else
+				echo "- Skip symlinked folder $sd" | tee -a $log
+			fi
 		else
 			echo "No subdirs found in $sd/" | tee -a $log
 			# TODO delete composite*.xml from $sd/ folder if there are no subdirs present
