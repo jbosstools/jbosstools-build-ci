@@ -265,9 +265,10 @@ regenProcess ()
 			#    lrwxrwxrwx    1 tools    tools           6 May 19 15:21 windup
 			echo "> Check if $sd is symlink..." | tee -a $log
 			if [[ $debug -gt 0 ]]; then
-				echo "ls -l" | sftp -q ${DEST_SERV}:$sd | egrep "^l" | tee -a $log
+				echo "ls -l" | sftp -q ${DEST_SERV}:$sd/ | tee -a $log
+				echo "ls -l" | sftp -q ${DEST_SERV}:$sd/ | egrep "^l" | tee -a $log
 			fi
-			isSymlink=$(echo "ls -l" | sftp -q ${DEST_SERV}:$sd | egrep "^l")
+			isSymlink=$(echo "ls -l" | sftp -q ${DEST_SERV}:$sd/ | egrep "^l")
 			if [[ ! ${isSymlink} ]]; then
 				echo "+ Generate metadata for first ${numbuildstolink} of ${subdirCount} subdir(s) in $sd" | tee -a $log
 				mkdir -p ${tmpdir}/cleanup-fresh-metadata/
