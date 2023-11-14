@@ -264,6 +264,9 @@ regenProcess ()
 			# $➔ echo "ls -l" | sftp -q ${TOOLS}/neon/stable/updates/windup | egrep "^l"
 			#    lrwxrwxrwx    1 tools    tools           6 May 19 15:21 windup
 			echo "> Check if $sd is symlink..." | tee -a $log
+			if [[ $debug -gt 0 ]]; then
+				echo "ls -l" | sftp -q ${DEST_SERV}:$sd | egrep "^l" | tee -a $log
+			fi
 			isSymlink=$(echo "ls -l" | sftp -q ${DEST_SERV}:$sd | egrep "^l")
 			if [[ ! ${isSymlink} ]]; then
 				echo "+ Generate metadata for first ${numbuildstolink} of ${subdirCount} subdir(s) in $sd" | tee -a $log
