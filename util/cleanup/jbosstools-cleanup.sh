@@ -261,14 +261,13 @@ regenProcess ()
 		if [[ $subdirCount -gt 0 ]]; then
 			siteName=${sd##*${DEST_PATH}/}
 			# JBIDE-25045 check if the destination folder is a symlink - we don't need (or want) to regen a symlink folder
-			# $➔ echo "ls -l" | sftp -q ${TOOLS}/neon/stable/updates/windup | egrep "^l"
+			# $➔ rsync --protocol=28 --rsh=ssh -e 'ssh -p 2222' ${TOOLS}/neon/stable/updates/windup | egrep "^l"
 			#    lrwxrwxrwx    1 tools    tools           6 May 19 15:21 windup
 			echo "> Check if $sd is symlink..." | tee -a $log
 			if [[ $debug -gt 0 ]]; then
 				rsync --protocol=28 --rsh=ssh -e 'ssh -p 2222' tools@filemgmt-prod-sync.jboss.org:/$sd  | tee -a $log
-				echo "ls -al $sd" | sftp -q ${DEST_SERV} | head -1 | tee -a $log
 			fi
-			isSymlink=$(echo "ls -al $sd" | sftp -q ${DEST_SERV} | head -1 | egrep "^l")
+			isSymlink=$(rsync --protocol=28 --rsh=ssh -e 'ssh -p 2222' tools@filemgmt-prod-sync.jboss.org:/$sd | egrep "^l")
 			if [[ ! ${isSymlink} ]]; then
 				echo "+ Generate metadata for first ${numbuildstolink} of ${subdirCount} subdir(s) in $sd" | tee -a $log
 				mkdir -p ${tmpdir}/cleanup-fresh-metadata/
