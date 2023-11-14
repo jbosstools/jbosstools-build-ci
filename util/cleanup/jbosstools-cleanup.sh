@@ -266,7 +266,7 @@ regenProcess ()
 			echo "> Check if $sd is symlink..." | tee -a $log
 			if [[ $debug -gt 0 ]]; then
 				rsync --protocol=28 --rsh=ssh -e 'ssh -p 2222' tools@filemgmt-prod-sync.jboss.org:/$sd  | tee -a $log
-				echo "ls -al $sd" | sftp -q ${DEST_SERV} | tee -a $log
+				echo "ls -al $sd" | sftp -q ${DEST_SERV} | head -1 | tee -a $log
 			fi
 			isSymlink=$(echo "ls -l" | sftp -q ${DEST_SERV}:$sd/ | egrep "^l")
 			if [[ ! ${isSymlink} ]]; then
