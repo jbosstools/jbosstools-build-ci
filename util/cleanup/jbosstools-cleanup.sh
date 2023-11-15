@@ -82,8 +82,8 @@ recursive_del ()
 		if egrep -q '^d' <<< $line; then
 		subdir=$(echo "$line" | awk '{ print $NF }')
 		recursive_del $sd "$dd/$subdir"
-		echo -e "rm $dd/$subdir/*" | sftp -q $DEST_SERV:$sd/
-		echo -e "rmdir $dd/$subdir" | sftp -q $DEST_SERV:$sd/
+		echo -e "rm $dd/$subdir/*" | sftp -q $DEST_SERV:$sd/ 2>/dev/null
+		echo -e "rmdir $dd/$subdir" | sftp -q $DEST_SERV:$sd/ 2>/dev/null
 		fi
 	done < $tmp
 	rm -f $tmp
@@ -199,8 +199,8 @@ clean ()
 								# delete all inner direcories
 								echo "" | tee -a $log
 								recursive_del "$sd" "$dd"
-								echo -e "rm $dd/*" | sftp -q $DEST_SERV:$sd/ 
-								echo -e "rmdir $dd" | sftp -q $DEST_SERV:$sd/
+								echo -e "rm $dd/*" | sftp -q $DEST_SERV:$sd/ 2>/dev/null
+								echo -e "rmdir $dd" | sftp -q $DEST_SERV:$sd/ 2>/dev/null
 								popd >/dev/null; rm -fr ${tmpdir}/$dd
 							else
 								echo "" | tee -a $log
